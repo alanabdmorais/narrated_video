@@ -84,9 +84,10 @@ def _linha_colorida_ass(pecas: list[PecaColorida], box_border: int, tamanho_font
     (texto, preto/branco por contraste) + \\3c (borda grossa = cor da
     classe, simula caixa preenchida).
 
-    `fonte_tag` (ex: "\\\\fnNoto Sans CJK KR") — usado pro coreano, cuja
-    fonte padrão (Arial) não tem os caracteres Hangul e mostraria
-    quadradinhos (□) no lugar do texto."""
+    `fonte_tag` (ex: "\\\\fnNoto Sans CJK KR") — usado pros idiomas CJK
+    (coreano e chinês, ver config.fonte_cjk), cuja fonte padrão (Arial) não
+    tem os caracteres Hangul/Han e mostraria quadradinhos (□) no lugar do
+    texto."""
     partes: list[str] = []
     for peca in pecas:
         texto_safe = _escapar(peca.texto)
@@ -141,7 +142,8 @@ def gerar_ass(
         # coreano aparece como quadradinhos (□) em ambientes sem fallback
         # automático de fonte (ex: Colab sem a Noto Sans CJK instalada
         # visível pro libass)
-        fonte_tag = f"\\fn{config.FONTE_CJK}" if idioma == "ko" else ""
+        _fonte = config.fonte_cjk(idioma)
+        fonte_tag = f"\\fn{_fonte}" if _fonte else ""
         for bloco in blocos:
             pecas = bloco.get("pecas", [])
             if not pecas:

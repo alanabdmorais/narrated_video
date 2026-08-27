@@ -668,7 +668,8 @@ def _adicionar_linha_simples(
 ) -> None:
     """Adiciona linha ASS com o texto da legenda sem colorização por palavra."""
     texto_safe = _escapar_ass_texto(leg.texto)
-    fonte_tag  = f"\\fn{config.FONTE_CJK}" if lang == "ko" else ""
+    _fonte     = config.fonte_cjk(lang)
+    fonte_tag  = f"\\fn{_fonte}" if _fonte else ""
     texto_ass  = (
         f"{{\\an2\\pos({config.LARGURA_TELA // 2},{y})"
         f"\\1c&H00FFFFFF&\\bord4\\shad0{fonte_tag}}}"
@@ -698,10 +699,16 @@ def _adicionar_linha_colorida(
     com as tags de cor inline — muito mais eficiente que uma entrada por palavra.
     """
     # ── Detectar modo idioma (1 cor por idioma) ou morfológico ──────────────
-    _IDIOMAS = {"pt", "en", "es", "fr", "ko"}
+    # O conjunto de idiomas vem de CORES_IDIOMAS (é de lá que a cor sai logo
+    # abaixo) em vez de uma lista fixa -- assim um idioma novo configurado
+    # ali já entra no modo idioma sozinho. Com uma lista fixa, o idioma que
+    # faltasse nela caía no modo morfológico e saía cinza (#666666), que era
+    # exatamente o que acontecia com o chinês.
+    _IDIOMAS = set(getattr(config, 'CORES_IDIOMAS', None) or {"pt", "en", "es", "fr", "ko"})
     classes = {p.classe for p in leg.palavras if p.texto.strip()}
     modo_idioma = bool(classes) and classes <= _IDIOMAS
-    fonte_tag = f"\\fn{config.FONTE_CJK}" if lang == "ko" else ""
+    _fonte = config.fonte_cjk(lang)
+    fonte_tag = f"\\fn{_fonte}" if _fonte else ""
 
     partes: list[str] = []
     for palavra in leg.palavras:

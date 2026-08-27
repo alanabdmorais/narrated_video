@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-classificacao.py — Mapeamento SIMPLIFICADO do Stanza (PT/EN/ES/FR) pras
+classificacao.py — Mapeamento SIMPLIFICADO do Stanza (PT/EN/ES/FR/ZH) pras
 11 classes do núcleo + 2 extensões do inglês.
 
 Verbo, substantivo, pronome e artigo não têm mais
@@ -47,6 +47,17 @@ def classificar_palavra_stanza(palavra: str, lema: str, upos: str, xpos: str,
                 return "auxiliar"
             if lema_lower == "not":
                 return "adverbio"
+
+    # ── Chinês: partícula (的, 了, 吗, 着, 过, 地, 得...) ────────────────────
+    # PART é a classe mais frequente do chinês -- 的 sozinho é o caractere
+    # mais comum da língua. Sem este branch ela cairia no fallback lá do
+    # fim ("adverbio"), pintando de laranja a maior parte do texto.
+    # Reaproveita a categoria "particula" que já existe pro coreano: mesma
+    # função gramatical (marca relação/aspecto, sem conteúdo lexical
+    # próprio) e mesma cor -- por isso o chinês não precisou de nenhuma
+    # categoria de cor nova, só das 14 genéricas + particula.
+    if idioma == "zh" and upos == "PART":
+        return "particula"
 
     # ── Substantivo / nome próprio ──────────────────────────────────────────
     if upos == "PROPN":

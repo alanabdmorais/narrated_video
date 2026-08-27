@@ -274,6 +274,53 @@ legados que apontam todos pra `pasta_oracao`.
 | `FONTE_TEXTO_IDIOMA` | `{}` | Por idioma-alvo, `"yt"` ou `"whisper"` como fonte bruta de texto. |
 | `CODIGO_LEGENDA_YOUTUBE` | `{}` | Override de código de idioma no YouTube (ex: `zh` → `zh-Hans`). |
 | `FORMATO_MANUAL_AUDIO` | `{}` | Override manual do ID de formato yt-dlp por idioma. |
+| `IDIOMAS_CJK` | `{"ko", "zh"}` | Idiomas que precisam de fonte CJK explícita (Arial não cobre Hangul/Han). |
+| `FONTE_CJK_POR_IDIOMA` | `{"zh": "Noto Sans CJK SC"}` | Variante regional por idioma; quem não estiver aqui cai em `FONTE_CJK`. Ver `config.fonte_cjk(lang)`. |
+| `SUFIXO_VARIANTE_IDIOMAS` | `""` | Sufixo nos finais nível 2 e 3, pra variantes do conjunto de idiomas conviverem (ver seção 8b). |
+
+## 8b. Variante de 6 idiomas — chinês (`zh`)
+
+Fluxo paralelo ao de 5 idiomas, em **notebooks próprios**; os de 5 idiomas
+continuam intactos e as duas variantes convivem na mesma pasta do vídeo.
+
+### Convenção de código
+
+| Onde | Código | Por quê |
+|---|---|---|
+| Interno (posição, cor, fonte, arquivos) | `zh` | Código canônico do projeto. |
+| YouTube (`--sub-langs`) | `zh-Hans` | Via `CODIGO_LEGENDA_YOUTUBE`. Use `zh-Hant` se quiser tradicional. |
+| Stanza (modelo) | `zh-hans` | Nome do modelo. Via `IDIOMAS_STANZA` no notebook. |
+
+**Simplificado (`Hans`), não tradicional** — é o usado na China continental,
+Singapura e Malásia (~1,1 bi de falantes) contra Taiwan/HK/Macau (~40 mi).
+
+### Notebooks
+
+| Novo | Copiado de | Mudança |
+|---|---|---|
+| `caption-multilang-zh-sources-gather.ipynb` | `caption-multilang-sources-gather` | `zh` em `IDIOMAS_ALVO` (o `CODIGO_LEGENDA_YOUTUBE` já vinha pronto) |
+| `caption-multilang-zh-generate.ipynb` | `caption-multilang-generate` | `zh` em `IDIOMAS_ALVO` + `FONTE_TEXTO_IDIOMA` |
+| `caption-multilang-zh-burn.ipynb` | `caption-multilang-burn` | `zh` em `IDIOMAS_ALVO`, `太` em `ABREVIACOES_LIVRO`, `SUFIXO_VARIANTE_IDIOMAS="_zh"` |
+| `caption-multicolor-zh-generate.ipynb` | `caption-multicolor-generate` | `zh: zh-hans` em `IDIOMAS_STANZA`, `.ass` próprio, sufixo `_zh` |
+| *(nenhum)* | `caption-multicolor-burn` | **reaproveitado como está** — é agnóstico de idioma (só recebe um `.ass` e queima) |
+
+Saídas: `<nome>_final_idiomas_zh.mp4` e `<nome>_final_multicolor_zh.mp4` — não
+sobrescrevem as de 5 idiomas.
+
+### Cores: o chinês não precisou de nenhuma categoria nova
+
+Reutiliza as 14 genéricas + `particula`. As 6 categorias exclusivas do coreano
+(terminações/sufixo) não se aplicam: **coreano é aglutinante** (sufixos
+transformam a palavra), **chinês é isolante** (palavras são blocos
+independentes, modificadas por outras palavras, não por sufixos).
+
+O único mapeamento próprio do chinês é `PART` → `particula` — `PART` é a classe
+mais frequente da língua (o 的 sozinho é o caractere mais comum do chinês) e
+sem isso cairia no fallback `adverbio`.
+
+| | Cor | Posição Y | Fonte |
+|---|---|---|---|
+| `zh` | `#B388FF` roxo claro | 500 (6ª faixa) | Noto Sans CJK **SC** |
 
 ## 9. Lacunas conhecidas / pontos de atenção
 
@@ -335,3 +382,14 @@ legados que apontam todos pra `pasta_oracao`.
   de tempo. Testado ponta a ponta (37 combinações de tag/forma): 0 caem em
   cinza sem ser o fallback `outro` intencional (tag genuinamente
   desconhecida).
+- **Chinês caía em cinza e sem fonte (corrigido junto com a variante zh).**
+  Dois conjuntos fixos ignoravam qualquer idioma fora dos 5 originais:
+  `ffmpeg_utils._IDIOMAS = {"pt","en","es","fr","ko"}` fazia o `zh` cair no
+  modo morfológico e sair no cinza `#666666` em vez da cor do idioma; e
+  `if lang == "ko"` (em `ffmpeg_utils` e `renderizacao`) só aplicava a fonte
+  CJK ao coreano, então o chinês renderizava em Arial — quadradinhos (□).
+  Mesma família do bug das classes finas do coreano. Agora `_IDIOMAS` deriva
+  de `CORES_IDIOMAS` (extensível sozinho) e a fonte vem de
+  `config.fonte_cjk(lang)`. Verificado com snapshot antes/depois: os 5
+  idiomas saem **byte a byte idênticos** (hash do `.ass` igual nos dois
+  fluxos, mais classificação e cores).

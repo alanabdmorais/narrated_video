@@ -5,6 +5,12 @@ BASE CORRIGIDA - Funciona para QUALQUER ORAÇÃO
 """
 
 # ── Idiomas suportados ────────────────────────────────────────────────────────
+# "zh" (chinês) NÃO entra nesta lista de propósito: ela é o default de
+# config.IDIOMAS, e incluir o chinês aqui mudaria silenciosamente o
+# comportamento dos fluxos de 5 idiomas que já rodam. Os dicts abaixo, sim,
+# já trazem a entrada de "zh" -- são consultados por idioma (.get(lang)),
+# então a entrada extra fica inerte até um notebook pedir "zh"
+# explicitamente em IDIOMAS_ALVO (ver caption-*-zh-*.ipynb).
 IDIOMAS: list[str] = ["pt", "en", "es", "fr", "ko"]
 
 SIGLAS_IDIOMAS: dict[str, str] = {
@@ -13,6 +19,7 @@ SIGLAS_IDIOMAS: dict[str, str] = {
     "es": "ES-ES",
     "fr": "FR-FR",
     "ko": "KO-KR",
+    "zh": "ZH-CN",   # chinês simplificado (zh-Hans) -- ver NOMES_IDIOMA
 }
 
 NOMES_IDIOMA: dict[str, str] = {
@@ -21,11 +28,14 @@ NOMES_IDIOMA: dict[str, str] = {
     "es": "espanhol",
     "fr": "francês",
     "ko": "coreano",
+    "zh": "chinês",
 }
 
 # ── Posições das legendas na tela (pixels, tela 1280px) ──────────────────────
-POSICOES_Y: dict[str, int] = {"pt": 100, "en": 180, "es": 260, "fr": 340, "ko": 420}
-POS_SIGLA_Y: dict[str, int] = {"pt": 65, "en": 145, "es": 225, "fr": 305, "ko": 385}
+# 6 faixas de 80px: a última (zh, y=500) ainda cabe folgado nos 720px de
+# altura -- a legenda fica centrada em an2 (centro-baixo) na posição dada.
+POSICOES_Y: dict[str, int] = {"pt": 100, "en": 180, "es": 260, "fr": 340, "ko": 420, "zh": 500}
+POS_SIGLA_Y: dict[str, int] = {"pt": 65, "en": 145, "es": 225, "fr": 305, "ko": 385, "zh": 465}
 
 # ── Dimensões da tela ─────────────────────────────────────────────────────────
 LARGURA_TELA: int = 1280

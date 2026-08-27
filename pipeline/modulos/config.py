@@ -149,6 +149,7 @@ class PipelineConfig:
                 'es': '#FF6D00',   # laranja
                 'fr': '#40C4FF',   # azul claro
                 'ko': '#FF4081',   # rosa/magenta
+                'zh': '#B388FF',   # roxo claro
             })
 
     # ── Layout de legenda ─────────────────────────────────────────────────────
@@ -164,6 +165,27 @@ class PipelineConfig:
     FONTE_CJK:           str = "Noto Sans CJK KR"  # fonte p/ coreano (Arial não cobre bem o Hangul;
                                                       # a família "Noto Sans CJK" cobre chinês/japonês/
                                                       # coreano — troque o sufixo se precisar de outro idioma)
+
+    # ── Quais idiomas precisam de fonte CJK, e qual variante ──────────────────
+    # Arial (fonte padrão do estilo ASS) não cobre Hangul nem Han: sem uma
+    # fonte CJK explícita o texto vira quadradinhos (□) ou some. As variantes
+    # regionais da família Noto Sans CJK compartilham os mesmos caracteres e
+    # diferem só no traçado de alguns Han (unificação Han) -- por isso o
+    # chinês usa a variante SC (simplificado) em vez da KR do coreano.
+    # Idiomas fora de IDIOMAS_CJK usam a fonte padrão do estilo (latinos).
+    IDIOMAS_CJK: set[str] = field(default_factory=lambda: {"ko", "zh"})
+    # Override por idioma; quem não estiver aqui (ex: "ko") cai em FONTE_CJK,
+    # preservando qualquer customização feita naquele campo.
+    FONTE_CJK_POR_IDIOMA: dict[str, str] = field(default_factory=lambda: {
+        "zh": "Noto Sans CJK SC",
+    })
+
+    def fonte_cjk(self, lang: str) -> str:
+        """Nome da fonte CJK deste idioma, ou "" se ele não precisa de uma
+        (idiomas latinos usam a fonte padrão do estilo ASS)."""
+        if lang not in self.IDIOMAS_CJK:
+            return ""
+        return self.FONTE_CJK_POR_IDIOMA.get(lang, self.FONTE_CJK)
     BOX_BORDER:          int = BOX_BORDER
     ESPACAMENTO_PALAVRA: int = ESPACAMENTO_PALAVRA
     LARGURA_CHAR:        int = LARGURA_CHAR
@@ -217,6 +239,15 @@ class PipelineConfig:
     # NOME_VIDEO_FINAL_CLASSIFICACAO(_BASICO) é um ramo obsoleto, não um nível
     # -- ver docstring dele abaixo.
 
+    # ── Sufixo de variante do CONJUNTO DE IDIOMAS ─────────────────────────────
+    # Só afeta os dois níveis que dependem de quais idiomas entram (2 e 3).
+    # Serve pra uma variante conviver com a original na mesma pasta em vez de
+    # sobrescrevê-la -- ex: a versão de 6 idiomas (com chinês,
+    # caption-multilang-zh-*.ipynb) usa "_zh" e gera
+    # <nome>_final_idiomas_zh.mp4, deixando o <nome>_final_idiomas.mp4 de 5
+    # idiomas intacto. Vazio (padrão) = nomes de sempre, nada muda.
+    SUFIXO_VARIANTE_IDIOMAS: str = ""
+
     @property
     def NOME_VIDEO_FINAL(self) -> str:
         """Vídeo final com legenda única (1 faixa simples) — Single Subtitle."""
@@ -227,7 +258,7 @@ class PipelineConfig:
         """Vídeo final com legendas multi-idioma empilhadas — Language Subtitles.
         Nome diferente de NOME_VIDEO_FINAL de propósito: os dois vídeos podem
         coexistir na mesma pasta sem um sobrescrever o outro."""
-        return f"{self.NOME_ORACAO}_final_idiomas{self._sufixo_modo}.mp4"
+        return f"{self.NOME_ORACAO}_final_idiomas{self._sufixo_modo}{self.SUFIXO_VARIANTE_IDIOMAS}.mp4"
 
     @property
     def NOME_VIDEO_FINAL_CLASSIFICACAO(self) -> str:
@@ -251,7 +282,7 @@ class PipelineConfig:
         dos outros níveis (antes era _com_legenda_colorida; vídeos já
         gerados antes dessa mudança, ex: 40_Matt_02, têm o arquivo real no
         Drive com o nome antigo -- renomeie manualmente)."""
-        return f"{self.NOME_ORACAO}_final_multicolor{self._sufixo_modo}.mp4"
+        return f"{self.NOME_ORACAO}_final_multicolor{self._sufixo_modo}{self.SUFIXO_VARIANTE_IDIOMAS}.mp4"
 
     @property
     def NOME_SRT_PT_WHISPER(self) -> str:
