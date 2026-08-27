@@ -23,6 +23,7 @@ pro notebook novo.
 """
 from __future__ import annotations
 
+import json
 from pathlib import Path
 from typing import NamedTuple, Optional
 
@@ -154,3 +155,43 @@ def gerar_ass(
 
     caminho_saida.write_text("".join(linhas), encoding="utf-8-sig")
     return caminho_saida
+
+
+def salvar_classificacao_multicolor(blocos: list[dict], caminho_saida: Path | str) -> Path:
+    """Salva a classificação (Stanza/Kiwi já filtrada, ver classificacao.py/
+    classificacao_ko.py) de UM idioma como JSON -- disponível pra baixar,
+    corrigir manualmente (trocar a "classe" de alguma peça errada) e subir
+    de volta com o mesmo nome, antes de gerar o .ass (ver
+    carregar_classificacao_multicolor)."""
+    caminho_saida = Path(caminho_saida)
+    bruto = [
+        {
+            "inicio_ms": bloco["inicio_ms"],
+            "fim_ms": bloco["fim_ms"],
+            "pecas": [
+                {"texto": p.texto, "classe": p.classe, "colado_anterior": p.colado_anterior}
+                for p in bloco.get("pecas", [])
+            ],
+        }
+        for bloco in blocos
+    ]
+    caminho_saida.write_text(json.dumps(bruto, ensure_ascii=False, indent=2), encoding="utf-8")
+    return caminho_saida
+
+
+def carregar_classificacao_multicolor(caminho: Path | str) -> list[dict]:
+    """Carrega de volta o JSON salvo por salvar_classificacao_multicolor()
+    -- reconstrói as PecaColorida a partir dos dicts, no formato que
+    gerar_ass() espera em blocos_por_idioma[idioma]."""
+    bruto = json.loads(Path(caminho).read_text(encoding="utf-8"))
+    return [
+        {
+            "inicio_ms": bloco["inicio_ms"],
+            "fim_ms": bloco["fim_ms"],
+            "pecas": [
+                PecaColorida(p["texto"], p["classe"], p.get("colado_anterior", False))
+                for p in bloco.get("pecas", [])
+            ],
+        }
+        for bloco in bruto
+    ]

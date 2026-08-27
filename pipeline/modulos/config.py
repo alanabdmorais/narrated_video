@@ -466,6 +466,15 @@ class PipelineConfig:
         vários idiomas empilhados na tela ao mesmo tempo."""
         return f"{self.NOME_ORACAO}_versiculo_multilingue.srt"
 
+    def nome_classificacao_multicolor(self, lang: str) -> str:
+        """JSON com o resultado da classificação gramatical (Stanza pra
+        pt/en/es/fr, Kiwi pro ko) usada na legenda multicolor
+        (caption-multicolor-generate.ipynb) -- palavra/peça + classe, por
+        bloco de tempo. Disponível pra correção manual: se esse arquivo já
+        existir no Drive quando o notebook rodar, ele é usado no lugar de
+        rodar o Stanza/Kiwi de novo pra esse idioma."""
+        return f"{self.NOME_ORACAO}_classificacao_multicolor_{lang}.json"
+
     def nome_match_json(self, capitulo: int) -> str:
         """JSON com o resultado do match versículo↔vídeo/imagem (match-scene-verse.ipynb)."""
         return f"match_{self.NOME_ORACAO}_cap{capitulo}.json"

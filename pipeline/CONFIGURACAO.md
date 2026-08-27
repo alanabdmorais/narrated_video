@@ -162,6 +162,15 @@ nome fixo (`caminho_saida`, default se não for passado outro):
 Sempre 1 arquivo `.ass` por vídeo (nunca por idioma — mesmo no multi-idioma,
 todos os idiomas já vêm empilhados dentro do mesmo arquivo).
 
+### Classificação gramatical intermediária (multicolor)
+
+| Propriedade | Padrão gerado | Observação |
+|---|---|---|
+| `nome_classificacao_multicolor(lang)` | `<nome>_classificacao_multicolor_<lang>.json` | Resultado bruto do Stanza/Kiwi já filtrado (palavra/peça + classe, por bloco), 1 arquivo por idioma. Salvo automaticamente por `caption-multicolor-generate.ipynb` — se esse arquivo já existir no Drive na próxima execução, é usado no lugar de rodar o Stanza/Kiwi de novo, então dá pra baixar, corrigir a `classe` de alguma peça errada à mão, e resubir com o mesmo nome antes de gerar o `.ass`. |
+
+Serialização em `renderizacao.py`: `salvar_classificacao_multicolor()`/
+`carregar_classificacao_multicolor()`.
+
 > **Migração do rename edge→whisper:** vídeos já gerados antes dessa mudança
 > (ex: `40_Matt_02`) têm arquivos reais no Drive com o nome antigo
 > (`40_Matt_02_edge_en.srt` etc.) — renomeie-os manualmente pra `_whisper_`
