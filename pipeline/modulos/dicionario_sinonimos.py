@@ -50,7 +50,7 @@ GRUPOS_SINONIMOS_PT = [
     ["dia", "luz do dia", "amanhecer", "alvorecer", "aurora"],
     ["luz", "claridade", "brilho", "resplendor", "fulgor"],
     ["nuvem", "nuvens", "nevoeiro"],
-    ["chuva", "tempestade", "temporal"],
+    ["chuva", "tempestade", "temporal", "trovão", "trovões", "relâmpago", "relâmpagos", "raio", "raios"],
     ["árvore", "árvores", "floresta", "bosque"],
     ["campo", "campos", "plantação", "lavoura", "seara"],
     ["caverna", "gruta", "cova", "gruta rochosa"],
@@ -99,6 +99,21 @@ GRUPOS_SINONIMOS_PT = [
     ["paz", "tranquilidade", "serenidade", "calma"],
     ["esperança", "confiança", "fé"],
     ["milagre", "milagroso", "prodígio", "maravilha"],
+
+    # ── sons / efeitos sonoros ───────────────────────────────────────
+    # Objetos/ações concretas cujo interesse principal é o SOM que fazem
+    # (efeito sonoro pontual) -- ver trilha_pipeline.py/efeitos_stock.
+    # Trovão/relâmpago já vivem dentro do grupo "chuva" acima (mesmo
+    # contexto de tempestade); os demais entram aqui por serem sons sem
+    # um "lugar" natural nas categorias visuais/narrativas de cima.
+    ["porta", "portas", "portão", "portões"],
+    ["cavalo", "cavalos", "égua", "corcel", "carruagem", "carruagens"],
+    ["vento", "ventania", "brisa", "rajada"],
+    ["fogo", "chamas", "labareda", "labaredas", "incêndio", "fornalha"],
+    ["trombeta", "trombetas", "shofar", "chifre de carneiro", "buzina"],
+    ["passos", "passo", "pisada", "pisadas"],
+    ["galo", "cantar do galo", "canto do galo"],
+    ["terremoto", "tremor de terra", "abalo sísmico"],
 ]
 
 GRUPOS_SINONIMOS_EN = [
@@ -136,7 +151,7 @@ GRUPOS_SINONIMOS_EN = [
     ["day", "daylight", "dawn", "sunrise"],
     ["light", "brightness", "radiance", "glow"],
     ["cloud", "clouds", "fog", "mist"],
-    ["rain", "storm", "tempest"],
+    ["rain", "storm", "tempest", "thunder", "thunderclap", "lightning", "lightning bolt"],
     ["tree", "trees", "forest", "woods"],
     ["field", "fields", "crop", "farmland", "harvest"],
     ["cave", "grotto", "cavern", "rocky cave"],
@@ -185,6 +200,16 @@ GRUPOS_SINONIMOS_EN = [
     ["peace", "tranquility", "serenity", "calm"],
     ["hope", "trust", "faith"],
     ["miracle", "miraculous", "wonder", "marvel"],
+
+    # ── sounds / sound effects ───────────────────────────────────────
+    ["door", "doors", "gate", "gates"],
+    ["horse", "horses", "mare", "steed", "chariot", "chariots"],
+    ["wind", "windstorm", "breeze", "gust"],
+    ["fire", "flames", "blaze", "inferno", "furnace"],
+    ["trumpet", "trumpets", "shofar", "ram's horn", "horn"],
+    ["footsteps", "footstep", "steps", "walking sound"],
+    ["rooster", "rooster crow", "cock crow"],
+    ["earthquake", "tremor", "seismic shock"],
 ]
 
 
