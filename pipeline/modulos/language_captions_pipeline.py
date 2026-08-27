@@ -21,7 +21,7 @@ para que todos os idiomas fiquem sincronizados entre si na tela.
 
 Por idioma-alvo, há duas fontes possíveis de texto bruto (ver
 config.fonte_texto): a legenda do YouTube (nome_srt_yt) ou a transcrição do
-Whisper sobre o áudio dublado (nome_srt_edge). Ambas podem ser corrigidas
+Whisper sobre o áudio dublado (nome_srt_whisper). Ambas podem ser corrigidas
 manualmente (baixe, corrija, reenvie ao Drive) antes da redistribuição.
 """
 from __future__ import annotations
@@ -153,7 +153,7 @@ class LanguageCaptionsPipeline:
     def transcrever_audio_idiomas(self, idiomas: list[str], modelo: str = "base") -> dict[str, Path]:
         """Transcreve com Whisper o áudio de cada idioma (já baixado por
         baixar_audio_idiomas() — se não estiver local, baixa do Drive antes)
-        e salva como {NOME}_edge_{lang}.srt no Drive.
+        e salva como {NOME}_whisper_{lang}.srt no Drive.
 
         Pula automaticamente o IDIOMA_MESTRE, se estiver na lista — a
         transcrição mestre já é feita pelo single-caption.ipynb (e
@@ -210,7 +210,7 @@ class LanguageCaptionsPipeline:
                 logger.warning("   ⚠️  [%s] Whisper não retornou texto — pulando", lang)
                 continue
 
-            destino = Path(self._cfg.nome_srt_edge(lang))
+            destino = Path(self._cfg.nome_srt_whisper(lang))
             salvar_srt(legendas, destino)
             self._drive.upload(destino, self._cfg.pasta_oracao, "text/plain")
             resultados[lang] = destino
@@ -269,7 +269,7 @@ class LanguageCaptionsPipeline:
         resultado: dict[str, list[Legenda]] = {}
         for lang in idiomas:
             fonte = self._cfg.fonte_texto(lang)
-            nome_bruto = self._cfg.nome_srt_yt(lang) if fonte == "yt" else self._cfg.nome_srt_edge(lang)
+            nome_bruto = self._cfg.nome_srt_yt(lang) if fonte == "yt" else self._cfg.nome_srt_whisper(lang)
             bruto_local = Path(nome_bruto)
             self._drive.download(self._cfg.pasta_oracao, nome_bruto, bruto_local)
 

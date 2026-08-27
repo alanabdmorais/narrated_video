@@ -18,7 +18,7 @@ pasta deste vídeo, o pipeline usa como legenda única no vídeo final".
 
 Fluxo:
     1. single-caption.ipynb roda o Whisper sobre o áudio e salva o
-       resultado como SRT em config.pasta_oracao / config.NOME_SRT_PT_EDGE
+       resultado como SRT em config.pasta_oracao / config.NOME_SRT_PT_WHISPER
        (esse é o nome padrão que config.nome_legenda_unica aponta, a menos
        que você preencha NOME_LEGENDA_UNICA com outro nome).
     2. (opcional, fora do Colab) você baixa esse SRT, corrige manualmente,
@@ -63,7 +63,7 @@ class CaptionPipeline:
         """
         Transcreve o áudio com Whisper e salva o resultado como SRT.
 
-        Salva sempre em config.NOME_SRT_PT_EDGE (o nome padrão de
+        Salva sempre em config.NOME_SRT_PT_WHISPER (o nome padrão de
         transcrição) — se você quiser que essa transcrição seja a legenda
         escolhida para queimar, deixe NOME_LEGENDA_UNICA em branco (usa o
         padrão automaticamente). Se preferir manter várias transcrições
@@ -79,7 +79,7 @@ class CaptionPipeline:
         recusa rodar para não apagar uma correção manual já feita. Veja
         PROTEGER_LEGENDA_MESTRE em config.py.
         """
-        destino = Path(self._cfg.NOME_SRT_PT_EDGE)
+        destino = Path(self._cfg.NOME_SRT_PT_WHISPER)
 
         if self._cfg.PROTEGER_LEGENDA_MESTRE and destino.name == self._cfg.nome_legenda_mestre:
             destino_drive = self._cfg.pasta_oracao / destino.name

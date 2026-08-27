@@ -230,10 +230,15 @@ class PipelineConfig:
         return f"{self.NOME_ORACAO}_com_legenda_colorida{self._sufixo_modo}.mp4"
 
     @property
-    def NOME_SRT_PT_EDGE(self) -> str:
-        """Transcrição do Whisper sobre a narração — mestre de timestamps.
-        Usa IDIOMA_MESTRE (não é mais fixo em 'pt')."""
-        return f"{self.NOME_ORACAO}_edge_{self.IDIOMA_MESTRE}.srt"
+    def NOME_SRT_PT_WHISPER(self) -> str:
+        """Transcrição do Whisper sobre a narração — mestre de SEGMENTAÇÃO
+        (tempos/blocos que os idiomas-alvo seguem). Usa IDIOMA_MESTRE (não é
+        mais fixo em 'pt'). Nome usa "whisper" (não "edge") porque é sempre
+        o Whisper que gera esse SRT, venha a narração do Edge TTS, de upload
+        manual ou de dublagem baixada como mestre -- ver nome_legenda_mestre
+        e nome_palavras_mestre/nome_audio_mestre abaixo pros outros 2 papéis
+        de "mestre" do vídeo (palavras e áudio, que não são o Whisper)."""
+        return f"{self.NOME_ORACAO}_whisper_{self.IDIOMA_MESTRE}.srt"
 
     # ── Legenda escolhida para o vídeo de legenda única (Single Subtitle) ────
     # Conceito diferente de "legenda mestre de segmentação/palavras" (que só
@@ -242,7 +247,7 @@ class PipelineConfig:
     # queimar como legenda única no vídeo final".
     #
     # Deixe em branco para usar o padrão (transcrição do Whisper sobre a
-    # narração: NOME_edge_IDIOMA.srt — é o que o notebook de geração salva).
+    # narração: NOME_whisper_IDIOMA.srt — é o que o notebook de geração salva).
     # Preencha manualmente para escolher outro arquivo já salvo na pasta do
     # vídeo — por exemplo, uma cópia renomeada depois de corrigida à mão,
     # ou uma legenda de outra origem (YouTube, roteiro, etc.).
@@ -252,19 +257,81 @@ class PipelineConfig:
     def nome_legenda_unica(self) -> str:
         """Arquivo SRT escolhido para o vídeo de legenda única.
 
-        Se NOME_LEGENDA_UNICA estiver vazio (padrão), usa NOME_SRT_PT_EDGE
+        Se NOME_LEGENDA_UNICA estiver vazio (padrão), usa NOME_SRT_PT_WHISPER
         (a transcrição do Whisper sobre a narração). Se preenchido, usa
         exatamente o que foi digitado na célula de configuração — permite
         apontar para qualquer SRT já salvo em pasta_oracao, inclusive uma
         versão corrigida manualmente com outro nome.
         """
-        return self.NOME_LEGENDA_UNICA.strip() or self.NOME_SRT_PT_EDGE
+        return self.NOME_LEGENDA_UNICA.strip() or self.NOME_SRT_PT_WHISPER
+
+    # ── Os 3 "mestres" do vídeo (áudio, palavras, segmentação) ────────────────
+    # O vídeo tem 3 papéis de "mestre", cada um podendo ser 1 arquivo só ou o
+    # resultado de uma mescla feita por VOCÊ fora do pipeline (o pipeline não
+    # tenta mesclar transcrições sozinho -- é frágil demais pra automatizar
+    # bem). Em todos os 3, o campo de override abaixo é opcional: vazio =
+    # usa o arquivo padrão daquele papel; preenchido = aponta pra qualquer
+    # arquivo já salvo em pasta_oracao (ex: sua versão corrigida/mesclada).
+    # Nenhum dos 3 usa sufixo "_mestre" no NOME do arquivo -- o papel de
+    # "mestre" é indicado pelo CAMPO de config que aponta pra ele, não por
+    # uma marca no nome do arquivo (mesmo padrão de nome_legenda_unica).
+    #
+    #  1. ÁUDIO mestre (nome_audio_mestre) — normalmente 1 arquivo só, sem
+    #     mescla: a narração (NOME_AUDIO), venha do Edge TTS, de upload
+    #     manual, ou de uma dublagem baixada usada como mestre.
+    #  2. PALAVRAS mestre (nome_palavras_mestre) — o roteiro (com ou sem
+    #     versículo). Pode ser mesclado por você com a transcrição Whisper
+    #     da dublagem do YouTube desse idioma, pra pegar palavra que a
+    #     dublagem falou ligeiramente diferente do roteiro escrito -- se
+    #     mesclar, salve o resultado por cima do mesmo arquivo no Drive.
+    #  3. SEGMENTAÇÃO mestre (nome_legenda_mestre) — quem decide os
+    #     blocos/tempos que os idiomas-alvo devem seguir. Essa é a mescla
+    #     que o próprio pipeline já faz bem (ver alinhar_versiculos() em
+    #     srt_utils.py): Whisper (nome_srt_whisper) + roteiro-versículo,
+    #     com fusão automática de versículo curto demais pro vizinho
+    #     (elimina gap/flicker -- ver calcular_segmentos_versiculo() em
+    #     match_pipeline.py).
+
+    NOME_AUDIO_MESTRE: str = ""
+
+    @property
+    def nome_audio_mestre(self) -> str:
+        """Arquivo de áudio da narração do idioma mestre.
+
+        Se NOME_AUDIO_MESTRE estiver vazio (padrão), usa NOME_AUDIO.
+        Preencha só se quiser apontar pra um áudio com outro nome já salvo
+        em pasta_oracao (ex: uma tomada alternativa)."""
+        return self.NOME_AUDIO_MESTRE.strip() or self.NOME_AUDIO
+
+    @property
+    def nome_roteiro(self) -> str:
+        """Roteiro do idioma mestre SEM números de versículo soltos no meio
+        do texto -- modo padrão (video-base-*-padrao.ipynb). Pra modo
+        versículo, ver nome_roteiro_versiculos."""
+        return f"{self.NOME_ORACAO}_roteiro.txt"
+
+    NOME_PALAVRAS_MESTRE: str = ""
+
+    @property
+    def nome_palavras_mestre(self) -> str:
+        """Arquivo de texto com as palavras corretas do idioma mestre --
+        o roteiro (nome_roteiro_versiculos em modo versículo, que é o caso
+        mais comum). Pode já vir corrigido/mesclado manualmente por você
+        com a transcrição Whisper da dublagem do YouTube (ver comentário
+        acima) -- nesse caso salve por cima do mesmo nome no Drive, não
+        precisa preencher NOME_PALAVRAS_MESTRE.
+
+        Se NOME_PALAVRAS_MESTRE estiver vazio (padrão), usa
+        nome_roteiro_versiculos. Preencha só pra apontar pra um arquivo com
+        outro nome (ex: modo padrão, sem versículo -- use nome_roteiro)."""
+        return self.NOME_PALAVRAS_MESTRE.strip() or self.nome_roteiro_versiculos
 
     # ── Legenda mestre (Language Subtitles — molde de segmentação/palavras) ──
     # Conceito diferente de nome_legenda_unica. Esta é a legenda que define
     # a SEGMENTAÇÃO e os TEMPOS que os outros idiomas devem seguir — os
     # idiomas-alvo têm seu texto redistribuído nos MESMOS blocos/tempos
     # desta legenda (não usam os tempos do próprio Whisper/YouTube deles).
+    # É o papel de "mestre de segmentação" descrito acima (item 3).
     #
     # Por padrão, reaproveita nome_legenda_unica (o SRT já corrigido do
     # Single Subtitle) — na prática, o mesmo arquivo serve aos dois
@@ -273,7 +340,8 @@ class PipelineConfig:
 
     @property
     def nome_legenda_mestre(self) -> str:
-        """Arquivo SRT que define segmentação/tempos para os outros idiomas.
+        """Arquivo SRT que define segmentação/tempos para os outros idiomas
+        (mestre de SEGMENTAÇÃO -- ver bloco "Os 3 mestres do vídeo" acima).
 
         Se NOME_LEGENDA_MESTRE estiver vazio (padrão), reaproveita
         nome_legenda_unica. Preencha para usar um molde diferente.
@@ -305,13 +373,13 @@ class PipelineConfig:
 
     # ── Fontes de texto bruto por idioma (Language Subtitles) ────────────────
     # Por idioma-alvo, qual arquivo bruto usar como fonte de texto para a
-    # redistribuição: "yt" (legenda do YouTube, nome_srt_yt) ou "edge"
-    # (transcrição do Whisper sobre o áudio dublado, nome_srt_edge).
+    # redistribuição: "yt" (legenda do YouTube, nome_srt_yt) ou "whisper"
+    # (transcrição do Whisper sobre o áudio dublado, nome_srt_whisper).
     # Idiomas não listados aqui usam o padrão "yt".
     FONTE_TEXTO_IDIOMA: dict[str, str] = field(default_factory=dict)
 
     def fonte_texto(self, lang: str) -> str:
-        """Retorna 'yt' ou 'edge' — qual fonte bruta usar para este idioma."""
+        """Retorna 'yt' ou 'whisper' — qual fonte bruta usar para este idioma."""
         return self.FONTE_TEXTO_IDIOMA.get(lang, "yt")
 
     # ── Código de idioma específico do YouTube (legendas) ─────────────────────
@@ -340,9 +408,9 @@ class PipelineConfig:
         filtro automático por idioma)."""
         return self.FORMATO_MANUAL_AUDIO.get(lang) or None
 
-    def nome_srt_edge(self, lang: str) -> str:
+    def nome_srt_whisper(self, lang: str) -> str:
         """Transcrição do Whisper sobre o áudio dublado deste idioma (bruta)."""
-        return f"{self.NOME_ORACAO}_edge_{lang}.srt"
+        return f"{self.NOME_ORACAO}_whisper_{lang}.srt"
 
     def nome_audio_idioma(self, lang: str) -> str:
         """Áudio dublado automático baixado do YouTube para este idioma."""

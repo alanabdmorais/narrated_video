@@ -135,25 +135,66 @@ Tudo isso vem de propriedades/métodos de `PipelineConfig` em `modulos/config.py
 
 | Propriedade | Padrão gerado | Observação |
 |---|---|---|
-| `NOME_SRT_PT_EDGE` | `<nome>_edge_<IDIOMA_MESTRE>.srt` | Transcrição Whisper sobre a narração — mestre de timestamps. |
-| `nome_srt_edge(lang)` | `<nome>_edge_<lang>.srt` | Transcrição Whisper sobre áudio dublado desse idioma. |
+| `NOME_SRT_PT_WHISPER` | `<nome>_whisper_<IDIOMA_MESTRE>.srt` | Transcrição Whisper sobre a narração — mestre de SEGMENTAÇÃO. Nome usa "whisper" (renomeado de "edge") porque é sempre o Whisper que gera esse SRT, venha a narração do Edge TTS ou não. |
+| `nome_srt_whisper(lang)` | `<nome>_whisper_<lang>.srt` | Transcrição Whisper sobre áudio dublado desse idioma. |
 | `nome_srt_yt(lang)` | `<nome>_yt_<lang>.srt` | Legenda original do YouTube (mestre de texto). |
 | `NOME_SRT_PT` / `nome_srt(lang)` | `<nome>_<IDIOMA_MESTRE ou lang>.srt` | Legenda já distribuída/corrigida por idioma. |
-| `nome_legenda_unica` | = `NOME_LEGENDA_UNICA` (se preenchido) senão `NOME_SRT_PT_EDGE` | SRT escolhido pro vídeo de legenda única. |
-| `nome_legenda_mestre` | = `NOME_LEGENDA_MESTRE` (se preenchido) senão `nome_legenda_unica` | Molde de segmentação/tempos pros outros idiomas (Language Subtitles). |
+| `nome_legenda_unica` | = `NOME_LEGENDA_UNICA` (se preenchido) senão `NOME_SRT_PT_WHISPER` | SRT escolhido pro vídeo de legenda única. |
+| `nome_legenda_mestre` | = `NOME_LEGENDA_MESTRE` (se preenchido) senão `nome_legenda_unica` | Molde de segmentação/tempos pros outros idiomas (Language Subtitles) — é o mestre de SEGMENTAÇÃO, ver seção 6b. |
 | `nome_ass(lang)` | `<nome>_legendas_<lang>.ass` | Legenda queimada (ASS), por idioma. |
 | `nome_srt_versiculo` | `<nome>_versiculo.srt` | Indicador de livro:versículo (overlay). |
 
 `PROTEGER_LEGENDA_MESTRE` (bool, padrão `True`) — impede sobrescrever a legenda
 mestre sem querer.
 
+> **Migração do rename edge→whisper:** vídeos já gerados antes dessa mudança
+> (ex: `40_Matt_02`) têm arquivos reais no Drive com o nome antigo
+> (`40_Matt_02_edge_en.srt` etc.) — renomeie-os manualmente pra `_whisper_`
+> antes de rodar os notebooks de novo para esse vídeo, ou aponte
+> `NOME_LEGENDA_UNICA`/`NOME_LEGENDA_MESTRE` pro nome antigo enquanto não
+> renomear.
+
 ### Match cena↔versículo / roteiro
 
 | Propriedade | Padrão gerado |
 |---|---|
-| `nome_roteiro_versiculos` | `<nome>_roteiro_versiculos.txt` |
+| `nome_roteiro` | `<nome>_roteiro.txt` (modo padrão, sem versículo) |
+| `nome_roteiro_versiculos` | `<nome>_roteiro_versiculos.txt` (modo versículo) |
 | `nome_match_json(capitulo)` | `match_<nome>_cap<capitulo>.json` |
 | `nome_lacunas_match(capitulo)` | `lacunas_match_<nome>_cap<capitulo>.txt` |
+
+## 6b. Os 3 "mestres" do vídeo (áudio, palavras, segmentação)
+
+O vídeo tem 3 papéis de "mestre" — cada um é normalmente 1 arquivo só, mas às
+vezes é o resultado de uma mescla que **você faz manualmente fora do
+pipeline** (o pipeline não tenta automatizar essas mesclas — é frágil demais
+pra fazer bem; só a mescla de segmentação, abaixo, é feita pelo próprio
+código). Nos 3, o nome do arquivo NÃO carrega sufixo `_mestre` — o papel de
+"mestre" vem do CAMPO de config que aponta pra ele, não de uma marca no nome
+do arquivo (mesmo padrão de `nome_legenda_unica`). Também não carregam sufixo
+de idioma — só há 1 áudio/roteiro mestre por vídeo, então não há o que
+desambiguar (diferente de `nome_audio_idioma(lang)`/`nome_srt_yt(lang)`, que
+têm um arquivo por idioma-alvo e por isso precisam do sufixo).
+
+| Papel | Config | Default | Mescla feita por |
+|---|---|---|---|
+| **Áudio** | `nome_audio_mestre` (override: `NOME_AUDIO_MESTRE`) | `NOME_AUDIO` (`<nome>_audio.wav`) | N/A — normalmente 1 arquivo só, sem mescla. |
+| **Palavras** | `nome_palavras_mestre` (override: `NOME_PALAVRAS_MESTRE`) | `nome_roteiro_versiculos` | **Você, manualmente** — roteiro mesclado com a transcrição Whisper da dublagem do YouTube (pra pegar palavra que a dublagem falou diferente do escrito). Salve o resultado por cima do mesmo arquivo no Drive. |
+| **Segmentação** | `nome_legenda_mestre` | `nome_legenda_unica` (Whisper) | **O próprio pipeline**, bem — `alinhar_versiculos()` em `srt_utils.py` mescla o Whisper com o roteiro-versículo (empresta tempo início/fim pra cada versículo), com fusão automática de versículo curto demais pro vizinho (elimina gap/flicker — `calcular_segmentos_versiculo()` em `match_pipeline.py`). Alimenta as decisões de trilha, efeitos e cenas. |
+
+Pros idiomas-alvo (não-mestre): não têm roteiro próprio. O texto vem de
+`nome_srt_yt(lang)` e/ou `nome_srt_whisper(lang)` (mesclados manualmente por
+você, mesma lógica de "palavras mestre" acima) — a segmentação, esses idiomas
+simplesmente herdam os mesmos blocos/tempos do mestre (`redistribuir_idiomas()`
+não calcula segmentação própria por idioma).
+
+`NOME_AUDIO_MESTRE`/`NOME_PALAVRAS_MESTRE` — vazio por padrão, mesmo padrão de
+override de `NOME_LEGENDA_UNICA`/`NOME_LEGENDA_MESTRE`: preencha só se quiser
+apontar pra um arquivo com outro nome já salvo em `pasta_oracao`.
+
+> `<nome>_audio_edge.wav`/`<nome>_audio_edge_<lang>.wav` — nome reservado pra
+> quando o áudio for **especificamente gerado pelo Edge TTS** (não em uso
+> agora, não implementado).
 
 ### Classificação morfológica / relatório
 
@@ -192,7 +233,7 @@ legados que apontam todos pra `pasta_oracao`.
 | `DURACAO_MINIMA_SEGMENTO_VERSICULO` | `2.0` (s) | Versículos mais curtos que isso são fundidos com o vizinho. |
 | `LARGURA_CLIPE`/`ALTURA_CLIPE`/`FPS_CLIPE` | `1280×720@25` | Padronização de todo clipe antes de concatenar (evita corromper duração). |
 | `ABREVIACOES_LIVRO` | dict por idioma | Overlay de referência (livro:versículo). |
-| `FONTE_TEXTO_IDIOMA` | `{}` | Por idioma-alvo, `"yt"` ou `"edge"` como fonte bruta de texto. |
+| `FONTE_TEXTO_IDIOMA` | `{}` | Por idioma-alvo, `"yt"` ou `"whisper"` como fonte bruta de texto. |
 | `CODIGO_LEGENDA_YOUTUBE` | `{}` | Override de código de idioma no YouTube (ex: `zh` → `zh-Hans`). |
 | `FORMATO_MANUAL_AUDIO` | `{}` | Override manual do ID de formato yt-dlp por idioma. |
 
@@ -209,3 +250,13 @@ legados que apontam todos pra `pasta_oracao`.
   Só precisa mexer se um dia quiser renomear essas abas.
 - `biblia_texto` é uma aba populada manualmente/externamente — não existe
   função no pipeline que a crie ou sincronize.
+- Rename `edge`→`whisper` nos nomes de SRT (config.py, `caption_pipeline.py`,
+  `language_captions_pipeline.py`, e os notebooks que usam
+  `nome_srt_whisper(lang)`/`NOME_SRT_PT_WHISPER`) — feito. Vídeos já gerados
+  antes disso (ex: `40_Matt_02`) mantêm os arquivos antigos no Drive com nome
+  `_edge_` — ver aviso na seção 6.
+- `nome_audio_mestre`/`nome_palavras_mestre`/`nome_legenda_mestre` formalizam
+  os 3 "mestres" do vídeo (seção 6b) — só `nome_legenda_mestre` (segmentação)
+  é de fato consumido/mesclado pelo pipeline; os outros 2 são "documentação
+  configurável" — apontam pro arquivo certo, mas a mescla em si (quando
+  existe) é sempre feita por você fora do pipeline.
