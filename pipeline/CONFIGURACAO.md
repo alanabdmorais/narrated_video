@@ -302,3 +302,23 @@ legados que apontam todos pra `pasta_oracao`.
   multicolor — as 3 variantes geram só 1 `.ass` por vídeo, cada uma com seu
   próprio nome fixo, nunca 1 arquivo por idioma). Ver tabela de `.ass` na
   seção 6 pros nomes reais.
+- **Bug real corrigido: coreano caía em cinza na legenda multicolor.**
+  `classificacao_ko.py` devolve classes finas (`particula_sujeito`,
+  `verbo_passado`, `honorifico`, etc.) que nunca bateram com nenhuma chave
+  de `cores.py` (só 20 chaves oficiais existem) — `cor_html()` caía no
+  fallback cinza (`#808080`) pra tudo que não fosse `numeral`/`adverbio`/
+  `interjeicao`/`conjuncao`/`pontuacao`. Ou seja, substantivo, pronome,
+  verbo e partícula coreanos (a maior parte do texto) saíam cinza, não na
+  cor pretendida. Corrigido com `cores.MAPA_CLASSES_FINAS` (traduz classe
+  fina → 1 das 20 oficiais, usado por `cor_html()`/`cor_texto()`/
+  `nome_cor_oficial()`) — a maioria das traduções já estava documentada
+  como subclasse em `central-decisao-cores.html` (ex: "particula": sujeito/
+  tópico/objeto/possessiva/locativa/direcional; "terminacao_final": neutra/
+  imperativo — por isso `EF` agora separa `terminacao_final_neutra`/
+  `terminacao_final_imperativa` em vez de cair em `verbo_imperativo`/`outro`
+  como antes). As duas exceções sem subclasse documentada na central
+  (`terminacao_passado`/`terminacao_futuro`, do `EP`) foram decididas indo
+  pra `verbo` — mesma família de cor do radical que já carrega essa marca
+  de tempo. Testado ponta a ponta (37 combinações de tag/forma): 0 caem em
+  cinza sem ser o fallback `outro` intencional (tag genuinamente
+  desconhecida).

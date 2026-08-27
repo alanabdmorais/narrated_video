@@ -84,17 +84,54 @@ NOMES_COR_OFICIAL: dict[str, str] = {
 }
 
 
+# ── Classes finas do coreano (classificacao_ko.py) -> uma das 20 cores    ──
+# ── oficiais acima. Decisão documentada em assets/central-decisao-      ──
+# ── cores.html (subclasses de cada card) -- as duas exceções sem        ──
+# ── subclasse documentada lá (terminacao_passado/terminacao_futuro, as  ──
+# ── terminações de tempo PRÉ-final -- ver EP em classificacao_ko.py)    ──
+# ── foram decididas aqui: tratadas como parte da família "verbo" (é a   ──
+# ── mesma marcação de tempo que já colore o radical do verbo).          ──
+MAPA_CLASSES_FINAS: dict[str, str] = {
+    "substantivo_proprio": "nome_proprio",
+    "substantivo_neutro_singular": "substantivo",
+    "pronome_pessoal": "pronome",
+    "pronome_demonstrativo": "pronome",
+    "verbo_presente": "verbo",
+    "verbo_passado": "verbo",
+    "verbo_futuro": "verbo",
+    "verbo_imperativo": "verbo",
+    "particula_sujeito": "particula",
+    "particula_objeto": "particula",
+    "particula_possessiva": "particula",
+    "particula_locativa": "particula",
+    "particula_direcional": "particula",
+    "particula_topico": "particula",
+    "honorifico": "terminacao_honorifica",
+    "terminacao_passado": "verbo",  # sem subclasse documentada -- ver comentário acima
+    "terminacao_futuro": "verbo",   # sem subclasse documentada -- ver comentário acima
+    "terminacao_final_neutra": "terminacao_final",
+    "terminacao_final_imperativa": "terminacao_final",
+}
+
+
+def _resolver_classe(classe: str) -> str:
+    """Traduz uma classe fina (ver MAPA_CLASSES_FINAS) pra uma das 20
+    oficiais -- classes que já são oficiais (ou "outro"/desconhecidas)
+    passam direto."""
+    return MAPA_CLASSES_FINAS.get(classe, classe)
+
+
 def cor_html(classe: str) -> str:
-    return CORES_HTML.get(classe, "#808080")
+    return CORES_HTML.get(_resolver_classe(classe), "#808080")
 
 
 def cor_texto(classe: str) -> str:
-    return CORES_TEXTO.get(classe, "#000000")
+    return CORES_TEXTO.get(_resolver_classe(classe), "#000000")
 
 
 def nome_cor_oficial(classe: str) -> str:
     """Nome oficial CSS da cor dessa classe (ex: "gold", "royalblue")."""
-    return NOMES_COR_OFICIAL.get(classe, "")
+    return NOMES_COR_OFICIAL.get(_resolver_classe(classe), "")
 
 
 def cor_ass(classe: str) -> str:

@@ -11,6 +11,14 @@ radical do verbo (VV/VA/...) não carrega a informação de tempo sozinho —
 isso vem de uma peça vizinha (EP/EF) dentro da MESMA palavra original. Por
 isso a função principal recebe a lista de peças de uma palavra inteira de
 uma vez, não peça isolada.
+
+As classes devolvidas aqui são mais FINAS que as 20 cores oficiais de
+cores.py (ex: "particula_sujeito", "verbo_passado" -- não existem como
+cor própria) -- de propósito, pra ficar informativo no JSON de
+classificação salvo (ver renderizacao.salvar_classificacao_multicolor).
+Quem acha a cor de fato é cores.cor_html(), que resolve essas classes
+finas pras 20 oficiais via cores.MAPA_CLASSES_FINAS (documentado em
+assets/central-decisao-cores.html).
 """
 from __future__ import annotations
 
@@ -185,22 +193,32 @@ def classificar_pecas_palavra_ko(pecas: list[dict]) -> list[str]:
             else:
                 resultado.append("outro")
         elif tag == "EF":
+            # Radical já carrega "verbo_imperativo" pro MODO (ver acima) --
+            # aqui é a peça da TERMINAÇÃO em si, que mapeia pra
+            # terminacao_final independente do modo (as duas subclasses
+            # documentadas na central de decisão: "neutra" 다 e
+            # "imperativo" 어라).
             if forma in _FORMAS_HONORIFICO_EF:
                 resultado.append("honorifico")
             elif forma in _FORMAS_IMPERATIVO_EF:
-                resultado.append("verbo_imperativo")
+                resultado.append("terminacao_final_imperativa")
             else:
-                resultado.append("outro")  # terminação final "neutra" (dicionário/plana)
+                resultado.append("terminacao_final_neutra")
         elif tag == "EC":
             resultado.append("conjuncao")  # terminação conectiva — liga orações
-        elif tag in ("ETN", "ETM"):
-            resultado.append("outro")  # nominalizador/modificador — sem cor própria no núcleo
+        elif tag == "ETN":
+            resultado.append("terminacao_nominal")  # transforma verbo em substantivo (기/ㅁ)
+        elif tag == "ETM":
+            resultado.append("terminacao_adjetival")  # transforma verbo em modificador (ㄴ/ㄹ/는)
 
         # ── Pontuação ─────────────────────────────────────────────────────
         elif tag in ("SF", "SP"):
             resultado.append("pontuacao")
 
+        elif tag == "XSM":
+            resultado.append("sufixo")  # sufixo raro (ex: 히) sem categoria própria
+
         else:
-            resultado.append("outro")  # XSM e qualquer tag imprevista
+            resultado.append("outro")  # qualquer tag imprevista
 
     return resultado
