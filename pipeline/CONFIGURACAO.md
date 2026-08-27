@@ -158,8 +158,8 @@ mestre sem querer.
 
 | Propriedade | Padrão gerado |
 |---|---|
-| `nome_roteiro` | `<nome>_roteiro.txt` (modo padrão, sem versículo) |
-| `nome_roteiro_versiculos` | `<nome>_roteiro_versiculos.txt` (modo versículo) |
+| `nome_roteiro` | `<nome>_roteiro.txt` (`MODO_ROTEIRO="padrao"`, sem versículo) |
+| `nome_roteiro_versiculos` | `<nome>_roteiro_versiculos.txt` (`MODO_ROTEIRO="versiculo"`, padrão) |
 | `nome_match_json(capitulo)` | `match_<nome>_cap<capitulo>.json` |
 | `nome_lacunas_match(capitulo)` | `lacunas_match_<nome>_cap<capitulo>.txt` |
 
@@ -179,7 +179,7 @@ têm um arquivo por idioma-alvo e por isso precisam do sufixo).
 | Papel | Config | Default | Mescla feita por |
 |---|---|---|---|
 | **Áudio** | `nome_audio_mestre` (override: `NOME_AUDIO_MESTRE`) | `NOME_AUDIO` (`<nome>_audio.wav`) | N/A — normalmente 1 arquivo só, sem mescla. |
-| **Palavras** | `nome_palavras_mestre` (override: `NOME_PALAVRAS_MESTRE`) | `nome_roteiro_versiculos` | **Você, manualmente** — roteiro mesclado com a transcrição Whisper da dublagem do YouTube (pra pegar palavra que a dublagem falou diferente do escrito). Salve o resultado por cima do mesmo arquivo no Drive. |
+| **Palavras** | `nome_palavras_mestre` (override: `NOME_PALAVRAS_MESTRE`) | `nome_roteiro_versiculos` (`MODO_ROTEIRO="versiculo"`, padrão) ou `nome_roteiro` (`MODO_ROTEIRO="padrao"`) | **Você, manualmente** — roteiro mesclado com a transcrição Whisper da dublagem do YouTube (pra pegar palavra que a dublagem falou diferente do escrito). Salve o resultado por cima do mesmo arquivo no Drive. |
 | **Segmentação** | `nome_legenda_mestre` | `nome_legenda_unica` (Whisper) | **O próprio pipeline**, bem — `alinhar_versiculos()` em `srt_utils.py` mescla o Whisper com o roteiro-versículo (empresta tempo início/fim pra cada versículo), com fusão automática de versículo curto demais pro vizinho (elimina gap/flicker — `calcular_segmentos_versiculo()` em `match_pipeline.py`). Alimenta as decisões de trilha, efeitos e cenas. |
 
 Pros idiomas-alvo (não-mestre): não têm roteiro próprio. O texto vem de

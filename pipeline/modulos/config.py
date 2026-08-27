@@ -98,6 +98,16 @@ class PipelineConfig:
     # dois modos podem coexistir na mesma pasta sem um sobrescrever o outro.
     SUFIXO_MODO_IMAGEM: str = "_img"
 
+    # ── Modo de roteiro: com versículo ou padrão ───────────────────────────────
+    # Independente de MODO_CLIPE (vídeo/imagem) -- os dois são combináveis.
+    # "versiculo" (padrão) → nome_palavras_mestre aponta pro roteiro COM
+    #            números de versículo soltos no meio do texto
+    #            (nome_roteiro_versiculos) -- usado pelos notebooks
+    #            video-base-*-versiculo.ipynb.
+    # "padrao"   → aponta pro roteiro normal, sem versículo (nome_roteiro) --
+    #            usado pelos notebooks video-base-*-padrao.ipynb.
+    MODO_ROTEIRO: str = "versiculo"
+
     # ── Parâmetros de vídeo ───────────────────────────────────────────────────
     # ── Montagem automática de clipe/imagem por versículo ─────────────────────
     # Segmentos mais curtos que isso (versículo muito breve) são absorvidos
@@ -315,16 +325,19 @@ class PipelineConfig:
     @property
     def nome_palavras_mestre(self) -> str:
         """Arquivo de texto com as palavras corretas do idioma mestre --
-        o roteiro (nome_roteiro_versiculos em modo versículo, que é o caso
-        mais comum). Pode já vir corrigido/mesclado manualmente por você
+        o roteiro (nome_roteiro_versiculos ou nome_roteiro, conforme
+        MODO_ROTEIRO). Pode já vir corrigido/mesclado manualmente por você
         com a transcrição Whisper da dublagem do YouTube (ver comentário
-        acima) -- nesse caso salve por cima do mesmo nome no Drive, não
-        precisa preencher NOME_PALAVRAS_MESTRE.
+        "Os 3 mestres do vídeo" acima) -- nesse caso salve por cima do
+        mesmo nome no Drive, não precisa preencher NOME_PALAVRAS_MESTRE.
 
         Se NOME_PALAVRAS_MESTRE estiver vazio (padrão), usa
-        nome_roteiro_versiculos. Preencha só pra apontar pra um arquivo com
-        outro nome (ex: modo padrão, sem versículo -- use nome_roteiro)."""
-        return self.NOME_PALAVRAS_MESTRE.strip() or self.nome_roteiro_versiculos
+        nome_roteiro_versiculos (MODO_ROTEIRO="versiculo", o caso mais
+        comum) ou nome_roteiro (MODO_ROTEIRO="padrao"). Preencha só pra
+        apontar pra um arquivo com outro nome."""
+        if self.NOME_PALAVRAS_MESTRE.strip():
+            return self.NOME_PALAVRAS_MESTRE.strip()
+        return self.nome_roteiro_versiculos if self.MODO_ROTEIRO == "versiculo" else self.nome_roteiro
 
     # ── Legenda mestre (Language Subtitles — molde de segmentação/palavras) ──
     # Conceito diferente de nome_legenda_unica. Esta é a legenda que define
