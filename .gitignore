@@ -1,0 +1,19 @@
+# Mídia bruta (áudio/vídeo) — fica só no Google Drive, nunca neste repositório.
+*.mp4
+*.mp3
+*.wav
+*.mov
+*.m4a
+*.aac
+*.ogg
+*.webm
+*.mkv
+*.avi
+
+# Rede de segurança extra: credenciais e segredos nunca devem entrar no repo.
+cookies.txt
+*.env
+*secret*
+*credential*
+*token*
+*api_key*

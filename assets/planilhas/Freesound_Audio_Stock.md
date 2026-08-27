@@ -1,0 +1,21 @@
+# Freesound_Audio_Stock
+
+> Nota de migração: exportação CSV nativa (`exportMimeType: text/csv`) retornou vazia
+> para este arquivo (a planilha tem múltiplas abas; a exportação parece pegar apenas
+> a aba ativa/primeira). O conteúdo abaixo é uma representação em texto/markdown obtida
+> via leitura de conteúdo — pode estar truncada/incompleta para planilhas grandes.
+> Para os dados completos e atualizados, consulte a planilha original no Google Drive.
+
+|  |  |  |  |  |  |  |  |  |  |
+| :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: |
+| id | titulo | url_preview | url_download | autor | duracao_s | tags_clima | tags_clima_semelhantes | fonte | data_sincronizacao |
+| 513984 | Sad Loop #1 | https://cdn.freesound.org/previews/513/513984_9996727-hq.mp3 |  | danlucaz |  | hope, relax, sad, sadness, esperançoso, esperançosa, esperança, otimista, inspirador, inspiradora, inspiração, oportunidade, oportunidades, calmo, calma, tranquilo, tranquila, sereno, serena, pacífico, pacífica, relaxante, triste, tristeza, melancólico, melancólica, melancolia, pesar | hope, relax, sad, sadness, esperançoso, esperançosa, esperança, otimista, inspirador, inspiradora, inspiração, oportunidade, oportunidades, calmo, calma, tranquilo, tranquila, sereno, serena, pacífico, pacífica, relaxante, triste, tristeza, melancólico, melancólica, melancolia, pesar | freesound | 2026-08-22 22:25 |
+| 685456 | Sad Loop #3 | https://cdn.freesound.org/previews/685/685456_9996727-hq.mp3 |  | danlucaz |  | relax, sad, sadness, calmo, calma, tranquilo, tranquila, sereno, serena, pacífico, pacífica, relaxante, triste, tristeza, melancólico, melancólica, melancolia, pesar | relax, sad, sadness, calmo, calma, tranquilo, tranquila, sereno, serena, pacífico, pacífica, relaxante, triste, tristeza, melancólico, melancólica, melancolia, pesar | freesound | 2026-08-22 22:25 |
+| 73588 | Benboncan__Sad_Trombone_more_wah_pseudostereo_reverb_enved.wav | https://cdn.freesound.org/previews/73/73588_1015240-hq.mp3 |  | Timbre |  | sad, triste, tristeza, melancólico, melancólica, melancolia, pesar, sadness | sad, triste, tristeza, melancólico, melancólica, melancolia, pesar, sadness | freesound | 2026-08-22 22:25 |
+| 569895 | Sad Loop #2 | https://cdn.freesound.org/previews/569/569895_9996727-hq.mp3 |  | danlucaz |  | sad, triste, tristeza, melancólico, melancólica, melancolia, pesar, sadness | sad, triste, tristeza, melancólico, melancólica, melancolia, pesar, sadness | freesound | 2026-08-22 22:25 |
+| 73750 | remix of Benboncan__Sad_Trombone_more_wah_bright&de-clicked.wav | https://cdn.freesound.org/previews/73/73750_1015240-hq.mp3 |  | Timbre |  | sad, triste, tristeza, melancólico, melancólica, melancolia, pesar, sadness | sad, triste, tristeza, melancólico, melancólica, melancolia, pesar, sadness | freesound | 2026-08-22 22:25 |
+| 562817 | Reclinable_chair-sad.wav | https://cdn.freesound.org/previews/562/562817_12494222-hq.mp3 |  | jcmunera1 |  | sad, triste, tristeza, melancólico, melancólica, melancolia, pesar, sadness | sad, triste, tristeza, melancólico, melancólica, melancolia, pesar, sadness | freesound | 2026-08-22 22:25 |
+| 582389 | Sad Arpy.aif | https://cdn.freesound.org/previews/582/582389_1453392-hq.mp3 |  | Xcreenplay |  | sad, triste, tristeza, melancólico, melancólica, melancolia, pesar, sadness | sad, triste, tristeza, melancólico, melancólica, melancolia, pesar, sadness | freesound | 2026-08-22 22:25 |
+| 494751 | Happy and Sad Flower Creatures.mp3 | https://cdn.freesound.org/previews/494/494751_8272463-hq.mp3 |  | LucasDuff |  | sad, sadness, triste, tristeza, melancólico, melancólica, melancolia, pesar | sad, sadness, triste, tristeza, melancólico, melancólica, melancolia, pesar | freesound | 2026-08-22 22:25 |
+| 517560 | Guitar Solo Sad loop | https://cdn.freesound.org/previews/517/517560_2282212-hq.mp3 |  | szegvari |  | Sad, triste, tristeza, melancólico, melancólica, melancolia, pesar, sad, sadness | Sad, triste, tristeza, melancólico, melancólica, melancolia, pesar, sad, sadness | freesound | 2026-08-22 22:25 |
+| 270559 | Sad Parade.aiff | https://cdn.freesound.org/previews/270/270559_5136938-hq.mp3 |  | ahofmann |  | sad, triste, tristeza, melancólico, melancólica, melancolia, pesar, sadness | sad, triste, tristeza, melancólico, melancólica, melancolia, pesar, sadness | freesound | 2026-08-22 22:25 |

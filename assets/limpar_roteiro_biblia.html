@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<title>Limpar roteiro bíblico</title>
+<style>
+  :root {
+    --bg: #1c1a17;
+    --panel: #2a2620;
+    --accent: #c9a15a;
+    --text: #f1ece2;
+    --muted: #a99f8d;
+    --border: #443e33;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 32px 20px;
+    background: var(--bg);
+    color: var(--text);
+    font-family: Georgia, 'Times New Roman', serif;
+  }
+  .wrap { max-width: 920px; margin: 0 auto; }
+  h1 {
+    font-size: 22px;
+    font-weight: 600;
+    margin: 0 0 6px;
+    color: var(--accent);
+    letter-spacing: 0.3px;
+  }
+  p.sub {
+    margin: 0 0 24px;
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.5;
+    font-family: Arial, sans-serif;
+  }
+  .row {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+  }
+  label {
+    display: block;
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 6px;
+    font-family: Arial, sans-serif;
+  }
+  input[type=text] {
+    width: 100%;
+    padding: 9px 10px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 6px;
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+  }
+  textarea {
+    width: 100%;
+    height: 320px;
+    padding: 14px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 8px;
+    font-family: Georgia, serif;
+    font-size: 15px;
+    line-height: 1.55;
+    resize: vertical;
+  }
+  #saida { border-color: var(--accent); }
+  .col { flex: 1; min-width: 300px; }
+  .actions {
+    display: flex;
+    gap: 10px;
+    margin: 18px 0;
+    flex-wrap: wrap;
+  }
+  button {
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    padding: 10px 18px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+  button:hover { opacity: 0.85; }
+  #btnLimpar { background: var(--accent); color: #211d17; }
+  #btnBaixar { background: #3d5a4a; color: #eafff1; }
+  #btnCopiar { background: var(--panel); color: var(--text); border: 1px solid var(--border); }
+  .status {
+    font-family: Arial, sans-serif;
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 4px;
+    min-height: 18px;
+  }
+  .status.ok { color: #8fd19e; }
+  .hint {
+    font-family: Arial, sans-serif;
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 6px;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>📖 Limpar roteiro bíblico (WEB)</h1>
+  <p class="sub">
+    Cole abaixo a página do capítulo exatamente como veio do site (com menu de navegação, título do livro,
+    números de versículo, marcas de rodapé † ‡ § * e a lista de notas no final). A ferramenta remove tudo
+    que não é texto bíblico — mas <strong>mantém os números de versículo</strong> soltos no meio do texto
+    (é assim que o pipeline sabe onde cada versículo começa). O resultado é <strong>editável</strong> —
+    revise e ajuste à vontade antes de copiar ou baixar.
+  </p>
+
+  <div class="row">
+    <div class="col">
+      <label for="nomeArquivo">Nome do arquivo (ex: 40_Matt_01)</label>
+      <input type="text" id="nomeArquivo" placeholder="40_Matt_01" value="40_Matt_01">
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col">
+      <label for="entrada">Texto original (colar aqui, exatamente como veio do site)</label>
+      <textarea id="entrada" placeholder="Matthew&#10;1&#10;1 The book of the genealogy of Jesus Christ... 2 Abraham became the father of Isaac...&#10;†1:1 Messiah (Hebrew)..."></textarea>
+    </div>
+    <div class="col">
+      <label for="saida">Texto limpo — editável, revise antes de usar</label>
+      <textarea id="saida" placeholder="O resultado aparece aqui depois de clicar em Limpar texto. Você pode editar livremente."></textarea>
+    </div>
+  </div>
+
+  <div class="actions">
+    <button id="btnLimpar">✨ Limpar texto</button>
+    <button id="btnCopiar">📋 Copiar</button>
+    <button id="btnBaixar">💾 Baixar .txt</button>
+  </div>
+  <div class="status" id="status"></div>
+  <div class="hint">Dica: depois de limpar, dá pra editar o texto da direita à mão — corrigir um nome, juntar uma linha, etc. — antes de copiar ou baixar.</div>
+</div>
+
+<script>
+function limparTexto(raw) {
+  let t = raw;
+
+  // Normaliza quebras de linha do Windows
+  t = t.replace(/\r\n/g, '\n');
+
+  // 1) Markdown-style links [texto](url) -> mantém só o texto do link
+  t = t.replace(/\[([^\]]*)\]\([^)]*\)/g, '$1');
+
+  // 2) Processa linha a linha ANTES de remover os símbolos de rodapé
+  //    (o "*" da lista de navegação precisa estar intacto pra ser reconhecido)
+  const linhas = t.split('\n');
+  const mantidas = [];
+  const RE_NAV_BULLET = /^\*\s/;                              // qualquer linha de navegação em lista "* algo"
+  const RE_SO_NUMERO = /^\s*\d+\s*$/;                         // linha com só o número do capítulo
+  const RE_TITULO_LIVRO = /^[A-ZÀ-Ý][a-zà-ÿ]*(\s[A-ZÀ-Ý][a-zà-ÿ]*)*$/; // linha só com Título (sem pontuação)
+  const RE_NOTA_RODAPE = /^\s*[†‡§*]?\s*\d{1,3}:\d{1,3}\s/;   // ex: "†1:1 Messiah (Hebrew)..."
+  const RE_RODAPE_PAGINA = /(Frequently Asked Questions|Public Domain|is in the Public Domain|Downloads|Please report any typos|Donations|Classic World English Bible|ecumenical book set)/i;
+
+  for (let linha of linhas) {
+    const l = linha.trim();
+    if (l === '') { mantidas.push(''); continue; }
+    if (RE_NAV_BULLET.test(l)) continue;
+    if (RE_SO_NUMERO.test(l)) continue;
+    if (RE_NOTA_RODAPE.test(l)) continue;
+    if (RE_RODAPE_PAGINA.test(l)) continue;
+    if (/^(The Good News According to|The Book of|The First Book of|The Second Book of|The Letter( of Paul)? to|The Revelation)$/i.test(l)) continue;
+    if (RE_TITULO_LIVRO.test(l) && l.split(' ').length <= 4 && l.length < 30) continue; // título solto (ex: "Matthew")
+    mantidas.push(linha);
+  }
+  t = mantidas.join('\n');
+
+  // 3) Só agora remove marcas de rodapé soltas no meio do texto (linhas de lista já foram embora)
+  t = t.replace(/[†‡§*]/g, '');
+
+  // 4) [removido de propósito] -- os números de versículo AGORA ficam no
+  //    texto, como marcador solto no meio do fluxo (ex: "1 Now when Jesus
+  //    ... 2 Where is he ..."). O pipeline (extrair_marcadores_versiculo)
+  //    reconhece esses números soltos pra saber onde cada versículo
+  //    começa -- não apagar mais.
+
+  // 5) Normaliza espaços e quebras de linha (mantém parágrafos separados por linha em branco)
+  t = t.replace(/[ \t]+/g, ' ');
+  t = t.replace(/ *\n */g, '\n');
+  t = t.replace(/\n{3,}/g, '\n\n');
+  t = t.split('\n').map(l => l.trim()).join('\n').trim();
+
+  return t;
+}
+
+const entrada = document.getElementById('entrada');
+const saida = document.getElementById('saida');
+const status = document.getElementById('status');
+const nomeArquivo = document.getElementById('nomeArquivo');
+
+document.getElementById('btnLimpar').addEventListener('click', () => {
+  if (!entrada.value.trim()) {
+    status.textContent = 'Cole o texto original primeiro.';
+    status.className = 'status';
+    return;
+  }
+  saida.value = limparTexto(entrada.value);
+  status.textContent = '✅ Texto limpo — revise e edite à vontade antes de copiar/baixar.';
+  status.className = 'status ok';
+});
+
+document.getElementById('btnCopiar').addEventListener('click', async () => {
+  if (!saida.value.trim()) { status.textContent = 'Nada para copiar ainda.'; status.className = 'status'; return; }
+  try {
+    await navigator.clipboard.writeText(saida.value);
+    status.textContent = '📋 Copiado para a área de transferência!';
+    status.className = 'status ok';
+  } catch (e) {
+    saida.select();
+    document.execCommand('copy');
+    status.textContent = '📋 Copiado (via seleção)!';
+    status.className = 'status ok';
+  }
+});
+
+document.getElementById('btnBaixar').addEventListener('click', () => {
+  if (!saida.value.trim()) { status.textContent = 'Nada para baixar ainda — clique em "Limpar texto" primeiro.'; status.className = 'status'; return; }
+  const nome = (nomeArquivo.value.trim() || 'roteiro') + '_roteiro_versiculos.txt';
+  const blob = new Blob([saida.value], { type: 'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = nome;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  status.textContent = `💾 Baixado como ${nome}`;
+  status.className = 'status ok';
+});
+</script>
+</body>
+</html>

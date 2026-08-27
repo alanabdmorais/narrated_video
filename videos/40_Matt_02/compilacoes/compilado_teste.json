@@ -1,0 +1,26 @@
+[
+  {
+    "segmento": 1,
+    "livro_pt": "Mateus",
+    "capitulo": 2,
+    "versiculo": 1,
+    "inicio_compilado_s": 0.0,
+    "fim_compilado_s": 11.711
+  },
+  {
+    "segmento": 2,
+    "livro_pt": "Mateus",
+    "capitulo": 2,
+    "versiculo": 9,
+    "inicio_compilado_s": 11.711,
+    "fim_compilado_s": 21.574
+  },
+  {
+    "segmento": 3,
+    "livro_pt": "Mateus",
+    "capitulo": 2,
+    "versiculo": 23,
+    "inicio_compilado_s": 21.574,
+    "fim_compilado_s": 29.343
+  }
+]

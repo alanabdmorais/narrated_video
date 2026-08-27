@@ -1,0 +1,533 @@
+# -*- coding: utf-8 -*-
+"""
+config.py — Configuração centralizada do pipeline (projeto Narrated Video).
+
+Estrutura de pastas no Drive:
+    narrated_video/
+    ├── pipeline/modulos/          ← módulos genéricos (nunca muda)
+    ├── pipeline/notebooks/        ← notebooks genéricos (nunca muda)
+    ├── assets/
+    │   ├── clipes/                ← clipes Pixabay reutilizáveis entre vídeos
+    │   ├── logo/                  ← logomarca
+    │   └── musica/                ← trilha sonora
+    └── videos/
+        └── 40_matt_02/            ← TUDO do vídeo, identificado pelo prefixo
+            ├── 40_matt_02_audio.wav
+            ├── 40_matt_02_video_base.mp4
+            └── ...
+
+Para adicionar novo vídeo: só mudar NOME_ORACAO e TEXTO_ORACAO na célula de
+configuração do notebook (o nome do campo é NOME_ORACAO por herança do
+projeto original — na prática representa o nome/identificador do vídeo).
+"""
+from __future__ import annotations
+
+import logging
+from dataclasses import dataclass, field
+from pathlib import Path
+
+from constants import (
+    IDIOMAS, SIGLAS_IDIOMAS, POSICOES_Y, POS_SIGLA_Y,
+    CORES_HTML, TEXTO_PRETO, LARGURA_TELA, ALTURA_TELA,
+    TAMANHO_FONTE_TAG, TAMANHO_FONTE_SIGLA, BOX_BORDER,
+    ESPACAMENTO_PALAVRA, LARGURA_CHAR,
+)
+
+logger = logging.getLogger(__name__)
+
+
+@dataclass
+class PipelineConfig:
+    """
+    Configuração completa do pipeline.
+
+    Para trocar de oração: altere apenas NOME_ORACAO e TEXTO_ORACAO.
+    PASTA_DRIVE_RAIZ é fixo para todo o projeto ("oracao_v1").
+    """
+
+    # ── Identidade da oração ──────────────────────────────────────────────────
+    NOME_ORACAO: str = "pai_nosso"
+
+    # ── Pasta raiz no Google Drive ────────────────────────────────────────────
+    # Fixo para todo o projeto — não muda entre vídeos
+    PASTA_DRIVE_RAIZ: str = "narrated_video"
+
+    # ── Texto para Edge TTS ───────────────────────────────────────────────────
+    TEXTO_ORACAO: str = (
+        "Pai Nosso que estais no céu,\n"
+        "santificado seja o vosso nome.\n"
+        "Venha a nós o vosso reino.\n"
+        "Seja feita a vossa vontade,\n"
+        "assim na terra como no céu.\n"
+        "O pão nosso de cada dia nos dai hoje.\n"
+        "Perdoai as nossas ofensas,\n"
+        "assim como nós perdoamos a quem nos tem ofendido.\n"
+        "E não nos deixeis cair em tentação,\n"
+        "mas livrai-nos do mal. Amém."
+    )
+
+    # ── Voz e idiomas ─────────────────────────────────────────────────────────
+    VOZ_EDGE: str = "pt-BR-AntonioNeural"
+    IDIOMAS: list[str] = field(default_factory=lambda: IDIOMAS.copy())
+
+    # ── IDs do Google Drive ───────────────────────────────────────────────────
+    # Planilha Pixabay de VÍDEOS (compartilhada entre orações)
+    ID_PLANILHA_DRIVE: str = "1bF7hnGSY7AALm4ZAS5owWNpiSTdgArW4ahAuVZaHPL0"
+    # Planilha Pixabay de IMAGENS (usada só quando MODO_CLIPE="imagem")
+    ID_PLANILHA_IMAGENS_DRIVE: str = ""
+    # Nome da coluna de status nas duas planilhas (marca quando cada linha foi usada)
+    NOME_COLUNA_STATUS_PLANILHA: str = "Downloading Ok"
+    # Cookies YouTube
+    ID_PASTA_COOKIES:  str = "1ZuxVr-pofA-Naqo8ysfGxWpYjSaSt3aE"
+
+    # ── Assets externos ───────────────────────────────────────────────────────
+    NOME_ARQUIVO_LOGO:   str = "globo_cruz_logo.png"
+    NOME_ARQUIVO_MUSICA: str = (
+        "Calmo créditos Shattered Paths - Aakash Gandhi(Youtube Audio Library).mp3"
+    )
+    NOME_COOKIES: str = "cookies.txt"
+
+    # ── Modo dos clipes de fundo: vídeo (padrão) ou imagem estática ───────────
+    # "video"  → comportamento atual, corta clipes de vídeo do Pixabay.
+    # "imagem" → usa fotos do Pixabay (ID_PLANILHA_IMAGENS_DRIVE), cada uma
+    #            virando um segmento de DURACAO_CLIPE segundos — melhor para
+    #            vídeos de estudo com muitas legendas simultâneas na tela
+    #            (menos movimento de fundo compete com a leitura).
+    MODO_CLIPE: str = "video"
+    # Sufixo adicionado ao vídeo base e final quando MODO_CLIPE="imagem" — os
+    # dois modos podem coexistir na mesma pasta sem um sobrescrever o outro.
+    SUFIXO_MODO_IMAGEM: str = "_img"
+
+    # ── Parâmetros de vídeo ───────────────────────────────────────────────────
+    # ── Montagem automática de clipe/imagem por versículo ─────────────────────
+    # Segmentos mais curtos que isso (versículo muito breve) são absorvidos
+    # pelo vizinho em vez de virar um corte de clipe próprio -- evita flicker
+    # de trocar de cena a cada 1-2s.
+    DURACAO_MINIMA_SEGMENTO_VERSICULO: float = 2.0
+
+    DURACAO_CLIPE:   int   = 5
+    TAMANHO_LOGO:    int   = 80
+    VOLUME_NARRACAO: float = 1.0    # volume da voz/narração (1.0 = original)
+    VOLUME_MUSICA:   float = 0.25   # volume da trilha sonora, relativo à narração
+    VELOCIDADE_AUDIO: float = 1.0   # velocidade da narração (1.0 = original; 0.9 = 10% mais devagar)
+    GROQ_MODEL:      str   = "llama-3.3-70b-versatile"
+
+    # ── Normalização dos clipes (CORREÇÃO DO BUG DE DURAÇÃO) ──────────────────
+    # Clipes do Pixabay vêm de autores diferentes, cada um com sua própria
+    # resolução e taxa de quadros (fps). Concatenar clipes com parâmetros
+    # DIFERENTES sem re-padronizar corrompe a duração do vídeo final de forma
+    # silenciosa (o ffmpeg não trava, só gera timestamps errados). Por isso,
+    # TODO clipe é re-padronizado pra essa resolução/fps antes de concatenar.
+    LARGURA_CLIPE: int = 1280
+    ALTURA_CLIPE:  int = 720
+    FPS_CLIPE:     int = 25
+
+    # ── Idioma mestre ─────────────────────────────────────────────────────────
+    # Idioma do áudio/roteiro que serve de mestre de TIMESTAMPS (Whisper roda
+    # nesse idioma) e de TEXTO (roteiro.txt ou legenda do YouTube nesse mesmo
+    # idioma). Os outros 3 idiomas são redistribuídos em cima desse molde.
+    IDIOMA_MESTRE:   str   = "pt"
+
+    # ── Cores por idioma (modo simples — 1 cor por idioma) ───────────────────
+    CORES_IDIOMAS: dict[str, str] = None  # preenchido no __post_init__
+
+    def __post_init__(self):
+        if self.CORES_IDIOMAS is None:
+            object.__setattr__(self, 'CORES_IDIOMAS', {
+                'pt': '#FFD600',   # amarelo
+                'en': '#69F0AE',   # verde
+                'es': '#FF6D00',   # laranja
+                'fr': '#40C4FF',   # azul claro
+                'ko': '#FF4081',   # rosa/magenta
+            })
+
+    # ── Layout de legenda ─────────────────────────────────────────────────────
+    POSICOES_Y:          dict[str, int] = field(default_factory=lambda: POSICOES_Y.copy())
+    POS_SIGLA_Y:         dict[str, int] = field(default_factory=lambda: POS_SIGLA_Y.copy())
+    SIGLAS_IDIOMAS:      dict[str, str] = field(default_factory=lambda: SIGLAS_IDIOMAS.copy())
+    CORES_HTML:          dict[str, str] = field(default_factory=lambda: CORES_HTML.copy())
+    TEXTO_PRETO:         set[str]       = field(default_factory=lambda: TEXTO_PRETO.copy())
+    LARGURA_TELA:        int = LARGURA_TELA
+    ALTURA_TELA:         int = ALTURA_TELA
+    TAMANHO_FONTE_TAG:   int = TAMANHO_FONTE_TAG
+    TAMANHO_FONTE_SIGLA: int = TAMANHO_FONTE_SIGLA
+    FONTE_CJK:           str = "Noto Sans CJK KR"  # fonte p/ coreano (Arial não cobre bem o Hangul;
+                                                      # a família "Noto Sans CJK" cobre chinês/japonês/
+                                                      # coreano — troque o sufixo se precisar de outro idioma)
+    BOX_BORDER:          int = BOX_BORDER
+    ESPACAMENTO_PALAVRA: int = ESPACAMENTO_PALAVRA
+    LARGURA_CHAR:        int = LARGURA_CHAR
+
+    # ── Estilo da legenda única (Single Subtitle — texto simples, 1 faixa) ────
+    # Independente de TAMANHO_FONTE_TAG (usado só no modo multi-idioma/palavra
+    # colorida) — a legenda única é a única coisa na tela, então pode (e deve)
+    # ser maior e mais legível.
+    TAMANHO_FONTE_LEGENDA: int = 32
+    CONTORNO_LEGENDA:      int = 3
+    MARGEM_V_LEGENDA:      int = 30  # sem efeito com alinhamento central (ASS ignora
+                                       # MarginV quando Alignment=5/meio — texto fica
+                                       # sempre centralizado verticalmente na tela)
+
+    # ── Modo de geração de vídeo ──────────────────────────────────────────────
+    VIDEO_SIMPLES_SEM_MORFOLOGIA: bool = False
+
+    # ── Retry / performance ───────────────────────────────────────────────────
+    GROQ_MAX_TENTATIVAS:    int   = 3
+    GROQ_DELAY_ENTRE_CALLS: float = 2.0
+    DOWNLOAD_TIMEOUT:       int   = 30
+    FFMPEG_NUM_THREADS:     int   = 3
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # NOMES DE ARQUIVO — todos prefixados com NOME_ORACAO
+    # ─────────────────────────────────────────────────────────────────────────
+
+    @property
+    def NOME_AUDIO(self) -> str:
+        return f"{self.NOME_ORACAO}_audio.wav"
+
+    @property
+    def _sufixo_modo(self) -> str:
+        """Sufixo aplicado aos nomes de vídeo quando MODO_CLIPE='imagem'
+        (string vazia em modo 'video', sem mudar nenhum nome existente)."""
+        return self.SUFIXO_MODO_IMAGEM if self.MODO_CLIPE == "imagem" else ""
+
+    @property
+    def NOME_VIDEO_BASE(self) -> str:
+        return f"{self.NOME_ORACAO}_video_base{self._sufixo_modo}.mp4"
+
+    @property
+    def NOME_VIDEO_FINAL(self) -> str:
+        """Vídeo final com legenda única (1 faixa simples) — Single Subtitle."""
+        return f"{self.NOME_ORACAO}_final{self._sufixo_modo}.mp4"
+
+    @property
+    def NOME_VIDEO_FINAL_IDIOMAS(self) -> str:
+        """Vídeo final com legendas multi-idioma empilhadas — Language Subtitles.
+        Nome diferente de NOME_VIDEO_FINAL de propósito: os dois vídeos podem
+        coexistir na mesma pasta sem um sobrescrever o outro."""
+        return f"{self.NOME_ORACAO}_final_idiomas{self._sufixo_modo}.mp4"
+
+    @property
+    def NOME_VIDEO_FINAL_CLASSIFICACAO(self) -> str:
+        """⚠️ OBSOLETO -- era da classificação morfológica antiga via API de IA
+        (descontinuada). O pipeline atual (Tanza/Kiwi) usa
+        NOME_VIDEO_FINAL_MULTICOLOR. Mantido só por compatibilidade com
+        vídeos antigos já gerados com esse nome -- não usar em código novo."""
+        return f"{self.NOME_ORACAO}_final_classificacao.mp4"
+
+    @property
+    def NOME_VIDEO_FINAL_CLASSIFICACAO_BASICO(self) -> str:
+        """⚠️ OBSOLETO -- ver NOME_VIDEO_FINAL_CLASSIFICACAO."""
+        return f"{self.NOME_ORACAO}_final_classificacao_basico.mp4"
+
+    @property
+    def NOME_VIDEO_FINAL_MULTICOLOR(self) -> str:
+        """Vídeo final com legenda multicor (classificação morfológica via
+        Tanza/Kiwi, 5 idiomas) -- gerado por caption-multicolor-burn.ipynb.
+        Nome mantido igual ao que já existe em vídeos já gerados
+        (ex: 40_Matt_02_com_legenda_colorida.mp4) -- não renomear sem
+        renomear também o arquivo já salvo no Drive."""
+        return f"{self.NOME_ORACAO}_com_legenda_colorida{self._sufixo_modo}.mp4"
+
+    @property
+    def NOME_SRT_PT_EDGE(self) -> str:
+        """Transcrição do Whisper sobre a narração — mestre de timestamps.
+        Usa IDIOMA_MESTRE (não é mais fixo em 'pt')."""
+        return f"{self.NOME_ORACAO}_edge_{self.IDIOMA_MESTRE}.srt"
+
+    # ── Legenda escolhida para o vídeo de legenda única (Single Subtitle) ────
+    # Conceito diferente de "legenda mestre de segmentação/palavras" (que só
+    # vai existir quando Language Subtitles for construído). Aqui é só:
+    # "qual arquivo SRT, já salvo na pasta deste vídeo, o pipeline pega para
+    # queimar como legenda única no vídeo final".
+    #
+    # Deixe em branco para usar o padrão (transcrição do Whisper sobre a
+    # narração: NOME_edge_IDIOMA.srt — é o que o notebook de geração salva).
+    # Preencha manualmente para escolher outro arquivo já salvo na pasta do
+    # vídeo — por exemplo, uma cópia renomeada depois de corrigida à mão,
+    # ou uma legenda de outra origem (YouTube, roteiro, etc.).
+    NOME_LEGENDA_UNICA: str = ""
+
+    @property
+    def nome_legenda_unica(self) -> str:
+        """Arquivo SRT escolhido para o vídeo de legenda única.
+
+        Se NOME_LEGENDA_UNICA estiver vazio (padrão), usa NOME_SRT_PT_EDGE
+        (a transcrição do Whisper sobre a narração). Se preenchido, usa
+        exatamente o que foi digitado na célula de configuração — permite
+        apontar para qualquer SRT já salvo em pasta_oracao, inclusive uma
+        versão corrigida manualmente com outro nome.
+        """
+        return self.NOME_LEGENDA_UNICA.strip() or self.NOME_SRT_PT_EDGE
+
+    # ── Legenda mestre (Language Subtitles — molde de segmentação/palavras) ──
+    # Conceito diferente de nome_legenda_unica. Esta é a legenda que define
+    # a SEGMENTAÇÃO e os TEMPOS que os outros idiomas devem seguir — os
+    # idiomas-alvo têm seu texto redistribuído nos MESMOS blocos/tempos
+    # desta legenda (não usam os tempos do próprio Whisper/YouTube deles).
+    #
+    # Por padrão, reaproveita nome_legenda_unica (o SRT já corrigido do
+    # Single Subtitle) — na prática, o mesmo arquivo serve aos dois
+    # propósitos, a menos que você queira um molde diferente.
+    NOME_LEGENDA_MESTRE: str = ""
+
+    @property
+    def nome_legenda_mestre(self) -> str:
+        """Arquivo SRT que define segmentação/tempos para os outros idiomas.
+
+        Se NOME_LEGENDA_MESTRE estiver vazio (padrão), reaproveita
+        nome_legenda_unica. Preencha para usar um molde diferente.
+        """
+        return self.NOME_LEGENDA_MESTRE.strip() or self.nome_legenda_unica
+
+    # ── Proteção da legenda mestre contra sobrescrita acidental ───────────────
+    # Se True (padrão), qualquer função que geraria/sobrescreveria um SRT cujo
+    # nome bate com nome_legenda_mestre recusa a operação em vez de sobrescrever
+    # silenciosamente — protege correções manuais já feitas na legenda mestre
+    # (ex: rodar a célula de transcrição do single-caption.ipynb de novo, sem
+    # querer, depois de já ter corrigido o arquivo à mão).
+    # Coloque False só quando quiser mesmo re-gerar a mestre do zero.
+    PROTEGER_LEGENDA_MESTRE: bool = True
+
+    # ── Indicador de livro:versículo (overlay pequeno no canto) ───────────────
+    # Referência fixa no canto superior esquerdo (ex: "Matt/Mt/마 2:4"), que
+    # muda só o número do versículo conforme a narração avança — separado das
+    # legendas de idioma empilhadas no meio da tela.
+    CAPITULO: int = 1
+    # Abreviações por idioma, na ordem em que devem aparecer combinadas
+    # (duplicatas — ex: pt/es/fr usando a mesma abreviação — são removidas
+    # automaticamente, mantendo a primeira ocorrência).
+    ABREVIACOES_LIVRO: dict[str, str] = field(default_factory=lambda: {
+        "en": "Matt", "pt": "Mt", "es": "Mt", "fr": "Mt", "ko": "마",
+    })
+    TAMANHO_FONTE_VERSICULO: int = 26
+    CONTORNO_VERSICULO:      int = 2
+
+    # ── Fontes de texto bruto por idioma (Language Subtitles) ────────────────
+    # Por idioma-alvo, qual arquivo bruto usar como fonte de texto para a
+    # redistribuição: "yt" (legenda do YouTube, nome_srt_yt) ou "edge"
+    # (transcrição do Whisper sobre o áudio dublado, nome_srt_edge).
+    # Idiomas não listados aqui usam o padrão "yt".
+    FONTE_TEXTO_IDIOMA: dict[str, str] = field(default_factory=dict)
+
+    def fonte_texto(self, lang: str) -> str:
+        """Retorna 'yt' ou 'edge' — qual fonte bruta usar para este idioma."""
+        return self.FONTE_TEXTO_IDIOMA.get(lang, "yt")
+
+    # ── Código de idioma específico do YouTube (legendas) ─────────────────────
+    # O YouTube às vezes usa um código diferente do código "canônico" que o
+    # resto do projeto usa (posição na tela, cor, fonte CJK, Whisper) — o caso
+    # mais comum é chinês ("zh" internamente vs "zh-Hans"/"zh-Hant" no
+    # YouTube). Coreano não precisa disso (YouTube já usa "ko" puro), mas o
+    # mecanismo fica disponível caso outro idioma precise no futuro — é só
+    # preencher o dict, ex: CODIGO_LEGENDA_YOUTUBE={"zh": "zh-Hans"}.
+    CODIGO_LEGENDA_YOUTUBE: dict[str, str] = field(default_factory=dict)
+
+    def codigo_legenda_youtube(self, lang: str) -> str:
+        """Código a usar no --sub-langs do yt-dlp para este idioma (pode
+        diferir do código canônico usado no resto do projeto — ver acima)."""
+        return self.CODIGO_LEGENDA_YOUTUBE.get(lang, lang)
+
+    # ── Override manual de formato de áudio por idioma ─────────────────────────
+    # As faixas de dublagem automática do YouTube às vezes ficam temporariamente
+    # indisponíveis para o filtro automático (ba[language^=...]) mesmo existindo
+    # — se acontecer, rode "yt-dlp -F URL", pegue o ID exato da faixa (ex:
+    # "251-11") e coloque aqui para aquele idioma específico.
+    FORMATO_MANUAL_AUDIO: dict[str, str] = field(default_factory=dict)
+
+    def formato_manual_audio(self, lang: str) -> Optional[str]:
+        """Retorna o ID de formato manual para este idioma, ou None (usa o
+        filtro automático por idioma)."""
+        return self.FORMATO_MANUAL_AUDIO.get(lang) or None
+
+    def nome_srt_edge(self, lang: str) -> str:
+        """Transcrição do Whisper sobre o áudio dublado deste idioma (bruta)."""
+        return f"{self.NOME_ORACAO}_edge_{lang}.srt"
+
+    def nome_audio_idioma(self, lang: str) -> str:
+        """Áudio dublado automático baixado do YouTube para este idioma."""
+        return f"{self.NOME_ORACAO}_audio_{lang}.wav"
+
+    @property
+    def NOME_SRT_PT(self) -> str:
+        """Legenda do idioma mestre, já distribuída/corrigida.
+        Usa IDIOMA_MESTRE (não é mais fixo em 'pt')."""
+        return f"{self.NOME_ORACAO}_{self.IDIOMA_MESTRE}.srt"
+
+    def nome_srt(self, lang: str) -> str:
+        return f"{self.NOME_ORACAO}_{lang}.srt"
+
+    @property
+    def nome_roteiro_versiculos(self) -> str:
+        """Roteiro do capítulo com números de versículo soltos no meio do
+        texto (ex: "1 Now when Jesus... 2 Where is he..."), já limpo de
+        navegação/notas de rodapé (ver limpar_roteiro_biblia.html). Fica em
+        videos/<nome>/ -- match-scene-verse.ipynb e os notebooks
+        video-base-*-versiculo.ipynb baixam esse arquivo sozinhos, sem
+        precisar colar o texto na célula de Configuração toda vez."""
+        return f"{self.NOME_ORACAO}_roteiro_versiculos.txt"
+
+    @property
+    def nome_srt_versiculo(self) -> str:
+        """SRT do indicador de livro:versículo (combinado, multilíngue)."""
+        return f"{self.NOME_ORACAO}_versiculo.srt"
+
+    def nome_match_json(self, capitulo: int) -> str:
+        """JSON com o resultado do match versículo↔vídeo/imagem (match-scene-verse.ipynb)."""
+        return f"match_{self.NOME_ORACAO}_cap{capitulo}.json"
+
+    def nome_lacunas_match(self, capitulo: int) -> str:
+        """Relatório dos versículos SEM match (nenhuma mídia bateu tag) --
+        lista as palavras-chave sugeridas pra você buscar manualmente no
+        pixabay_downloader antes de rodar a montagem automática."""
+        return f"lacunas_match_{self.NOME_ORACAO}_cap{capitulo}.txt"
+
+    def nome_srt_yt(self, lang: str) -> str:
+        """Legenda original do YouTube (mestre de texto/proporção)."""
+        return f"{self.NOME_ORACAO}_yt_{lang}.srt"
+
+    def nome_classificacao(self, lang: str) -> str:
+        """JSON de classificação morfológica completa."""
+        return f"{self.NOME_ORACAO}_classificacao_{lang}.json"
+
+    def nome_classificacao_basico(self, lang: str) -> str:
+        """JSON de classificação morfológica básica."""
+        return f"{self.NOME_ORACAO}_classificacao_basico_{lang}.json"
+
+    def nome_ass(self, lang: str) -> str:
+        return f"{self.NOME_ORACAO}_legendas_{lang}.ass"
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # PASTAS DO DRIVE
+    # Estrutura: narrated_video/
+    #   ├── assets/clipes|logo|musica    ← compartilhados entre vídeos
+    #   └── videos/{nome}/               ← tudo do vídeo específico
+    # ─────────────────────────────────────────────────────────────────────────
+
+    @property
+    def pasta_base_drive(self) -> Path:
+        """Pasta raiz do projeto no Drive."""
+        return Path(f"/content/drive/MyDrive/{self.PASTA_DRIVE_RAIZ}")
+
+    # ── Assets compartilhados (não mudam entre orações) ───────────────────────
+    @property
+    def pasta_assets(self) -> Path:
+        return self.pasta_base_drive / "assets"
+
+    @property
+    def pasta_assets_clipes(self) -> Path:
+        """Clipes Pixabay reutilizáveis entre todas as orações."""
+        return self.pasta_assets / "clipes"
+
+    @property
+    def pasta_assets_logo(self) -> Path:
+        # Pasta real no Drive é "marca" (não "logo")
+        return self.pasta_assets / "marca"
+
+    @property
+    def pasta_assets_musica(self) -> Path:
+        # Pasta real no Drive é "trilha" (não "musica")
+        return self.pasta_assets / "trilha"
+
+    # ── Pasta do vídeo específico (tudo identificado pelo prefixo) ────────────
+    @property
+    def pasta_oracao(self) -> Path:
+        """Pasta raiz do vídeo: videos/{nome}/"""
+        return self.pasta_base_drive / "videos" / self.NOME_ORACAO
+
+    @property
+    def pasta_correcoes(self) -> Path:
+        """JSONs revisados pelo usuário (pacote revisão)."""
+        return self.pasta_oracao / f"{self.NOME_ORACAO}_correcoes"
+
+    # ── Aliases para compatibilidade com módulos existentes ───────────────────
+    @property
+    def pasta_drive_correcoes(self) -> Path:
+        return self.pasta_correcoes
+
+    @property
+    def pasta_drive_brutos(self) -> Path:
+        """JSONs brutos gerados pelo Groq (backup automático)."""
+        return self.pasta_oracao / f"{self.NOME_ORACAO}_brutos"
+
+    @property
+    def pasta_revisao(self) -> Path:
+        """Prompts genéricos de revisão — compartilhados entre todas as orações."""
+        return self.pasta_base_drive / "pipeline" / "revisao"
+
+    # ── Nomes de arquivo do pacote de revisão ─────────────────────────────────
+
+    @property
+    def nome_relatorio(self) -> str:
+        """Relatório CSV específico da oração."""
+        return f"{self.NOME_ORACAO}_relatorio.csv"
+
+    @property
+    def nome_prompt_revisao(self) -> str:
+        """Prompt de revisão completa — genérico."""
+        return "prompt_revisao.md"
+
+    @property
+    def nome_prompt_revisao_basico(self) -> str:
+        """Prompt de revisão básica — genérico."""
+        return "prompt_revisao_basico.md"
+
+    @property
+    def pasta_assets_videos(self) -> Path:
+        """Alias legado → pasta da oração."""
+        return self.pasta_oracao
+
+    @property
+    def pasta_assets_audio(self) -> Path:
+        """Alias legado → pasta da oração."""
+        return self.pasta_oracao
+
+    @property
+    def pasta_assets_legendas(self) -> Path:
+        """Alias legado → pasta da oração."""
+        return self.pasta_oracao
+
+    @property
+    def pasta_assets_cache(self) -> Path:
+        return self.pasta_oracao / f"{self.NOME_ORACAO}_cache"
+
+    @property
+    def pasta_assets_marca(self) -> Path:
+        """Alias legado → pasta logo compartilhada."""
+        return self.pasta_assets_logo
+
+    @property
+    def pasta_assets_trilha(self) -> Path:
+        """Alias legado → pasta musica compartilhada."""
+        return self.pasta_assets_musica
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # VALIDAÇÃO E RESUMO
+    # ─────────────────────────────────────────────────────────────────────────
+
+    def validate(self) -> None:
+        erros: list[str] = []
+        if not self.NOME_ORACAO:
+            erros.append("NOME_ORACAO não pode ser vazio")
+        if not self.TEXTO_ORACAO:
+            erros.append("TEXTO_ORACAO não pode ser vazio")
+        if not self.ID_PLANILHA_DRIVE:
+            erros.append("ID_PLANILHA_DRIVE não configurado")
+        if erros:
+            raise ValueError("PipelineConfig inválido:\n" + "\n".join(f"  - {e}" for e in erros))
+        logger.info("PipelineConfig OK: '%s'", self.NOME_ORACAO)
+
+    def resumo(self) -> str:
+        return "\n".join([
+            f"Vídeo:         {self.NOME_ORACAO}",
+            f"Drive raiz:    {self.PASTA_DRIVE_RAIZ}",
+            f"Pasta vídeo:   {self.pasta_oracao}",
+            f"Áudio:         {self.NOME_AUDIO}",
+            f"Vídeo base:    {self.NOME_VIDEO_BASE}",
+            f"Legenda escolhida: {self.nome_legenda_unica}",
+            f"Voz Edge TTS:  {self.VOZ_EDGE}",
+            f"Velocidade:    {self.VELOCIDADE_AUDIO}x",
+            f"Volume narração/trilha: {self.VOLUME_NARRACAO} / {self.VOLUME_MUSICA}",
+            f"Clipes:        {self.pasta_assets_clipes}",
+            f"Padrão clipe:  {self.LARGURA_CLIPE}x{self.ALTURA_CLIPE} @ {self.FPS_CLIPE}fps",
+        ])

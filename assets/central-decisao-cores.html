@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Painel de Classificação — Legenda Multicor (20 classes)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #191510; --surface: #24201a; --surface-2: #2e2820; --line: #3a3327;
+    --text: #ede3d1; --text-muted: #9c917d; --accent: #c99b4a; --accent-soft: #4a3f24;
+    --gap: #a8435a; --gap-soft: #402028; --ok: #5a8f6f;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font-family: 'IBM Plex Sans', sans-serif; line-height: 1.5; }
+  .wrap { max-width: 1280px; margin: 0 auto; padding: 0 28px 100px; }
+
+  header { padding: 48px 0 28px; border-bottom: 1px solid var(--line); }
+  .eyebrow { font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); margin: 0 0 12px; }
+  h1 { font-family: 'Fraunces', serif; font-weight: 600; font-size: clamp(28px,4.5vw,42px); line-height: 1.1; margin: 0 0 14px; letter-spacing: -.01em; }
+  header p.lede { max-width: 700px; color: var(--text-muted); font-size: 15px; margin: 0; }
+
+  .busca-bar { position: sticky; top: 0; z-index: 20; background: var(--bg); padding: 18px 0; border-bottom: 1px solid var(--line); margin-bottom: 8px; display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+  #busca { flex: 1; min-width: 240px; max-width: 420px; padding: 10px 14px; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; color: var(--text); font-family: 'IBM Plex Sans'; font-size: 14px; outline: none; }
+  #busca:focus { border-color: var(--accent); }
+  #busca::placeholder { color: var(--text-muted); }
+  .contagem-filtro { font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--text-muted); }
+  .btn-salvar { margin-left: auto; padding: 10px 20px; background: var(--accent); color: #191510; border: none; border-radius: 8px; font-family: 'IBM Plex Sans'; font-weight: 600; font-size: 14px; cursor: pointer; }
+  .btn-salvar:hover { opacity: .9; }
+  .btn-salvar:disabled { opacity: .35; cursor: default; }
+  #contador-mudancas { font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--accent); }
+
+  .col-labels { display: grid; grid-template-columns: 1fr 1px 1fr; gap: 0; margin: 36px 0 -6px; }
+  .col-labels .lbl { font-family: 'IBM Plex Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--text-muted); padding: 0 20px; }
+
+  section.bloco { margin-top: 44px; }
+  .bloco-titulo { font-family: 'Fraunces', serif; font-size: 21px; font-weight: 600; margin: 0 0 18px; padding-bottom: 10px; border-bottom: 1px solid var(--line); }
+
+  .classe-card { border: 1px solid var(--line); border-radius: 10px; margin-bottom: 12px; overflow: hidden; background: var(--surface); }
+  .classe-card.oculta { display: none; }
+  .classe-card.modificada { border-color: var(--accent); }
+
+  .classe-header { padding: 12px 20px; border-bottom: 1px solid var(--line); background: var(--surface-2); }
+  .classe-header .nome { font-size: 14.5px; font-weight: 500; }
+  .classe-header .tecnico { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+  .classe-header .explicacao-definicao { font-size: 12.5px; color: var(--text-muted); margin-top: 8px; line-height: 1.5; max-width: 900px; }
+  .subclasses-linha { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .subclasse-chip { display: flex; align-items: baseline; gap: 6px; padding: 4px 10px; background: var(--accent-soft); border: 1px solid var(--accent); border-radius: 20px; font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; color: var(--accent); }
+  .subclasse-chip .subclasse-exemplo { color: var(--text-muted); font-style: italic; }
+
+  .duas-colunas { display: grid; grid-template-columns: 1fr 1px 1fr; }
+  .divisor { background: var(--line); }
+  .coluna { padding: 16px 20px; display: flex; flex-direction: column; gap: 10px; }
+
+  .info-linha { display: flex; justify-content: space-between; font-size: 12.5px; }
+  .info-linha .k { color: var(--text-muted); font-family: 'IBM Plex Mono', monospace; }
+  .info-linha .v { font-family: 'IBM Plex Mono', monospace; }
+
+  .amostra-box { padding: 14px; border-radius: 8px; background: rgba(0,0,0,.15); display: flex; align-items: center; justify-content: center; min-height: 54px; }
+  .amostra-pill { padding: 7px 18px; border-radius: 20px; font-size: 16px; font-weight: 500; }
+
+  .controles-proposta { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .controles-proposta input[type=color] { width: 40px; height: 32px; border: 1px solid var(--line); border-radius: 6px; background: transparent; cursor: pointer; padding: 2px; flex-shrink: 0; }
+  .busca-cor-wrap { position: relative; flex: 1; min-width: 160px; }
+  .busca-cor-oficial { width: 100%; padding: 7px 10px; background: var(--surface-2); border: 1px solid var(--line); border-radius: 6px; color: var(--text); font-family: 'IBM Plex Sans'; font-size: 12.5px; outline: none; }
+  .busca-cor-oficial:focus { border-color: var(--accent); }
+  .busca-cor-resultados { position: absolute; top: 36px; left: 0; right: 0; z-index: 15; background: var(--surface-2); border: 1px solid var(--line); border-radius: 6px; max-height: 220px; overflow-y: auto; display: none; }
+  .busca-cor-resultados.aberto { display: block; }
+  .busca-cor-item { display: flex; align-items: center; gap: 8px; padding: 7px 10px; cursor: pointer; font-family: 'IBM Plex Mono', monospace; font-size: 12px; }
+  .busca-cor-item:hover { background: var(--accent-soft); }
+  .busca-cor-item .sw { width: 14px; height: 14px; border-radius: 3px; flex-shrink: 0; border: 1px solid rgba(255,255,255,.15); }
+  .nome-cor-proposta { font-family: 'IBM Plex Mono', monospace; font-size: 12.5px; color: var(--accent); min-width: 90px; }
+  .toggle-texto { display: flex; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+  .toggle-texto button { border: none; background: var(--surface-2); color: var(--text-muted); font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; padding: 7px 12px; cursor: pointer; }
+  .toggle-texto button.ativo { background: var(--accent); color: #191510; }
+  .btn-resetar { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--text-muted); background: none; border: none; text-decoration: underline; cursor: pointer; padding: 0; }
+  .badge-mudou { font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: var(--accent); border: 1px solid var(--accent); border-radius: 4px; padding: 1px 6px; }
+
+  /* nao cobertas KO */
+  .gap-tabela { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .gap-tabela th { text-align: left; font-family: 'IBM Plex Mono', monospace; font-size: 11px; text-transform: uppercase; color: var(--text-muted); padding: 8px 12px; border-bottom: 1px solid var(--line); }
+  .gap-tabela td { padding: 10px 12px; border-bottom: 1px solid var(--line); }
+  .gap-tabela .peca { font-family: 'IBM Plex Mono', monospace; font-size: 15px; }
+  .gap-tabela .tag { font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--accent); }
+  .gap-tabela .desc { color: var(--text-muted); font-size: 12.5px; }
+  .gap-tabela .n { text-align: right; font-family: 'IBM Plex Mono', monospace; color: var(--text-muted); }
+
+  footer { margin-top: 60px; padding-top: 20px; border-top: 1px solid var(--line); color: var(--text-muted); font-size: 12px; font-family: 'IBM Plex Mono', monospace; }
+
+  /* ── lista compacta ──────────────────────────────────────────────── */
+  .lista-compacta { border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+  .linha-compacta { display: grid; grid-template-columns: 200px 1fr 1fr 110px 90px; align-items: center; gap: 10px; padding: 10px 16px; border-bottom: 1px solid var(--line); }
+  .linha-compacta:last-child { border-bottom: none; }
+  .linha-compacta:nth-child(odd) { background: var(--surface); }
+  .linha-compacta .nome-classe { font-size: 13px; }
+  .linha-compacta .cor-atual-linha { display: flex; align-items: center; gap: 8px; font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--text-muted); }
+  .sw-linha { width: 15px; height: 15px; border-radius: 4px; flex-shrink: 0; box-shadow: 0 0 0 1px rgba(255,255,255,.08); }
+  .btn-escolher { padding: 6px 12px; background: var(--surface-2); border: 1px solid var(--line); border-radius: 6px; color: var(--text-muted); font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; cursor: pointer; text-align: left; display:flex; align-items:center; gap:8px; }
+  .btn-escolher:hover { border-color: var(--accent); }
+  .btn-escolher.escolhido { color: var(--text); }
+  .toggle-texto-linha { display: flex; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+  .toggle-texto-linha button { border: none; background: var(--surface-2); color: var(--text-muted); font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; padding: 6px 8px; cursor: pointer; flex:1; }
+  .toggle-texto-linha button.ativo { background: var(--accent); color: #191510; }
+  .toggle-texto-linha button:disabled { opacity: .35; cursor: not-allowed; }
+  .btn-salvar-linha { padding: 6px 12px; background: var(--accent); color: #191510; border: none; border-radius: 6px; font-family: 'IBM Plex Sans'; font-weight: 600; font-size: 11.5px; cursor: pointer; }
+  .btn-salvar-linha:disabled { opacity: .3; cursor: default; }
+  .btn-salvar-linha.salvo { background: var(--ok); }
+
+  /* ── botao abrir legenda ─────────────────────────────────────────── */
+  .btn-legenda { padding: 10px 16px; background: var(--surface); border: 1px solid var(--accent); border-radius: 8px; color: var(--accent); font-family: 'IBM Plex Sans'; font-size: 13px; cursor: pointer; }
+  .btn-legenda:hover { background: var(--accent-soft); }
+
+  /* ── popup ───────────────────────────────────────────────────────── */
+  .overlay { position: fixed; inset: 0; background: rgba(0,0,0,.6); display: none; align-items: center; justify-content: center; z-index: 50; }
+  .overlay.aberto { display: flex; }
+  .popup { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; width: 640px; max-width: 92vw; max-height: 72vh; display: flex; flex-direction: column; }
+  .popup-header { padding: 16px 20px; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center; }
+  .popup-header h3 { margin: 0; font-size: 15px; font-family: 'Fraunces', serif; }
+  .popup-fechar { background: none; border: none; color: var(--text-muted); font-size: 22px; cursor: pointer; line-height: 1; }
+  .popup-busca { padding: 14px 20px; border-bottom: 1px solid var(--line); }
+  .popup-busca input { width: 100%; padding: 9px 12px; background: var(--surface-2); border: 1px solid var(--line); border-radius: 6px; color: var(--text); font-family: 'IBM Plex Sans'; font-size: 13px; outline: none; }
+  .popup-grid { padding: 14px 20px; overflow-y: auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(150px,1fr)); gap: 8px; }
+  .popup-item { display: flex; align-items: center; justify-content: space-between; padding: 8px 10px; border-radius: 6px; cursor: pointer; font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; }
+
+  @media (max-width: 800px) {
+    .duas-colunas, .col-labels { grid-template-columns: 1fr; }
+    .divisor { height: 1px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <p class="eyebrow">Legenda Multicor · 5 Idiomas · 20 classes</p>
+    <h1>Central de decisão — cores por classe gramatical</h1>
+    <p class="lede">
+      Sistema simplificado: 20 cores no total (11 núcleo + numeral + 2 inglês + 6 coreano).
+      Cada explicação mostra quais cores antigas foram agrupadas ali. Exemplos fora do roteiro,
+      lado a lado: o que está valendo agora e um espaço pra propor outra cor. Só rode "salvar
+      proposta" no final — isso baixa um arquivo com só o que você mudou, pra me mandar depois.
+    </p>
+  </header>
+
+  <section class="bloco" style="margin-top:32px">
+    <h2 class="bloco-titulo">Resumo rápido</h2>
+    <p class="bloco-sub">Visão geral das 20 classes — clique em "nova cor" pra propor rapidamente, sem abrir o card detalhado.</p>
+    <div class="lista-compacta" id="lista-compacta"></div>
+  </section>
+
+  <section class="bloco" style="margin-top:32px">
+    <h2 class="bloco-titulo">Legenda Montessori</h2>
+    <p class="bloco-sub">As 9 categorias e cores do método Montessori de ensino de gramática — 6 das nossas 20 classes usam exatamente a mesma cor.</p>
+    <div id="montessori-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:8px"></div>
+  </section>
+
+  <div class="busca-bar" style="margin-top:44px">
+    <input type="text" id="busca" placeholder="Buscar por classe ou exemplo…">
+    <span class="contagem-filtro" id="contagem-filtro"></span>
+    <span id="contador-mudancas"></span>
+    <button class="btn-salvar" id="btn-salvar" disabled>Salvar proposta (0)</button>
+    <button class="btn-legenda" id="btn-abrir-legenda">Ver as 148 cores oficiais</button>
+  </div>
+
+  <div id="secoes-container"></div>
+
+  <section class="bloco">
+    <h2 class="bloco-titulo">Cobertura do coreano</h2>
+    <p style="color:var(--text-muted);font-size:13.5px;max-width:800px;margin-top:-8px">
+      Com a simplificação, o coreano fechou <b style="color:var(--ok)">cobertura completa</b> —
+      toda peça do texto tem uma cor própria agora. Antes, terminações como a que transforma
+      verbo em substantivo (기/ㅁ), a que transforma verbo em modificador (ㄴ/ㄹ/는), e alguns
+      sufixos raros (히) caíam em cinza sem classe — hoje viraram "terminação nominal",
+      "terminação adjetival" e "sufixo" respectivamente (veja a seção de extensão do coreano
+      acima).
+    </p>
+  </section>
+
+  <!-- popup de cores -- reaproveitado tanto pra escolher cor de uma classe quanto pra so consultar a legenda -->
+  <div class="overlay" id="overlay">
+    <div class="popup">
+      <div class="popup-header">
+        <h3 id="popup-titulo">Cores oficiais</h3>
+        <button class="popup-fechar" id="popup-fechar">×</button>
+      </div>
+      <div class="popup-busca"><input type="text" id="popup-busca-input" placeholder="Buscar cor oficial…" autocomplete="off"></div>
+      <div class="popup-grid" id="popup-grid"></div>
+    </div>
+  </div>
+
+  <footer>Central de decisão · gerada a partir de cores.py + classificacao.py + classificacao_ko.py · cores oficiais: CSS Color Module (W3C)</footer>
+</div>
+
+<script>
+const DADOS = {"cores": {"substantivo": "#000000", "verbo": "#FF0000", "pronome": "#800080", "adverbio": "#FFA500", "conjuncao": "#FFC0CB", "interjeicao": "#FFD700", "artigo": "#0000FF", "adjetivo": "#000080", "preposicao": "#2E8B57", "nome_proprio": "#FFFF00", "numeral": "#C0C0C0", "pontuacao": "#808080", "modal": "#A52A2A", "auxiliar": "#FFFFFF", "particula": "#7FFFD4", "terminacao_honorifica": "#808000", "terminacao_nominal": "#FA8072", "terminacao_adjetival": "#4B0082", "terminacao_final": "#DC143C", "sufixo": "#008080"}, "cores_texto": {"substantivo": "#FFFFFF", "verbo": "#FFFFFF", "pronome": "#FFFFFF", "adverbio": "#000000", "conjuncao": "#000000", "interjeicao": "#000000", "artigo": "#FFFFFF", "adjetivo": "#FFFFFF", "preposicao": "#FFFFFF", "nome_proprio": "#000000", "numeral": "#000000", "pontuacao": "#FFFFFF", "modal": "#FFFFFF", "auxiliar": "#000000", "particula": "#000000", "terminacao_honorifica": "#FFFFFF", "terminacao_nominal": "#000000", "terminacao_adjetival": "#FFFFFF", "terminacao_final": "#FFFFFF", "sufixo": "#FFFFFF"}, "nomes_cor_oficial": {"substantivo": "black", "verbo": "red", "pronome": "purple", "adverbio": "orange", "conjuncao": "pink", "interjeicao": "gold", "artigo": "blue", "adjetivo": "navy", "preposicao": "seagreen", "nome_proprio": "yellow", "numeral": "silver", "pontuacao": "gray", "modal": "brown", "auxiliar": "white", "particula": "aquamarine", "terminacao_honorifica": "olive", "terminacao_nominal": "salmon", "terminacao_adjetival": "indigo", "terminacao_final": "crimson", "sufixo": "teal"}, "css_147": {"black": "#000000", "silver": "#C0C0C0", "gray": "#808080", "white": "#FFFFFF", "maroon": "#800000", "red": "#FF0000", "purple": "#800080", "fuchsia": "#FF00FF", "green": "#008000", "lime": "#00FF00", "olive": "#808000", "yellow": "#FFFF00", "navy": "#000080", "blue": "#0000FF", "teal": "#008080", "aqua": "#00FFFF", "orange": "#FFA500", "aliceblue": "#F0F8FF", "antiquewhite": "#FAEBD7", "aquamarine": "#7FFFD4", "azure": "#F0FFFF", "beige": "#F5F5DC", "bisque": "#FFE4C4", "blanchedalmond": "#FFEBCD", "blueviolet": "#8A2BE2", "brown": "#A52A2A", "burlywood": "#DEB887", "cadetblue": "#5F9EA0", "chartreuse": "#7FFF00", "chocolate": "#D2691E", "coral": "#FF7F50", "cornflowerblue": "#6495ED", "cornsilk": "#FFF8DC", "crimson": "#DC143C", "cyan": "#00FFFF", "darkblue": "#00008B", "darkcyan": "#008B8B", "darkgoldenrod": "#B8860B", "darkgray": "#A9A9A9", "darkgreen": "#006400", "darkgrey": "#A9A9A9", "darkkhaki": "#BDB76B", "darkmagenta": "#8B008B", "darkolivegreen": "#556B2F", "darkorange": "#FF8C00", "darkorchid": "#9932CC", "darkred": "#8B0000", "darksalmon": "#E9967A", "darkseagreen": "#8FBC8F", "darkslateblue": "#483D8B", "darkslategray": "#2F4F4F", "darkturquoise": "#00CED1", "darkviolet": "#9400D3", "deeppink": "#FF1493", "deepskyblue": "#00BFFF", "dimgray": "#696969", "dodgerblue": "#1E90FF", "firebrick": "#B22222", "floralwhite": "#FFFAF0", "forestgreen": "#228B22", "gainsboro": "#DCDCDC", "ghostwhite": "#F8F8FF", "gold": "#FFD700", "goldenrod": "#DAA520", "greenyellow": "#ADFF2F", "honeydew": "#F0FFF0", "hotpink": "#FF69B4", "indianred": "#CD5C5C", "indigo": "#4B0082", "ivory": "#FFFFF0", "khaki": "#F0E68C", "lavender": "#E6E6FA", "lavenderblush": "#FFF0F5", "lawngreen": "#7CFC00", "lemonchiffon": "#FFFACD", "lightblue": "#ADD8E6", "lightcoral": "#F08080", "lightcyan": "#E0FFFF", "lightgoldenrodyellow": "#FAFAD2", "lightgray": "#D3D3D3", "lightgreen": "#90EE90", "lightpink": "#FFB6C1", "lightsalmon": "#FFA07A", "lightseagreen": "#20B2AA", "lightskyblue": "#87CEFA", "lightslategray": "#778899", "lightsteelblue": "#B0C4DE", "lightyellow": "#FFFFE0", "limegreen": "#32CD32", "linen": "#FAF0E6", "magenta": "#FF00FF", "mediumaquamarine": "#66CDAA", "mediumblue": "#0000CD", "mediumorchid": "#BA55D3", "mediumpurple": "#9370DB", "mediumseagreen": "#3CB371", "mediumslateblue": "#7B68EE", "mediumspringgreen": "#00FA9A", "mediumturquoise": "#48D1CC", "mediumvioletred": "#C71585", "midnightblue": "#191970", "mintcream": "#F5FFFA", "mistyrose": "#FFE4E1", "moccasin": "#FFE4B5", "navajowhite": "#FFDEAD", "oldlace": "#FDF5E6", "olivedrab": "#6B8E23", "orangered": "#FF4500", "orchid": "#DA70D6", "palegoldenrod": "#EEE8AA", "palegreen": "#98FB98", "paleturquoise": "#AFEEEE", "palevioletred": "#DB7093", "papayawhip": "#FFEFD5", "peachpuff": "#FFDAB9", "peru": "#CD853F", "pink": "#FFC0CB", "plum": "#DDA0DD", "powderblue": "#B0E0E6", "rebeccapurple": "#663399", "rosybrown": "#BC8F8F", "royalblue": "#4169E1", "saddlebrown": "#8B4513", "salmon": "#FA8072", "sandybrown": "#F4A460", "seagreen": "#2E8B57", "seashell": "#FFF5EE", "sienna": "#A0522D", "skyblue": "#87CEEB", "slateblue": "#6A5ACD", "slategray": "#708090", "snow": "#FFFAFA", "springgreen": "#00FF7F", "steelblue": "#4682B4", "tan": "#D2B48C", "thistle": "#D8BFD8", "tomato": "#FF6347", "turquoise": "#40E0D0", "violet": "#EE82EE", "wheat": "#F5DEB3", "whitesmoke": "#F5F5F5", "yellowgreen": "#9ACD32", "grey": "#808080", "darkslategrey": "#2F4F4F", "dimgrey": "#696969", "lightgrey": "#D3D3D3", "lightslategrey": "#778899", "slategrey": "#708090"}, "nomes": {"substantivo": "Substantivo", "nome_proprio": "Nome Próprio", "verbo": "Verbo", "pronome": "Pronome", "artigo": "Artigo", "adjetivo": "Adjetivo", "numeral": "Numeral", "preposicao": "Preposição", "conjuncao": "Conjunção", "adverbio": "Advérbio", "interjeicao": "Interjeição", "pontuacao": "Pontuação", "modal": "Partícula Modal (inglês)", "auxiliar": "Partícula Auxiliar (inglês)", "particula": "Partícula (coreano)", "terminacao_honorifica": "Terminação Honorífica (coreano)", "terminacao_nominal": "Terminação Nominal (coreano)", "terminacao_adjetival": "Terminação Adjetival (coreano)", "terminacao_final": "Terminação Final (coreano)", "sufixo": "Sufixo (coreano)"}, "explicacoes": {"substantivo": {"definicao": "Nomeia seres, lugares, objetos e ideias — é o núcleo do sujeito ou do objeto da frase.", "subclasses": [{"nome": "masculino singular", "exemplo": "o caminho"}, {"nome": "masculino plural", "exemplo": "os caminhos"}, {"nome": "feminino singular", "exemplo": "a luz"}, {"nome": "feminino plural", "exemplo": "as luzes"}, {"nome": "neutro (EN/KO)", "exemplo": "the light"}]}, "nome_proprio": {"definicao": "Substantivo que nomeia algo específico e único — uma pessoa, um lugar, uma nação. Sempre com inicial maiúscula.", "subclasses": []}, "verbo": {"definicao": "O núcleo da frase — diz o que está acontecendo, aconteceu, ou pode acontecer.", "subclasses": [{"nome": "presente", "exemplo": "ele anda"}, {"nome": "passado", "exemplo": "ele andou"}, {"nome": "futuro", "exemplo": "ele andará"}, {"nome": "condicional", "exemplo": "ele andaria"}, {"nome": "imperativo", "exemplo": "ande!"}, {"nome": "subjuntivo", "exemplo": "que ele ande"}]}, "pronome": {"definicao": "Substitui ou acompanha um substantivo sem repetir o nome.", "subclasses": [{"nome": "pessoal", "exemplo": "ele, ela"}, {"nome": "possessivo", "exemplo": "seu, sua"}, {"nome": "demonstrativo", "exemplo": "este, esse"}, {"nome": "relativo", "exemplo": "que, quem"}]}, "artigo": {"definicao": "Determina o substantivo, e também cobre outros determinantes que aparecem colados a um substantivo com função parecida.", "subclasses": [{"nome": "definido", "exemplo": "o, a"}, {"nome": "indefinido", "exemplo": "um, uma"}, {"nome": "possessivo (como determinante)", "exemplo": "sua casa"}, {"nome": "demonstrativo (como determinante)", "exemplo": "essa casa"}]}, "adjetivo": {"definicao": "Qualifica o substantivo, dando uma característica.", "subclasses": [{"nome": "descritivo comum", "exemplo": "forte, grande"}, {"nome": "particípio usado como qualidade", "exemplo": "a criança nascida"}]}, "numeral": {"definicao": "Indica quantidade ou posição numa sequência. Categoria própria na gramática — nem substantivo nem adjetivo (confirmado tanto pela gramática tradicional quanto pela forma como o Stanza analisa a palavra).", "subclasses": []}, "preposicao": {"definicao": "Liga duas palavras estabelecendo uma relação entre elas.", "subclasses": []}, "conjuncao": {"definicao": "Conecta palavras, frases ou orações.", "subclasses": []}, "adverbio": {"definicao": "Modifica um verbo, um adjetivo ou outro advérbio.", "subclasses": []}, "interjeicao": {"definicao": "Expressa uma emoção ou reação súbita, isolada do resto da frase.", "subclasses": []}, "pontuacao": {"definicao": "Sinais gráficos que organizam a frase.", "subclasses": []}, "modal": {"definicao": "Inglês: partícula que acompanha um verbo pra marcar futuro, possibilidade ou obrigação — o inglês não flexiona o verbo pra isso numa palavra só, usa essa peça extra na frente.", "subclasses": [{"nome": "futuro", "exemplo": "will, shall"}, {"nome": "possibilidade/condicional", "exemplo": "would, might, could, should, may"}, {"nome": "obrigação", "exemplo": "must"}]}, "auxiliar": {"definicao": "Inglês: palavra sem significado próprio que ajuda a montar a frase.", "subclasses": [{"nome": "pergunta/negação", "exemplo": "do, does, did"}, {"nome": "antes de infinitivo", "exemplo": "to"}, {"nome": "posse", "exemplo": "'s"}]}, "particula": {"definicao": "Coreano: marca a função de uma palavra na frase. Conceito sem equivalente direto nos outros 4 idiomas.", "subclasses": [{"nome": "sujeito", "exemplo": "가/이"}, {"nome": "tópico", "exemplo": "는/은"}, {"nome": "objeto", "exemplo": "를/을"}, {"nome": "possessiva", "exemplo": "의"}, {"nome": "locativa", "exemplo": "에서"}, {"nome": "direcional", "exemplo": "으로"}]}, "terminacao_honorifica": {"definicao": "Coreano: parte da palavra que marca o nível de formalidade/respeito de quem fala — a mesma frase muda de terminação dependendo de quem está ouvindo.", "subclasses": []}, "terminacao_nominal": {"definicao": "Coreano: transforma um verbo em substantivo — equivalente a \"-ção\"/\"-mento\" em português, só que produtivo e usado o tempo todo na língua.", "subclasses": []}, "terminacao_adjetival": {"definicao": "Coreano: transforma um verbo em modificador de substantivo — equivalente a fazer uma oração inteira funcionar como adjetivo.", "subclasses": []}, "terminacao_final": {"definicao": "Coreano: fecha a frase.", "subclasses": [{"nome": "neutra", "exemplo": "다"}, {"nome": "imperativo", "exemplo": "어라"}]}, "sufixo": {"definicao": "Coreano: sufixos diversos que modificam a palavra sem se encaixar nas categorias acima.", "subclasses": []}}, "secoes": [{"titulo": "Substantivo, Nome Próprio, Verbo, Pronome", "classes": ["substantivo", "nome_proprio", "verbo", "pronome"]}, {"titulo": "Artigo, Adjetivo, Numeral", "classes": ["artigo", "adjetivo", "numeral"]}, {"titulo": "Preposição, Conjunção, Advérbio, Interjeição, Pontuação", "classes": ["preposicao", "conjuncao", "adverbio", "interjeicao", "pontuacao"]}, {"titulo": "Extensão — Inglês", "classes": ["modal", "auxiliar"]}, {"titulo": "Extensão — Coreano", "classes": ["particula", "terminacao_honorifica", "terminacao_nominal", "terminacao_adjetival", "terminacao_final", "sufixo"]}], "exemplos": {"substantivo": {"pt": "caminho", "en": "path", "es": "camino", "fr": "chemin", "ko": "길"}, "nome_proprio": {"pt": "Davi", "en": "David", "es": "David", "fr": "David", "ko": "다윗"}, "verbo": {"pt": "andar", "en": "walk", "es": "andar", "fr": "marcher", "ko": "걷다"}, "pronome": {"pt": "ela", "en": "she", "es": "ella", "fr": "elle", "ko": "그녀"}, "artigo": {"pt": "o", "en": "the", "es": "el", "fr": "le", "ko": "—"}, "adjetivo": {"pt": "forte", "en": "strong", "es": "fuerte", "fr": "fort", "ko": "강한"}, "numeral": {"pt": "sete", "en": "seven", "es": "siete", "fr": "sept", "ko": "일곱"}, "preposicao": {"pt": "sobre", "en": "on", "es": "sobre", "fr": "sur", "ko": "—"}, "conjuncao": {"pt": "mas", "en": "but", "es": "pero", "fr": "mais", "ko": "그러나"}, "adverbio": {"pt": "hoje", "en": "today", "es": "hoy", "fr": "aujourd'hui", "ko": "오늘"}, "interjeicao": {"pt": "ah!", "en": "oh!", "es": "¡ay!", "fr": "ah!", "ko": "아"}, "pontuacao": {"pt": ".", "en": ".", "es": ".", "fr": ".", "ko": "."}, "modal": {"pt": "—", "en": "will / can / must", "es": "—", "fr": "—", "ko": "—"}, "auxiliar": {"pt": "—", "en": "do", "es": "—", "fr": "—", "ko": "—"}, "particula": {"pt": "—", "en": "—", "es": "—", "fr": "—", "ko": "가/는/를"}, "terminacao_honorifica": {"pt": "—", "en": "—", "es": "—", "fr": "—", "ko": "습니다"}, "terminacao_nominal": {"pt": "—", "en": "—", "es": "—", "fr": "—", "ko": "기/ㅁ"}, "terminacao_adjetival": {"pt": "—", "en": "—", "es": "—", "fr": "—", "ko": "ㄴ/ㄹ/는"}, "terminacao_final": {"pt": "—", "en": "—", "es": "—", "fr": "—", "ko": "다 / 어라"}, "sufixo": {"pt": "—", "en": "—", "es": "—", "fr": "—", "ko": "히"}}, "montessori": [{"categoria": "Substantivo (Noun)", "cor_nome": "Preto", "hex": "#000000", "forma": "triângulo grande", "nossa_classe": "substantivo"}, {"categoria": "Verbo (Verb)", "cor_nome": "Vermelho", "hex": "#FF0000", "forma": "círculo", "nossa_classe": "verbo"}, {"categoria": "Pronome (Pronoun)", "cor_nome": "Roxo", "hex": "#800080", "forma": "triângulo grande", "nossa_classe": "pronome"}, {"categoria": "Advérbio (Adverb)", "cor_nome": "Laranja", "hex": "#FFA500", "forma": "círculo pequeno", "nossa_classe": "adverbio"}, {"categoria": "Conjunção (Conjunction)", "cor_nome": "Rosa", "hex": "#FFC0CB", "forma": "faixa/fita", "nossa_classe": "conjuncao"}, {"categoria": "Interjeição (Interjection)", "cor_nome": "Dourado", "hex": "#FFD700", "forma": "ponto de exclamação", "nossa_classe": "interjeicao"}, {"categoria": "Artigo (Article)", "cor_nome": "Azul claro", "hex": "#ADD8E6", "forma": "triângulo pequeno", "nossa_classe": "artigo"}, {"categoria": "Adjetivo (Adjective)", "cor_nome": "Azul escuro", "hex": "#00008B", "forma": "triângulo médio", "nossa_classe": "adjetivo"}, {"categoria": "Preposição (Preposition)", "cor_nome": "Verde", "hex": "#008000", "forma": "meia-lua/ponte", "nossa_classe": "preposicao"}]};
+const BANDEIRAS = { pt: "PT", en: "EN", es: "ES", fr: "FR", ko: "KO" };
+const TODOS_IDIOMAS = ["pt","en","es","fr","ko"];
+
+// estado das propostas -- so guarda o que foi de fato alterado
+const propostas = {};
+
+function idiomasComExemplo(classe) {
+  return TODOS_IDIOMAS.filter(i => DADOS.exemplos[classe] && DADOS.exemplos[classe][i] && DADOS.exemplos[classe][i] !== "—");
+}
+
+function montarAmostra(classe, cor, corTexto) {
+  const idiomas = idiomasComExemplo(classe);
+  if (idiomas.length === 0) return '<span style="color:var(--text-muted);font-size:12.5px">sem exemplo cadastrado</span>';
+  return idiomas.slice(0,3).map(idioma => {
+    const palavra = DADOS.exemplos[classe][idioma];
+    return `<span class="amostra-pill" style="background:${cor};color:${corTexto};margin:0 4px">${palavra}</span>`;
+  }).join('');
+}
+
+function montarExplicacao(classe) {
+  const exp = DADOS.explicacoes[classe];
+  if (!exp) return '';
+  let html = `<div class="explicacao-definicao">${exp.definicao}</div>`;
+  if (exp.subclasses && exp.subclasses.length > 0) {
+    html += `<div class="subclasses-linha">` + exp.subclasses.map(s =>
+      `<span class="subclasse-chip">${s.nome}<span class="subclasse-exemplo">${s.exemplo}</span></span>`
+    ).join('') + `</div>`;
+  }
+  return html;
+}
+
+function montarCard(classe) {
+  const corAtual = DADOS.cores[classe];
+  const corTextoAtual = DADOS.cores_texto[classe];
+  const nome = DADOS.nomes[classe] || classe;
+
+  return `
+    <div class="classe-card" data-classe="${classe}"
+         data-busca="${(nome + ' ' + classe + ' ' + Object.values(DADOS.exemplos[classe]||{}).join(' ')).toLowerCase()}">
+      <div class="classe-header">
+        <div class="nome">${nome}</div>
+        <div class="tecnico">${classe}</div>
+        ${montarExplicacao(classe)}
+      </div>
+      <div class="duas-colunas">
+        <div class="coluna" data-lado="atual">
+          <div class="info-linha"><span class="k">cor</span><span class="v" style="color:${corAtual}">■ ${DADOS.nomes_cor_oficial[classe] || 'sem nome oficial'}</span></div>
+          <div class="info-linha"><span class="k">número</span><span class="v">${corAtual}</span></div>
+          <div class="info-linha"><span class="k">texto</span><span class="v">${corTextoAtual === '#000000' ? 'preto' : 'branco'}</span></div>
+          <div class="amostra-box">${montarAmostra(classe, corAtual, corTextoAtual)}</div>
+        </div>
+        <div class="divisor"></div>
+        <div class="coluna" data-lado="proposto">
+          <div class="controles-proposta">
+            <input type="color" value="${corAtual}" data-classe="${classe}" class="input-cor" title="Seletor arco-íris (cor livre)">
+            <div class="busca-cor-wrap">
+              <input type="text" class="busca-cor-oficial" data-classe="${classe}" placeholder="ou busque um nome oficial…" autocomplete="off">
+              <div class="busca-cor-resultados" data-classe="${classe}"></div>
+            </div>
+          </div>
+          <div class="controles-proposta">
+            <span class="nome-cor-proposta" data-classe="${classe}">${DADOS.nomes_cor_oficial[classe] || 'sem nome oficial'}</span>
+            <div class="toggle-texto" data-classe="${classe}">
+              <button data-cor-texto="#000000" class="${corTextoAtual==='#000000'?'ativo':''}">preto</button>
+              <button data-cor-texto="#FFFFFF" class="${corTextoAtual==='#FFFFFF'?'ativo':''}">branco</button>
+            </div>
+            <button class="btn-resetar" data-classe="${classe}" style="display:none">desfazer</button>
+            <span class="badge-mudou" data-classe="${classe}" style="display:none">alterado</span>
+          </div>
+          <div class="amostra-box" data-preview="${classe}">${montarAmostra(classe, corAtual, corTextoAtual)}</div>
+        </div>
+      </div>
+    </div>`;
+}
+
+// ── monta as secoes ──────────────────────────────────────────────────
+const container = document.getElementById('secoes-container');
+DADOS.secoes.forEach(secao => {
+  const bloco = document.createElement('section');
+  bloco.className = 'bloco';
+  bloco.innerHTML = `<h2 class="bloco-titulo">${secao.titulo}</h2>` + secao.classes.map(montarCard).join('');
+  container.appendChild(bloco);
+});
+
+// ── atualiza a previa proposta ao vivo ───────────────────────────────
+// ── busca reversa: hex -> nome oficial (undefined se não bater com nenhum) ──
+const HEX_PARA_NOME_OFICIAL = {};
+Object.entries(DADOS.css_147).forEach(([nome, hex]) => {
+  HEX_PARA_NOME_OFICIAL[hex.toUpperCase()] = nome;
+});
+
+function atualizarPreview(classe, corForcada) {
+  const inputCor = document.querySelector(`.input-cor[data-classe="${classe}"]`);
+  const toggleAtivo = document.querySelector(`.toggle-texto[data-classe="${classe}"] button.ativo`);
+  const cor = (corForcada || inputCor.value).toUpperCase();
+  if (corForcada) inputCor.value = corForcada;
+  const corTexto = toggleAtivo ? toggleAtivo.dataset.corTexto : DADOS.cores_texto[classe];
+
+  const preview = document.querySelector(`[data-preview="${classe}"]`);
+  preview.innerHTML = montarAmostra(classe, cor, corTexto);
+
+  const nomeEl = document.querySelector(`.nome-cor-proposta[data-classe="${classe}"]`);
+  nomeEl.textContent = HEX_PARA_NOME_OFICIAL[cor] || 'sem nome oficial';
+
+  const corOriginal = DADOS.cores[classe].toUpperCase();
+  const corTextoOriginal = DADOS.cores_texto[classe];
+  const mudou = (cor !== corOriginal) || (corTexto !== corTextoOriginal);
+
+  const badge = document.querySelector(`.badge-mudou[data-classe="${classe}"]`);
+  const resetar = document.querySelector(`.btn-resetar[data-classe="${classe}"]`);
+  const card = document.querySelector(`.classe-card[data-classe="${classe}"]`);
+
+  if (mudou) {
+    propostas[classe] = { cor_proposta: cor, nome_cor_proposta: HEX_PARA_NOME_OFICIAL[cor] || null,
+                           cor_texto_proposta: corTexto,
+                           cor_atual: DADOS.cores[classe], cor_texto_atual: corTextoOriginal };
+    badge.style.display = 'inline-block';
+    resetar.style.display = 'inline-block';
+    card.classList.add('modificada');
+  } else {
+    delete propostas[classe];
+    badge.style.display = 'none';
+    resetar.style.display = 'none';
+    card.classList.remove('modificada');
+  }
+  atualizarContadorMudancas();
+}
+
+// ── busca por nome oficial ───────────────────────────────────────────
+document.addEventListener('input', e => {
+  if (e.target.classList.contains('busca-cor-oficial')) {
+    const classe = e.target.dataset.classe;
+    const termo = e.target.value.trim().toLowerCase();
+    const resultadosEl = document.querySelector(`.busca-cor-resultados[data-classe="${classe}"]`);
+    if (!termo) { resultadosEl.classList.remove('aberto'); return; }
+    const nomes = Object.keys(DADOS.css_147).filter(n => n.toLowerCase().includes(termo)).slice(0, 8);
+    if (nomes.length === 0) {
+      resultadosEl.innerHTML = '<div class="busca-cor-item" style="color:var(--text-muted)">nenhum nome oficial encontrado</div>';
+    } else {
+      resultadosEl.innerHTML = nomes.map(n =>
+        `<div class="busca-cor-item" data-classe="${classe}" data-hex="${DADOS.css_147[n]}" data-nome="${n}">
+           <span class="sw" style="background:${DADOS.css_147[n]}"></span>${n} · ${DADOS.css_147[n]}
+         </div>`
+      ).join('');
+    }
+    resultadosEl.classList.add('aberto');
+  }
+});
+document.addEventListener('click', e => {
+  const item = e.target.closest('.busca-cor-item[data-hex]');
+  if (item) {
+    const classe = item.dataset.classe;
+    document.querySelector(`.busca-cor-oficial[data-classe="${classe}"]`).value = item.dataset.nome;
+    document.querySelector(`.busca-cor-resultados[data-classe="${classe}"]`).classList.remove('aberto');
+    atualizarPreview(classe, item.dataset.hex);
+  } else if (!e.target.classList.contains('busca-cor-oficial')) {
+    document.querySelectorAll('.busca-cor-resultados.aberto').forEach(el => el.classList.remove('aberto'));
+  }
+});
+
+document.addEventListener('input', e => {
+  if (e.target.classList.contains('input-cor')) atualizarPreview(e.target.dataset.classe);
+});
+document.addEventListener('click', e => {
+  if (e.target.closest('.toggle-texto')) {
+    const wrap = e.target.closest('.toggle-texto');
+    wrap.querySelectorAll('button').forEach(b => b.classList.remove('ativo'));
+    e.target.classList.add('ativo');
+    atualizarPreview(wrap.dataset.classe);
+  }
+  if (e.target.classList.contains('btn-resetar')) {
+    const classe = e.target.dataset.classe;
+    document.querySelector(`.input-cor[data-classe="${classe}"]`).value = DADOS.cores[classe];
+    document.querySelector(`.busca-cor-oficial[data-classe="${classe}"]`).value = '';
+    const wrap = document.querySelector(`.toggle-texto[data-classe="${classe}"]`);
+    wrap.querySelectorAll('button').forEach(b => b.classList.toggle('ativo', b.dataset.corTexto === DADOS.cores_texto[classe]));
+    atualizarPreview(classe);
+  }
+});
+
+function atualizarContadorMudancas() {
+  const n = Object.keys(propostas).length;
+  document.getElementById('contador-mudancas').textContent = n > 0 ? `${n} pendente${n>1?'s':''}` : '';
+  const btn = document.getElementById('btn-salvar');
+  btn.disabled = n === 0;
+  btn.textContent = `Salvar proposta (${n})`;
+}
+
+// ── salvar / baixar proposta ──────────────────────────────────────────
+document.getElementById('btn-salvar').addEventListener('click', () => {
+  const saida = {
+    video_referencia: "40_Matt_02",
+    data_geracao: new Date().toISOString().slice(0,10),
+    mudancas: Object.entries(propostas).map(([classe, dados]) => ({
+      classe, nome: DADOS.nomes[classe], ...dados
+    }))
+  };
+  const blob = new Blob([JSON.stringify(saida, null, 2)], {type: 'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'proposta-cores-legenda-multicor.json';
+  a.click();
+  URL.revokeObjectURL(url);
+});
+
+// ── busca ─────────────────────────────────────────────────────────────
+const buscaInput = document.getElementById('busca');
+const contagemEl = document.getElementById('contagem-filtro');
+buscaInput.addEventListener('input', () => {
+  const termo = buscaInput.value.trim().toLowerCase();
+  const cards = document.querySelectorAll('.classe-card');
+  let visiveis = 0;
+  cards.forEach(card => {
+    const bate = !termo || card.dataset.busca.includes(termo);
+    card.classList.toggle('oculta', !bate);
+    if (bate) visiveis++;
+  });
+  contagemEl.textContent = termo ? `${visiveis} de ${cards.length}` : '';
+});
+
+// ── funcao de contraste, reaproveitada em varios lugares ────────────────
+function corTextoPorLuminancia(hex) {
+  const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
+  return (0.299*r + 0.587*g + 0.114*b) > 140 ? "#000000" : "#FFFFFF";
+}
+
+// ── lista compacta ────────────────────────────────────────────────────
+const escolhasCompactas = {}; // classe -> {nome, hex, corTexto}
+
+function montarListaCompacta() {
+  const lista = document.getElementById('lista-compacta');
+  lista.innerHTML = Object.keys(DADOS.cores).map(classe => {
+    const nomeAtual = DADOS.nomes_cor_oficial[classe];
+    const hexAtual = DADOS.cores[classe];
+    const escolha = escolhasCompactas[classe];
+    return `
+      <div class="linha-compacta" data-classe="${classe}">
+        <div class="nome-classe">${DADOS.nomes[classe]}</div>
+        <div class="cor-atual-linha"><span class="sw-linha" style="background:${hexAtual}"></span>${nomeAtual}</div>
+        <button class="btn-escolher-compacta ${escolha?'escolhido':''}" data-classe="${classe}">
+          ${escolha ? `<span class="sw-linha" style="background:${escolha.hex}"></span>${escolha.nome}` : 'nova cor…'}
+        </button>
+        <div class="toggle-texto-linha" data-classe="${classe}">
+          <button data-cor-texto="#000000" ${escolha?'':'disabled'} class="${escolha && escolha.corTexto==='#000000'?'ativo':''}">preto</button>
+          <button data-cor-texto="#FFFFFF" ${escolha?'':'disabled'} class="${escolha && escolha.corTexto==='#FFFFFF'?'ativo':''}">branco</button>
+        </div>
+        <button class="btn-salvar-linha" data-classe="${classe}" ${escolha?'':'disabled'}>salvar</button>
+      </div>`;
+  }).join('');
+}
+montarListaCompacta();
+
+// ── legenda montessori ──────────────────────────────────────────────
+const montessoriGrid = document.getElementById('montessori-grid');
+montessoriGrid.innerHTML = DADOS.montessori.map(m => {
+  const corTexto = corTextoPorLuminancia(m.hex);
+  return `<div style="display:flex;flex-direction:column;gap:4px;padding:10px 14px;background:${m.hex};color:${corTexto};border-radius:8px">
+            <div style="font-size:13px;font-weight:600">${m.categoria}</div>
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;opacity:.85">${m.cor_nome} · ${m.forma}</div>
+          </div>`;
+}).join('');
+
+// ── popup compartilhado (escolha contextual OU so consulta geral) ──────
+let classeAtivaPopup = null; // null = modo "so consulta" (legenda geral)
+const overlay = document.getElementById('overlay');
+const popupGrid = document.getElementById('popup-grid');
+const popupBuscaInput = document.getElementById('popup-busca-input');
+const popupTitulo = document.getElementById('popup-titulo');
+
+function montarPopupGrid(filtro) {
+  const termo = (filtro || '').toLowerCase();
+  const nomes = Object.keys(DADOS.css_147).filter(n => !termo || n.toLowerCase().includes(termo));
+  popupGrid.innerHTML = nomes.map(nome => {
+    const hex = DADOS.css_147[nome];
+    const clicavel = classeAtivaPopup !== null;
+    return `<div class="popup-item" ${clicavel ? `data-nome="${nome}" data-hex="${hex}"` : ''}
+                 style="background:${hex};color:${corTextoPorLuminancia(hex)};${clicavel?'cursor:pointer':'cursor:default'}">
+              <span>${nome}</span><span style="opacity:.7">${hex}</span>
+            </div>`;
+  }).join('');
+}
+
+function abrirPopup(classe) {
+  classeAtivaPopup = classe;
+  popupTitulo.textContent = classe ? `Escolher cor oficial — ${DADOS.nomes[classe]}` : 'As 148 cores oficiais (CSS / W3C)';
+  popupBuscaInput.value = '';
+  montarPopupGrid();
+  overlay.classList.add('aberto');
+  popupBuscaInput.focus();
+}
+function fecharPopup() {
+  overlay.classList.remove('aberto');
+  classeAtivaPopup = null;
+}
+
+document.getElementById('btn-abrir-legenda').addEventListener('click', () => abrirPopup(null));
+document.getElementById('popup-fechar').addEventListener('click', fecharPopup);
+overlay.addEventListener('click', e => { if (e.target === overlay) fecharPopup(); });
+popupBuscaInput.addEventListener('input', () => montarPopupGrid(popupBuscaInput.value));
+
+document.addEventListener('click', e => {
+  const btnEscolher = e.target.closest('.btn-escolher-compacta');
+  if (btnEscolher) { abrirPopup(btnEscolher.dataset.classe); return; }
+
+  const item = e.target.closest('.popup-item[data-hex]');
+  if (item && classeAtivaPopup) {
+    escolhasCompactas[classeAtivaPopup] = { nome: item.dataset.nome, hex: item.dataset.hex, corTexto: corTextoPorLuminancia(item.dataset.hex) };
+    fecharPopup();
+    montarListaCompacta();
+    return;
+  }
+
+  const btnToggleCompacto = e.target.closest('.toggle-texto-linha button:not(:disabled)');
+  if (btnToggleCompacto) {
+    const classe = btnToggleCompacto.closest('.toggle-texto-linha').dataset.classe;
+    if (escolhasCompactas[classe]) {
+      escolhasCompactas[classe].corTexto = btnToggleCompacto.dataset.corTexto;
+      montarListaCompacta();
+    }
+    return;
+  }
+
+  const btnSalvarCompacto = e.target.closest('.btn-salvar-linha');
+  if (btnSalvarCompacto && !btnSalvarCompacto.disabled) {
+    const classe = btnSalvarCompacto.dataset.classe;
+    const escolha = escolhasCompactas[classe];
+    // usa o MESMO mecanismo de propostas da parte detalhada, pra entrar
+    // no mesmo arquivo exportado por "salvar proposta"
+    propostas[classe] = {
+      cor_proposta: escolha.hex, nome_cor_proposta: escolha.nome,
+      cor_texto_proposta: escolha.corTexto,
+      cor_atual: DADOS.cores[classe], cor_texto_atual: DADOS.cores_texto[classe],
+    };
+    atualizarContadorMudancas();
+    btnSalvarCompacto.textContent = 'salvo ✓';
+    btnSalvarCompacto.classList.add('salvo');
+  }
+});
+</script>
+
+</body>
+</html>

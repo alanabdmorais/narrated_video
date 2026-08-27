@@ -1,0 +1,800 @@
+﻿posicao_palavra,palavra_completa,peca,classe_kiwi,posicao_frase,significado
+0,히로도왕,히로도왕,NNP,0,substantivo próprio
+1,시대에,시대,NNG,0,substantivo comum
+1,시대에,에,JKB,0,partícula adverbial (locativo/direcional/etc)
+2,예습께서,예습,NNG,0,substantivo comum
+2,예습께서,께서,JKS,0,partícula de sujeito
+3,유대,유대,NNP,0,substantivo próprio
+4,배들래에면서,배들래,NNP,0,substantivo próprio
+4,배들래에면서,에,JKB,0,partícula adverbial (locativo/direcional/etc)
+4,배들래에면서,면서,EC,0,terminação conectiva (liga orações)
+5,태어나시었을,태어나,VV,0,verbo (ação)
+5,태어나시었을,시,EP,0,"terminação pré-final (tempo, honorífico)"
+5,태어나시었을,었,EP,0,"terminação pré-final (tempo, honorífico)"
+5,태어나시었을,을,ETM,0,terminação que transforma verbo em modificador
+6,때,때,NNG,0,substantivo comum
+7,동방에서,동방,NNG,0,substantivo comum
+7,동방에서,에서,JKB,0,partícula adverbial (locativo/direcional/etc)
+8,온,오,VV,0,verbo (ação)
+8,온,ᆫ,ETM,0,terminação que transforma verbo em modificador
+9,현자들이,현자,NNG,0,substantivo comum
+9,현자들이,들,XSN,0,sufixo formador de substantivo
+9,현자들이,이,JKS,0,partícula de sujeito
+10,예로살레메어이르어,예,NNG,0,substantivo comum
+10,예로살레메어이르어,로,JKB,0,partícula adverbial (locativo/direcional/etc)
+10,예로살레메어이르어,살,NNG,0,substantivo comum
+10,예로살레메어이르어,레,NNG,0,substantivo comum
+10,예로살레메어이르어,메,VV,0,verbo (ação)
+10,예로살레메어이르어,어,EC,0,terminação conectiva (liga orações)
+10,예로살레메어이르어,이르,VV-I,0,verbo (raiz irregular)
+10,예로살레메어이르어,어,EC,0,terminação conectiva (liga orações)
+11,유대인의,유대인,NNG,0,substantivo comum
+11,유대인의,의,JKG,0,partícula possessiva
+12,왕으로,왕,NNG,0,substantivo comum
+12,왕으로,으로,JKB,0,partícula adverbial (locativo/direcional/etc)
+13,태어나어,태어나,VV,0,verbo (ação)
+13,태어나어,어,EC,0,terminação conectiva (liga orações)
+14,신분이,신분,NNG,0,substantivo comum
+14,신분이,이,JKS,0,partícula de sujeito
+15,어디,어디,NP,0,pronome
+16,계십니까,계시,VV,0,verbo (ação)
+16,계십니까,ᆸ니까,EF,0,terminação final (fecha a frase)
+0,우리가,우리,NP,1,pronome
+0,우리가,가,JKS,1,partícula de sujeito
+1,동방에서,동방,NNG,1,substantivo comum
+1,동방에서,에서,JKB,1,partícula adverbial (locativo/direcional/etc)
+2,그분의,그분,NP,1,pronome
+2,그분의,의,JKG,1,partícula possessiva
+3,별을,별,NNG,1,substantivo comum
+3,별을,을,JKO,1,partícula de objeto
+4,보고,보,VV,1,verbo (ação)
+4,보고,고,EC,1,terminação conectiva (liga orações)
+5,그분께,그분,NP,1,pronome
+5,그분께,께,JKB,1,partícula adverbial (locativo/direcional/etc)
+6,경배하러,경배,NNG,1,substantivo comum
+6,경배하러,하,XSV,1,sufixo formador de verbo
+6,경배하러,러,EC,1,terminação conectiva (liga orações)
+7,오었습니다,오,VV,1,verbo (ação)
+7,오었습니다,었,EP,1,"terminação pré-final (tempo, honorífico)"
+7,오었습니다,습니다,EF,1,terminação final (fecha a frase)
+8,이라고,이,VCP,1,cópula ('ser/estar')
+8,이라고,라고,EC,1,terminação conectiva (liga orações)
+9,말하었습니다.,말,NNG,1,substantivo comum
+9,말하었습니다.,하,XSV,1,sufixo formador de verbo
+9,말하었습니다.,었,EP,1,"terminação pré-final (tempo, honorífico)"
+9,말하었습니다.,습니다,EF,1,terminação final (fecha a frase)
+9,말하었습니다.,.,SF,1,pontuação final (. ! ?)
+0,히로도왕은히,히로도왕,NNG,2,substantivo comum
+0,히로도왕은히,은,JX,2,"partícula auxiliar (tópico, ênfase, etc — inclui 은/는)"
+0,히로도왕은히,히,XSM,2,(não catalogada aqui)
+1,말을,말,NNG,2,substantivo comum
+1,말을,을,JKO,2,partícula de objeto
+2,듣고,듣,VV-I,2,verbo (raiz irregular)
+2,듣고,고,EC,2,terminação conectiva (liga orações)
+3,걱정이,걱정,NNG,2,substantivo comum
+3,걱정이,이,JKS,2,partícula de sujeito
+4,많었고,많,VA,2,verbo descritivo (função de adjetivo)
+4,많었고,었,EP,2,"terminação pré-final (tempo, honorífico)"
+4,많었고,고,EC,2,terminação conectiva (liga orações)
+5,온,온,MM,2,determinante
+6,예로살렘,예로살렘,NNG,2,substantivo comum
+7,백성도,백성,NNG,2,substantivo comum
+7,백성도,도,JX,2,"partícula auxiliar (tópico, ênfase, etc — inclui 은/는)"
+8,그와,그,NP,2,pronome
+8,그와,와,JKB,2,partícula adverbial (locativo/direcional/etc)
+9,함께,함께,MAG,2,advérbio
+10,걱정하었습니다.,걱정,NNG,2,substantivo comum
+10,걱정하었습니다.,하,XSV,2,sufixo formador de verbo
+10,걱정하었습니다.,었,EP,2,"terminação pré-final (tempo, honorífico)"
+10,걱정하었습니다.,습니다,EF,2,terminação final (fecha a frase)
+10,걱정하었습니다.,.,SF,2,pontuação final (. ! ?)
+0,히로,히,NNG,3,substantivo comum
+0,히로,로,JKB,3,partícula adverbial (locativo/direcional/etc)
+1,쓴,쓰,VV,3,verbo (ação)
+1,쓴,ᆫ,ETM,3,terminação que transforma verbo em modificador
+2,모든,모든,MM,3,determinante
+3,대재사장과,대,NNB,3,substantivo dependente (só existe com outra palavra antes)
+3,대재사장과,재,XPN,3,(não catalogada aqui)
+3,대재사장과,사장,NNG,3,substantivo comum
+3,대재사장과,과,JC,3,conjunção (partícula)
+4,백성의,백성,NNG,3,substantivo comum
+4,백성의,의,JKG,3,partícula possessiva
+5,율법학자들을,율법,NNG,3,substantivo comum
+5,율법학자들을,학자,NNG,3,substantivo comum
+5,율법학자들을,들,XSN,3,sufixo formador de substantivo
+5,율법학자들을,을,JKO,3,partícula de objeto
+6,부르어무와,부르,VV,3,verbo (ação)
+6,부르어무와,어,EC,3,terminação conectiva (liga orações)
+6,부르어무와,무,NNG,3,substantivo comum
+6,부르어무와,와,JC,3,conjunção (partícula)
+7,그리스도가,그리스도,NNP,3,substantivo próprio
+7,그리스도가,가,JKS,3,partícula de sujeito
+8,어디에서,어디,NP,3,pronome
+8,어디에서,에서,JKB,3,partícula adverbial (locativo/direcional/etc)
+9,태어날,태어나,VV,3,verbo (ação)
+9,태어날,ᆯ,ETM,3,terminação que transforma verbo em modificador
+10,것인지,것,NNB,3,substantivo dependente (só existe com outra palavra antes)
+10,것인지,이,VCP,3,cópula ('ser/estar')
+10,것인지,ᆫ지,EC,3,terminação conectiva (liga orações)
+11,묻었습니다.,묻,VV-I,3,verbo (raiz irregular)
+11,묻었습니다.,었,EP,3,"terminação pré-final (tempo, honorífico)"
+11,묻었습니다.,습니다,EF,3,terminação final (fecha a frase)
+11,묻었습니다.,.,SF,3,pontuação final (. ! ?)
+0,그들이,그,NP,4,pronome
+0,그들이,들,XSN,4,sufixo formador de substantivo
+0,그들이,이,JKS,4,partícula de sujeito
+1,유대,유대,NNP,4,substantivo próprio
+2,배들래에면서,배들래,NNP,4,substantivo próprio
+2,배들래에면서,에,JKB,4,partícula adverbial (locativo/direcional/etc)
+2,배들래에면서,면서,EC,4,terminação conectiva (liga orações)
+3,태어날,태어나,VV,4,verbo (ação)
+3,태어날,ᆯ,ETM,4,terminação que transforma verbo em modificador
+4,것입니다.,것,NNB,4,substantivo dependente (só existe com outra palavra antes)
+4,것입니다.,이,VCP,4,cópula ('ser/estar')
+4,것입니다.,ᆸ니다,EF,4,terminação final (fecha a frase)
+4,것입니다.,.,SF,4,pontuação final (. ! ?)
+0,선지자가,선지자,NNG,5,substantivo comum
+0,선지자가,가,JKS,5,partícula de sujeito
+1,이렇게,이렇,VA-I,5,(não catalogada aqui)
+1,이렇게,게,EC,5,terminação conectiva (liga orações)
+2,기록하었기,기록,NNG,5,substantivo comum
+2,기록하었기,하,XSV,5,sufixo formador de verbo
+2,기록하었기,었,EP,5,"terminação pré-final (tempo, honorífico)"
+2,기록하었기,기,ETN,5,terminação nominalizadora
+3,때문입니다.,때문,NNB,5,substantivo dependente (só existe com outra palavra antes)
+3,때문입니다.,이,VCP,5,cópula ('ser/estar')
+3,때문입니다.,ᆸ니다,EF,5,terminação final (fecha a frase)
+3,때문입니다.,.,SF,5,pontuação final (. ! ?)
+0,유다,유다,NNP,6,substantivo próprio
+1,땅,땅,NNG,6,substantivo comum
+2,배들래에마,배들래,NNG,6,substantivo comum
+2,배들래에마,에,JKB,6,partícula adverbial (locativo/direcional/etc)
+2,배들래에마,마,MAG,6,advérbio
+3,너는,너,NP,6,pronome
+3,너는,는,JX,6,"partícula auxiliar (tópico, ênfase, etc — inclui 은/는)"
+4,유다의,유다,NNP,6,substantivo próprio
+4,유다의,의,JKG,6,partícula possessiva
+5,지도자들,지도자,NNG,6,substantivo comum
+5,지도자들,들,XSN,6,sufixo formador de substantivo
+6,가운데,가운데,NNG,6,substantivo comum
+7,가장,가장,MAG,6,advérbio
+8,작은,작,VA,6,verbo descritivo (função de adjetivo)
+8,작은,은,ETM,6,terminação que transforma verbo em modificador
+9,곳이,곳,NNG,6,substantivo comum
+9,곳이,이,JKC,6,partícula de complemento
+10,아니니,아니,VCN,6,(não catalogada aqui)
+10,아니니,니,EC,6,terminação conectiva (liga orações)
+11,너에게서,너,NP,6,pronome
+11,너에게서,에게서,JKB,6,partícula adverbial (locativo/direcional/etc)
+12,나의,나,NP,6,pronome
+12,나의,의,JKG,6,partícula possessiva
+13,백성,백성,NNG,6,substantivo comum
+14,이스라엘을,이스라엘,NNP,6,substantivo próprio
+14,이스라엘을,을,JKO,6,partícula de objeto
+15,다스릴,다스리,VV,6,verbo (ação)
+15,다스릴,ᆯ,ETM,6,terminação que transforma verbo em modificador
+16,총독이,총독,NNG,6,substantivo comum
+16,총독이,이,JKS,6,partícula de sujeito
+17,나올,나오,VV,6,verbo (ação)
+17,나올,ᆯ,ETM,6,terminação que transforma verbo em modificador
+18,것이다,것,NNB,6,substantivo dependente (só existe com outra palavra antes)
+18,것이다,이,VCP,6,cópula ('ser/estar')
+18,것이다,다,EF,6,terminação final (fecha a frase)
+19,이라고,이,VCP,6,cópula ('ser/estar')
+19,이라고,라고,EC,6,terminação conectiva (liga orações)
+20,대답하었습니다.,대답,NNG,6,substantivo comum
+20,대답하었습니다.,하,XSV,6,sufixo formador de verbo
+20,대답하었습니다.,었,EP,6,"terminação pré-final (tempo, honorífico)"
+20,대답하었습니다.,습니다,EF,6,terminação final (fecha a frase)
+20,대답하었습니다.,.,SF,6,pontuação final (. ! ?)
+0,히로,히,NNG,7,substantivo comum
+0,히로,로,JKB,7,partícula adverbial (locativo/direcional/etc)
+1,쓴,쓰,VV,7,verbo (ação)
+1,쓴,ᆫ,ETM,7,terminação que transforma verbo em modificador
+2,몰래,몰래,MAG,7,advérbio
+3,현자들을,현자,NNG,7,substantivo comum
+3,현자들을,들,XSN,7,sufixo formador de substantivo
+3,현자들을,을,JKO,7,partícula de objeto
+4,부르어,부르,VV,7,verbo (ação)
+4,부르어,어,EC,7,terminação conectiva (liga orações)
+5,별이,별,NNG,7,substantivo comum
+5,별이,이,JKS,7,partícula de sujeito
+6,나타난,나타나,VV,7,verbo (ação)
+6,나타난,ᆫ,ETM,7,terminação que transforma verbo em modificador
+7,정확한,정확,NNG,7,substantivo comum
+7,정확한,하,XSA,7,(não catalogada aqui)
+7,정확한,ᆫ,ETM,7,terminação que transforma verbo em modificador
+8,시각을,시각,NNG,7,substantivo comum
+8,시각을,을,JKO,7,partícula de objeto
+9,알어,알,VV,7,verbo (ação)
+9,알어,어,EC,7,terminação conectiva (liga orações)
+10,내었습니다.,내,VX,7,verbo auxiliar
+10,내었습니다.,었,EP,7,"terminação pré-final (tempo, honorífico)"
+10,내었습니다.,습니다,EF,7,terminação final (fecha a frase)
+10,내었습니다.,.,SF,7,pontuação final (. ! ?)
+0,그리고,그리고,MAJ,8,(não catalogada aqui)
+1,그들을,그,NP,8,pronome
+1,그들을,들,XSN,8,sufixo formador de substantivo
+1,그들을,을,JKO,8,partícula de objeto
+2,배들래에무로,배들래,NNG,8,substantivo comum
+2,배들래에무로,에,JKB,8,partícula adverbial (locativo/direcional/etc)
+2,배들래에무로,무,NNG,8,substantivo comum
+2,배들래에무로,로,JKB,8,partícula adverbial (locativo/direcional/etc)
+3,보냐며,보,VV,8,verbo (ação)
+3,보냐며,냐며,EC,8,terminação conectiva (liga orações)
+4,가어서,가,VV,8,verbo (ação)
+4,가어서,어서,EC,8,terminação conectiva (liga orações)
+5,그,그,MM,8,determinante
+6,아기를,아기,NNG,8,substantivo comum
+6,아기를,를,JKO,8,partícula de objeto
+7,자세히,자세히,MAG,8,advérbio
+8,찾아보어라,찾아보,VV,8,verbo (ação)
+8,찾아보어라,어라,EF,8,terminação final (fecha a frase)
+0,찾으면,찾,VV,9,verbo (ação)
+0,찾으면,으면,EC,9,terminação conectiva (liga orações)
+1,나에게,나,NP,9,pronome
+1,나에게,에게,JKB,9,partícula adverbial (locativo/direcional/etc)
+2,알리어주어라,알리,VV,9,verbo (ação)
+2,알리어주어라,어,EC,9,terminação conectiva (liga orações)
+2,알리어주어라,주,VX,9,verbo auxiliar
+2,알리어주어라,어라,EF,9,terminação final (fecha a frase)
+0,나도,나,NP,10,pronome
+0,나도,도,JX,10,"partícula auxiliar (tópico, ênfase, etc — inclui 은/는)"
+1,가어서,가,VV,10,verbo (ação)
+1,가어서,어서,EC,10,terminação conectiva (liga orações)
+2,그분께,그분,NP,10,pronome
+2,그분께,께,JKB,10,partícula adverbial (locativo/direcional/etc)
+3,경배하겠다,경배,NNG,10,substantivo comum
+3,경배하겠다,하,XSV,10,sufixo formador de verbo
+3,경배하겠다,겠,EP,10,"terminação pré-final (tempo, honorífico)"
+3,경배하겠다,다,EF,10,terminação final (fecha a frase)
+4,이라고,이,VCP,10,cópula ('ser/estar')
+4,이라고,라고,EC,10,terminação conectiva (liga orações)
+5,말하었습니다.,말,NNG,10,substantivo comum
+5,말하었습니다.,하,XSV,10,sufixo formador de verbo
+5,말하었습니다.,었,EP,10,"terminação pré-final (tempo, honorífico)"
+5,말하었습니다.,습니다,EF,10,terminação final (fecha a frase)
+5,말하었습니다.,.,SF,10,pontuação final (. ! ?)
+0,그들은,그,NP,11,pronome
+0,그들은,들,XSN,11,sufixo formador de substantivo
+0,그들은,은,JX,11,"partícula auxiliar (tópico, ênfase, etc — inclui 은/는)"
+1,왕의,왕,NNG,11,substantivo comum
+1,왕의,의,JKG,11,partícula possessiva
+2,말을,말,NNG,11,substantivo comum
+2,말을,을,JKO,11,partícula de objeto
+3,듣고,듣,VV-I,11,verbo (raiz irregular)
+3,듣고,고,EC,11,terminação conectiva (liga orações)
+4,길을,길,NNG,11,substantivo comum
+4,길을,을,JKO,11,partícula de objeto
+5,떠나었습니다.,떠나,VV,11,verbo (ação)
+5,떠나었습니다.,었,EP,11,"terminação pré-final (tempo, honorífico)"
+5,떠나었습니다.,습니다,EF,11,terminação final (fecha a frase)
+5,떠나었습니다.,.,SF,11,pontuação final (. ! ?)
+0,보십시오,보,VV,12,verbo (ação)
+0,보십시오,시,EP,12,"terminação pré-final (tempo, honorífico)"
+0,보십시오,ᆸ시오,EF,12,terminação final (fecha a frase)
+0,그들이,그,NP,13,pronome
+0,그들이,들,XSN,13,sufixo formador de substantivo
+0,그들이,이,JKS,13,partícula de sujeito
+1,동쪽에서,동쪽,NNG,13,substantivo comum
+1,동쪽에서,에서,JKB,13,partícula adverbial (locativo/direcional/etc)
+2,보었단,보,VV,13,verbo (ação)
+2,보었단,었,EP,13,"terminação pré-final (tempo, honorífico)"
+2,보었단,단,ETM,13,terminação que transforma verbo em modificador
+3,별이,별,NNG,13,substantivo comum
+3,별이,이,JKS,13,partícula de sujeito
+4,그들,그,NP,13,pronome
+4,그들,들,XSN,13,sufixo formador de substantivo
+5,앞에서,앞,NNG,13,substantivo comum
+5,앞에서,에서,JKB,13,partícula adverbial (locativo/direcional/etc)
+6,인도하어,인도,NNG,13,substantivo comum
+6,인도하어,하,XSV,13,sufixo formador de verbo
+6,인도하어,어,EC,13,terminação conectiva (liga orações)
+7,마침내,마침내,MAG,13,advérbio
+8,아기가,아기,NNG,13,substantivo comum
+8,아기가,가,JKS,13,partícula de sujeito
+9,있는,있,VV,13,verbo (ação)
+9,있는,는,ETM,13,terminação que transforma verbo em modificador
+10,곳에,곳,NNG,13,substantivo comum
+10,곳에,에,JKB,13,partícula adverbial (locativo/direcional/etc)
+11,이르어습니이다.,이르,VV-I,13,verbo (raiz irregular)
+11,이르어습니이다.,어,EC,13,terminação conectiva (liga orações)
+11,이르어습니이다.,습,NNG,13,substantivo comum
+11,이르어습니이다.,니,NNG,13,substantivo comum
+11,이르어습니이다.,이,VCP,13,cópula ('ser/estar')
+11,이르어습니이다.,다,EF,13,terminação final (fecha a frase)
+11,이르어습니이다.,.,SF,13,pontuação final (. ! ?)
+0,그,그,MM,14,determinante
+1,별을,별,NNG,14,substantivo comum
+1,별을,을,JKO,14,partícula de objeto
+2,보자,보,VV,14,verbo (ação)
+2,보자,자,EC,14,terminação conectiva (liga orações)
+3,그들은,그,NP,14,pronome
+3,그들은,들,XSN,14,sufixo formador de substantivo
+3,그들은,은,JX,14,"partícula auxiliar (tópico, ênfase, etc — inclui 은/는)"
+4,매우,매우,MAG,14,advérbio
+5,기뻐하었습니다.,기뻐하,VV,14,verbo (ação)
+5,기뻐하었습니다.,었,EP,14,"terminação pré-final (tempo, honorífico)"
+5,기뻐하었습니다.,습니다,EF,14,terminação final (fecha a frase)
+5,기뻐하었습니다.,.,SF,14,pontuação final (. ! ?)
+0,그들은,그,NP,15,pronome
+0,그들은,들,XSN,15,sufixo formador de substantivo
+0,그들은,은,JX,15,"partícula auxiliar (tópico, ênfase, etc — inclui 은/는)"
+1,집에,집,NNG,15,substantivo comum
+1,집에,에,JKB,15,partícula adverbial (locativo/direcional/etc)
+2,들어가어,들어가,VV,15,verbo (ação)
+2,들어가어,어,EC,15,terminação conectiva (liga orações)
+3,아기와,아기,NNG,15,substantivo comum
+3,아기와,와,JC,15,conjunção (partícula)
+4,그의,그,NP,15,pronome
+4,그의,의,JKG,15,partícula possessiva
+5,어머니,어머니,NNG,15,substantivo comum
+6,마리아를,마리아,NNP,15,substantivo próprio
+6,마리아를,를,JKO,15,partícula de objeto
+7,보고,보,VV,15,verbo (ação)
+7,보고,고,EC,15,terminação conectiva (liga orações)
+8,엎드리어,엎드리,VV,15,verbo (ação)
+8,엎드리어,어,EC,15,terminação conectiva (liga orações)
+9,경배하었습니다.,경배,NNG,15,substantivo comum
+9,경배하었습니다.,하,XSV,15,sufixo formador de verbo
+9,경배하었습니다.,었,EP,15,"terminação pré-final (tempo, honorífico)"
+9,경배하었습니다.,습니다,EF,15,terminação final (fecha a frase)
+9,경배하었습니다.,.,SF,15,pontuação final (. ! ?)
+0,그들은,그,NP,16,pronome
+0,그들은,들,XSN,16,sufixo formador de substantivo
+0,그들은,은,JX,16,"partícula auxiliar (tópico, ênfase, etc — inclui 은/는)"
+1,봄을,봄,NNG,16,substantivo comum
+1,봄을,을,JKO,16,partícula de objeto
+2,상자를,상자,NNG,16,substantivo comum
+2,상자를,를,JKO,16,partícula de objeto
+3,열어,열,VV,16,verbo (ação)
+3,열어,어,EC,16,terminação conectiva (liga orações)
+4,아기에게,아기,NNG,16,substantivo comum
+4,아기에게,에게,JKB,16,partícula adverbial (locativo/direcional/etc)
+5,근과,근,NNG,16,substantivo comum
+5,근과,과,JC,16,conjunção (partícula)
+6,유향과,유향,NNP,16,substantivo próprio
+6,유향과,과,JC,16,conjunção (partícula)
+7,모략을,모략,NNG,16,substantivo comum
+7,모략을,을,JKO,16,partícula de objeto
+8,옛물,옛,MM,16,determinante
+8,옛물,물,NNG,16,substantivo comum
+9,로,로,JKB,16,partícula adverbial (locativo/direcional/etc)
+10,들이었습니다.,들이,VV,16,verbo (ação)
+10,들이었습니다.,었,EP,16,"terminação pré-final (tempo, honorífico)"
+10,들이었습니다.,습니다,EF,16,terminação final (fecha a frase)
+10,들이었습니다.,.,SF,16,pontuação final (. ! ?)
+0,꿈에서,꿈,NNG,17,substantivo comum
+0,꿈에서,에서,JKB,17,partícula adverbial (locativo/direcional/etc)
+1,헤로세게,헤,VV,17,verbo (ação)
+1,헤로세게,로,EC,17,terminação conectiva (liga orações)
+1,헤로세게,세,VA,17,verbo descritivo (função de adjetivo)
+1,헤로세게,게,EC,17,terminação conectiva (liga orações)
+2,돌아가지,돌아가,VV,17,verbo (ação)
+2,돌아가지,지,EC,17,terminação conectiva (liga orações)
+3,말라는,말,VX,17,verbo auxiliar
+3,말라는,라는,ETM,17,terminação que transforma verbo em modificador
+4,경고를,경고,NNG,17,substantivo comum
+4,경고를,를,JKO,17,partícula de objeto
+5,받고,받,VV-R,17,(não catalogada aqui)
+5,받고,고,EC,17,terminação conectiva (liga orações)
+6,다른,다른,MM,17,determinante
+7,길로,길,NNG,17,substantivo comum
+7,길로,로,JKB,17,partícula adverbial (locativo/direcional/etc)
+8,자기,자기,NP,17,pronome
+9,나라로,나라,NNG,17,substantivo comum
+9,나라로,로,JKB,17,partícula adverbial (locativo/direcional/etc)
+10,돌아가었습니다.,돌아가,VV,17,verbo (ação)
+10,돌아가었습니다.,었,EP,17,"terminação pré-final (tempo, honorífico)"
+10,돌아가었습니다.,습니다,EF,17,terminação final (fecha a frase)
+10,돌아가었습니다.,.,SF,17,pontuação final (. ! ?)
+0,그들이,그,NP,18,pronome
+0,그들이,들,XSN,18,sufixo formador de substantivo
+0,그들이,이,JKS,18,partícula de sujeito
+1,떠난,떠나,VV,18,verbo (ação)
+1,떠난,ᆫ,ETM,18,terminação que transforma verbo em modificador
+2,후,후,NNG,18,substantivo comum
+3,보십시오.,보,VV,18,verbo (ação)
+3,보십시오.,시,EP,18,"terminação pré-final (tempo, honorífico)"
+3,보십시오.,ᆸ시오,EF,18,terminação final (fecha a frase)
+3,보십시오.,.,SF,18,pontuação final (. ! ?)
+0,주의천사가,주,NNG,19,substantivo comum
+0,주의천사가,의,JKG,19,partícula possessiva
+0,주의천사가,천사,NNG,19,substantivo comum
+0,주의천사가,가,JKS,19,partícula de sujeito
+1,요새,요새,NNG,19,substantivo comum
+2,배,배,NNG,19,substantivo comum
+3,꿈에,꿈,NNG,19,substantivo comum
+3,꿈에,에,JKB,19,partícula adverbial (locativo/direcional/etc)
+4,나타나어,나타나,VV,19,verbo (ação)
+4,나타나어,어,EC,19,terminação conectiva (liga orações)
+5,말하었습니다.,말,NNG,19,substantivo comum
+5,말하었습니다.,하,XSV,19,sufixo formador de verbo
+5,말하었습니다.,었,EP,19,"terminação pré-final (tempo, honorífico)"
+5,말하었습니다.,습니다,EF,19,terminação final (fecha a frase)
+5,말하었습니다.,.,SF,19,pontuação final (. ! ?)
+0,일어나어,일어나,VV,20,verbo (ação)
+0,일어나어,어,EC,20,terminação conectiva (liga orações)
+1,아기와,아기,NNG,20,substantivo comum
+1,아기와,와,JC,20,conjunção (partícula)
+2,그의,그,NP,20,pronome
+2,그의,의,JKG,20,partícula possessiva
+3,어머니를,어머니,NNG,20,substantivo comum
+3,어머니를,를,JKO,20,partícula de objeto
+4,데리고,데리,VV,20,verbo (ação)
+4,데리고,고,EC,20,terminação conectiva (liga orações)
+5,이,이,MM,20,determinante
+6,집트로,집,NNG,20,substantivo comum
+6,집트로,트,VV,20,verbo (ação)
+6,집트로,로,JKB,20,partícula adverbial (locativo/direcional/etc)
+7,피난하어,피난,NNG,20,substantivo comum
+7,피난하어,하,XSV,20,sufixo formador de verbo
+7,피난하어,어,EC,20,terminação conectiva (liga orações)
+8,나가,나,NP,20,pronome
+8,나가,가,JKS,20,partícula de sujeito
+9,너에게,너,NP,20,pronome
+9,너에게,에게,JKB,20,partícula adverbial (locativo/direcional/etc)
+10,말할,말,NNG,20,substantivo comum
+10,말할,하,XSV,20,sufixo formador de verbo
+10,말할,ᆯ,ETM,20,terminação que transforma verbo em modificador
+11,때까지,때,NNG,20,substantivo comum
+11,때까지,까지,JX,20,"partícula auxiliar (tópico, ênfase, etc — inclui 은/는)"
+12,거기에,거기,NP,20,pronome
+12,거기에,에,JKB,20,partícula adverbial (locativo/direcional/etc)
+13,머무르어라,머무르,VV,20,verbo (ação)
+13,머무르어라,어라,EF,20,terminação final (fecha a frase)
+0,헤로시,헤로시,NNG,21,substantivo comum
+1,아기를,아기,NNG,21,substantivo comum
+1,아기를,를,JKO,21,partícula de objeto
+2,찾어,찾,VV,21,verbo (ação)
+2,찾어,어,EC,21,terminação conectiva (liga orações)
+3,주기려,주,VX,21,verbo auxiliar
+3,주기려,기,ETN,21,terminação nominalizadora
+3,주기려,려,EC,21,terminação conectiva (liga orações)
+4,할,하,VX,21,verbo auxiliar
+4,할,ᆯ,ETM,21,terminação que transforma verbo em modificador
+5,것이다.,것,NNB,21,substantivo dependente (só existe com outra palavra antes)
+5,것이다.,이,VCP,21,cópula ('ser/estar')
+5,것이다.,다,EF,21,terminação final (fecha a frase)
+5,것이다.,.,SF,21,pontuação final (. ! ?)
+0,요새,요새,NNG,22,substantivo comum
+1,분,분,NNB,22,substantivo dependente (só existe com outra palavra antes)
+2,일어나어,일어나,VV,22,verbo (ação)
+2,일어나어,어,EC,22,terminação conectiva (liga orações)
+3,밤에,밤,NNG,22,substantivo comum
+3,밤에,에,JKB,22,partícula adverbial (locativo/direcional/etc)
+4,아기와,아기,NNG,22,substantivo comum
+4,아기와,와,JC,22,conjunção (partícula)
+5,그의,그,NP,22,pronome
+5,그의,의,JKG,22,partícula possessiva
+6,어머니를,어머니,NNG,22,substantivo comum
+6,어머니를,를,JKO,22,partícula de objeto
+7,데리고,데리,VV,22,verbo (ação)
+7,데리고,고,EC,22,terminação conectiva (liga orações)
+8,이,이,MM,22,determinante
+9,집트로,집,NNG,22,substantivo comum
+9,집트로,트,VV,22,verbo (ação)
+9,집트로,로,JKB,22,partícula adverbial (locativo/direcional/etc)
+10,가어서,가,VV,22,verbo (ação)
+10,가어서,어서,EC,22,terminação conectiva (liga orações)
+11,헤로시,헤로시,NNG,22,substantivo comum
+12,죽을,죽,VV,22,verbo (ação)
+12,죽을,을,ETM,22,terminação que transforma verbo em modificador
+13,때까지,때,NNG,22,substantivo comum
+13,때까지,까지,JX,22,"partícula auxiliar (tópico, ênfase, etc — inclui 은/는)"
+14,거기에,거기,NP,22,pronome
+14,거기에,에,JKB,22,partícula adverbial (locativo/direcional/etc)
+15,머무르어습니다.,머무르,VV,22,verbo (ação)
+15,머무르어습니다.,어,EC,22,terminação conectiva (liga orações)
+15,머무르어습니다.,스,VV,22,verbo (ação)
+15,머무르어습니다.,ᆸ니다,EF,22,terminação final (fecha a frase)
+15,머무르어습니다.,.,SF,22,pontuação final (. ! ?)
+0,이는,이,NP,23,pronome
+0,이는,는,JX,23,"partícula auxiliar (tópico, ênfase, etc — inclui 은/는)"
+1,죽게서,죽,VV,23,verbo (ação)
+1,죽게서,게,EC,23,terminação conectiva (liga orações)
+1,죽게서,서,VV,23,verbo (ação)
+2,예언자를,예언자,NNG,23,substantivo comum
+2,예언자를,를,JKO,23,partícula de objeto
+3,통하어,통하,VV,23,verbo (ação)
+3,통하어,어,EC,23,terminação conectiva (liga orações)
+4,말씀하신,말씀,NNG,23,substantivo comum
+4,말씀하신,하,XSV,23,sufixo formador de verbo
+4,말씀하신,시,EP,23,"terminação pré-final (tempo, honorífico)"
+4,말씀하신,ᆫ,ETM,23,terminação que transforma verbo em modificador
+5,나가,나,NP,23,pronome
+5,나가,가,JKS,23,partícula de sujeito
+6,나의,나,NP,23,pronome
+6,나의,의,JKG,23,partícula possessiva
+7,아들을,아들,NNG,23,substantivo comum
+7,아들을,을,JKO,23,partícula de objeto
+8,이,이,MM,23,determinante
+9,집트에서,집,NNG,23,substantivo comum
+9,집트에서,트,VV,23,verbo (ação)
+9,집트에서,에서,JKB,23,partícula adverbial (locativo/direcional/etc)
+10,불러내었다,불러내,VV,23,verbo (ação)
+10,불러내었다,었,EP,23,"terminação pré-final (tempo, honorífico)"
+10,불러내었다,다,EC,23,terminação conectiva (liga orações)
+11,늘ᆫ,늘,VV,23,verbo (ação)
+11,늘ᆫ,ᆫ,ETM,23,terminação que transforma verbo em modificador
+12,말씀이,말씀,NNG,23,substantivo comum
+12,말씀이,이,JKS,23,partícula de sujeito
+13,이루어지게,이루어지,VV,23,verbo (ação)
+13,이루어지게,게,EC,23,terminação conectiva (liga orações)
+14,하려함,하,VX,23,verbo auxiliar
+14,하려함,려,EC,23,terminação conectiva (liga orações)
+14,하려함,하,VX,23,verbo auxiliar
+14,하려함,ᆷ,ETN,23,terminação nominalizadora
+15,이었습니다.,이,VCP,23,cópula ('ser/estar')
+15,이었습니다.,었,EP,23,"terminação pré-final (tempo, honorífico)"
+15,이었습니다.,습니다,EF,23,terminação final (fecha a frase)
+15,이었습니다.,.,SF,23,pontuação final (. ! ?)
+0,헤로슨,헤로슨,NNP,24,substantivo próprio
+1,동방박사들이,동방,NNG,24,substantivo comum
+1,동방박사들이,박사,NNG,24,substantivo comum
+1,동방박사들이,들,XSN,24,sufixo formador de substantivo
+1,동방박사들이,이,JKS,24,partícula de sujeito
+2,자기를,자기,NP,24,pronome
+2,자기를,를,JKO,24,partícula de objeto
+3,조롱한,조롱,NNG,24,substantivo comum
+3,조롱한,하,XSV,24,sufixo formador de verbo
+3,조롱한,ᆫ,ETM,24,terminação que transforma verbo em modificador
+4,것을,것,NNB,24,substantivo dependente (só existe com outra palavra antes)
+4,것을,을,JKO,24,partícula de objeto
+5,알고,알,VV,24,verbo (ação)
+5,알고,고,EC,24,terminação conectiva (liga orações)
+6,몹시,몹시,MAG,24,advérbio
+7,노하어,노하,VV,24,verbo (ação)
+7,노하어,어,EC,24,terminação conectiva (liga orações)
+8,사람들을,사람,NNG,24,substantivo comum
+8,사람들을,들,XSN,24,sufixo formador de substantivo
+8,사람들을,을,JKO,24,partícula de objeto
+9,보내어,보내,VV,24,verbo (ação)
+9,보내어,어,EC,24,terminação conectiva (liga orações)
+10,베들레앰과,베들레앰,NNP,24,substantivo próprio
+10,베들레앰과,과,JC,24,conjunção (partícula)
+11,그,그,MM,24,determinante
+12,주변,주변,NNG,24,substantivo comum
+13,지역에,지역,NNG,24,substantivo comum
+13,지역에,에,JKB,24,partícula adverbial (locativo/direcional/etc)
+14,있는,있,VV,24,verbo (ação)
+14,있는,는,ETM,24,terminação que transforma verbo em modificador
+15,두,두,MM,24,determinante
+16,살이하의,살,NNB,24,substantivo dependente (só existe com outra palavra antes)
+16,살이하의,이하,NNG,24,substantivo comum
+16,살이하의,의,JKG,24,partícula possessiva
+17,모든,모든,MM,24,determinante
+18,남자,남자,NNG,24,substantivo comum
+19,아이들을,아이,NNG,24,substantivo comum
+19,아이들을,들,XSN,24,sufixo formador de substantivo
+19,아이들을,을,JKO,24,partícula de objeto
+20,동방박사들이,동방,NNG,24,substantivo comum
+20,동방박사들이,박사,NNG,24,substantivo comum
+20,동방박사들이,들,XSN,24,sufixo formador de substantivo
+20,동방박사들이,이,JKS,24,partícula de sujeito
+21,말한,말,NNG,24,substantivo comum
+21,말한,하,XSV,24,sufixo formador de verbo
+21,말한,ᆫ,ETM,24,terminação que transforma verbo em modificador
+22,정확한,정확,NNG,24,substantivo comum
+22,정확한,하,XSA,24,(não catalogada aqui)
+22,정확한,ᆫ,ETM,24,terminação que transforma verbo em modificador
+23,시기에,시기,NNG,24,substantivo comum
+23,시기에,에,JKB,24,partícula adverbial (locativo/direcional/etc)
+24,맞추어,맞추,VV,24,verbo (ação)
+24,맞추어,어,EC,24,terminação conectiva (liga orações)
+25,죽이었습니다.,죽이,VV,24,verbo (ação)
+25,죽이었습니다.,었,EP,24,"terminação pré-final (tempo, honorífico)"
+25,죽이었습니다.,습니다,EF,24,terminação final (fecha a frase)
+25,죽이었습니다.,.,SF,24,pontuação final (. ! ?)
+0,이로서,이,NP,25,pronome
+0,이로서,로서,JKB,25,partícula adverbial (locativo/direcional/etc)
+1,예르미아,예르미아,NNP,25,substantivo próprio
+2,선지자가,선지자,NNG,25,substantivo comum
+2,선지자가,가,JKS,25,partícula de sujeito
+3,예언한,예언,NNG,25,substantivo comum
+3,예언한,하,XSV,25,sufixo formador de verbo
+3,예언한,ᆫ,ETM,25,terminação que transforma verbo em modificador
+4,말씀이,말씀,NNG,25,substantivo comum
+4,말씀이,이,JKS,25,partícula de sujeito
+5,이루어지었습니다.,이루어지,VV,25,verbo (ação)
+5,이루어지었습니다.,었,EP,25,"terminação pré-final (tempo, honorífico)"
+5,이루어지었습니다.,습니다,EF,25,terminação final (fecha a frase)
+5,이루어지었습니다.,.,SF,25,pontuação final (. ! ?)
+0,남아에서,남아,NNG,26,substantivo comum
+0,남아에서,에서,JKB,26,partícula adverbial (locativo/direcional/etc)
+1,소리가,소리,NNG,26,substantivo comum
+1,소리가,가,JKS,26,partícula de sujeito
+2,들린이,들리,VV,26,verbo (ação)
+2,들린이,ᆫ,ETM,26,terminação que transforma verbo em modificador
+2,들린이,이,MM,26,determinante
+3,통곡과,통곡,NNG,26,substantivo comum
+3,통곡과,과,JC,26,conjunção (partícula)
+4,슬픔의,슬픔,NNG,26,substantivo comum
+4,슬픔의,의,JKG,26,partícula possessiva
+5,소리이라,소리,NNG,26,substantivo comum
+5,소리이라,이,VCP,26,cópula ('ser/estar')
+5,소리이라,라,EC,26,terminação conectiva (liga orações)
+6,나혈이,나,NP,26,pronome
+6,나혈이,혈,NNG,26,substantivo comum
+6,나혈이,이,JKS,26,partícula de sujeito
+7,자기,자기,NP,26,pronome
+8,자식들을,자식,NNG,26,substantivo comum
+8,자식들을,들,XSN,26,sufixo formador de substantivo
+8,자식들을,을,JKO,26,partícula de objeto
+9,위하어,위하,VV,26,verbo (ação)
+9,위하어,어,EC,26,terminação conectiva (liga orações)
+10,울며,울,VV,26,verbo (ação)
+10,울며,며,EC,26,terminação conectiva (liga orações)
+11,그들이,그,NP,26,pronome
+11,그들이,들,XSN,26,sufixo formador de substantivo
+11,그들이,이,JKS,26,partícula de sujeito
+12,없어지었으므로,없,VA,26,verbo descritivo (função de adjetivo)
+12,없어지었으므로,어,EC,26,terminação conectiva (liga orações)
+12,없어지었으므로,지,VX,26,verbo auxiliar
+12,없어지었으므로,었,EP,26,"terminação pré-final (tempo, honorífico)"
+12,없어지었으므로,으므로,EC,26,terminação conectiva (liga orações)
+13,위로,위,NNG,26,substantivo comum
+13,위로,로,JKB,26,partícula adverbial (locativo/direcional/etc)
+14,맞지,맞,VV,26,verbo (ação)
+14,맞지,지,EC,26,terminação conectiva (liga orações)
+15,못하리라,못하,VX,26,verbo auxiliar
+15,못하리라,리라,EC,26,terminação conectiva (liga orações)
+16,헤로시,헤로시,NNG,26,substantivo comum
+17,죽은,죽,VV,26,verbo (ação)
+17,죽은,은,ETM,26,terminação que transforma verbo em modificador
+18,후에,후,NNG,26,substantivo comum
+18,후에,에,JKB,26,partícula adverbial (locativo/direcional/etc)
+19,주의천사가,주의,NNG,26,substantivo comum
+19,주의천사가,천사,NNG,26,substantivo comum
+19,주의천사가,가,JKS,26,partícula de sujeito
+20,이,이,MM,26,determinante
+21,집트에,집,NNG,26,substantivo comum
+21,집트에,트,VV,26,verbo (ação)
+21,집트에,에,JKB,26,partícula adverbial (locativo/direcional/etc)
+22,있는,있,VV,26,verbo (ação)
+22,있는,는,ETM,26,terminação que transforma verbo em modificador
+23,요새,요새,NNG,26,substantivo comum
+24,배,배,NNG,26,substantivo comum
+25,꿈에,꿈,NNG,26,substantivo comum
+25,꿈에,에,JKB,26,partícula adverbial (locativo/direcional/etc)
+26,나타나어,나타나,VV,26,verbo (ação)
+26,나타나어,어,EC,26,terminação conectiva (liga orações)
+27,이르되,이르,VV-R,26,(não catalogada aqui)
+27,이르되,되,EC,26,terminação conectiva (liga orações)
+28,일어나어,일어나,VV,26,verbo (ação)
+28,일어나어,어,EC,26,terminação conectiva (liga orações)
+29,그,그,MM,26,determinante
+30,어린아이와,어리,VA,26,verbo descritivo (função de adjetivo)
+30,어린아이와,ᆫ,ETM,26,terminação que transforma verbo em modificador
+30,어린아이와,아이,NNG,26,substantivo comum
+30,어린아이와,와,JC,26,conjunção (partícula)
+31,그의,그,NP,26,pronome
+31,그의,의,JKG,26,partícula possessiva
+32,어머니를,어머니,NNG,26,substantivo comum
+32,어머니를,를,JKO,26,partícula de objeto
+33,데리고,데리,VV,26,verbo (ação)
+33,데리고,고,EC,26,terminação conectiva (liga orações)
+34,이스라일,이스라일,NNP,26,substantivo próprio
+35,땅으로,땅,NNG,26,substantivo comum
+35,땅으로,으로,JKB,26,partícula adverbial (locativo/direcional/etc)
+36,가라,가,VV,26,verbo (ação)
+36,가라,라,EC,26,terminação conectiva (liga orações)
+37,그,그,MM,26,determinante
+38,어린아이를,어린아이,NNG,26,substantivo comum
+38,어린아이를,를,JKO,26,partícula de objeto
+39,죽이려던,죽이,VV,26,verbo (ação)
+39,죽이려던,려던,ETM,26,terminação que transforma verbo em modificador
+40,자들이,자,NNB,26,substantivo dependente (só existe com outra palavra antes)
+40,자들이,들,XSN,26,sufixo formador de substantivo
+40,자들이,이,JKS,26,partícula de sujeito
+41,죽어,죽,VV,26,verbo (ação)
+41,죽어,어,EC,26,terminação conectiva (liga orações)
+42,는이라,는,JX,26,"partícula auxiliar (tópico, ênfase, etc — inclui 은/는)"
+42,는이라,이,VCP,26,cópula ('ser/estar')
+42,는이라,라,EC,26,terminação conectiva (liga orações)
+43,예습께서,예습,NNG,26,substantivo comum
+43,예습께서,께서,JKS,26,partícula de sujeito
+44,일어나어,일어나,VV,26,verbo (ação)
+44,일어나어,어,EC,26,terminação conectiva (liga orações)
+45,어린아이와,어린아이,NNG,26,substantivo comum
+45,어린아이와,와,JC,26,conjunção (partícula)
+46,그의,그,NP,26,pronome
+46,그의,의,JKG,26,partícula possessiva
+47,어머니를,어머니,NNG,26,substantivo comum
+47,어머니를,를,JKO,26,partícula de objeto
+48,데리고,데리,VV,26,verbo (ação)
+48,데리고,고,EC,26,terminação conectiva (liga orações)
+49,이스라일,이스라일,NNP,26,substantivo próprio
+50,땅으로,땅,NNG,26,substantivo comum
+50,땅으로,으로,JKB,26,partícula adverbial (locativo/direcional/etc)
+51,가시었다,가,VV,26,verbo (ação)
+51,가시었다,시,EP,26,"terminação pré-final (tempo, honorífico)"
+51,가시었다,었,EP,26,"terminação pré-final (tempo, honorífico)"
+51,가시었다,다,EF,26,terminação final (fecha a frase)
+0,그러나,그러나,MAJ,27,(não catalogada aqui)
+1,헤로세,헤로,NNP,27,substantivo próprio
+1,헤로세,세,MM,27,determinante
+2,뒤를,뒤,NNG,27,substantivo comum
+2,뒤를,를,JKO,27,partícula de objeto
+3,잇어,잇,VV-I,27,verbo (raiz irregular)
+3,잇어,어,EC,27,terminação conectiva (liga orações)
+4,아르케라우가,아르케라우,NNP,27,substantivo próprio
+4,아르케라우가,가,JKS,27,partícula de sujeito
+5,유대를,유대,NNG,27,substantivo comum
+5,유대를,를,JKO,27,partícula de objeto
+6,다스리고,다스리,VV,27,verbo (ação)
+6,다스리고,고,EC,27,terminação conectiva (liga orações)
+7,있다는,있,VX,27,verbo auxiliar
+7,있다는,다는,ETM,27,terminação que transforma verbo em modificador
+8,소식을,소식,NNG,27,substantivo comum
+8,소식을,을,JKO,27,partícula de objeto
+9,듣고는,듣,VV-I,27,verbo (raiz irregular)
+9,듣고는,고,EC,27,terminação conectiva (liga orações)
+9,듣고는,는,JX,27,"partícula auxiliar (tópico, ênfase, etc — inclui 은/는)"
+10,그곳으로,그곳,NP,27,pronome
+10,그곳으로,으로,JKB,27,partícula adverbial (locativo/direcional/etc)
+11,가기를,가,VV,27,verbo (ação)
+11,가기를,기,ETN,27,terminação nominalizadora
+11,가기를,를,JKO,27,partícula de objeto
+12,두려워하시었다,두려워하,VV,27,verbo (ação)
+12,두려워하시었다,시,EP,27,"terminação pré-final (tempo, honorífico)"
+12,두려워하시었다,었,EP,27,"terminação pré-final (tempo, honorífico)"
+12,두려워하시었다,다,EF,27,terminação final (fecha a frase)
+0,꿈에서,꿈,NNG,28,substantivo comum
+0,꿈에서,에서,JKB,28,partícula adverbial (locativo/direcional/etc)
+1,경고를,경고,NNG,28,substantivo comum
+1,경고를,를,JKO,28,partícula de objeto
+2,받으시고,받,VV-R,28,(não catalogada aqui)
+2,받으시고,으시,EP,28,"terminação pré-final (tempo, honorífico)"
+2,받으시고,고,EC,28,terminação conectiva (liga orações)
+3,갈릴리,갈리,VV,28,verbo (ação)
+3,갈릴리,ᆯ,ETM,28,terminação que transforma verbo em modificador
+3,갈릴리,리,NNB,28,substantivo dependente (só existe com outra palavra antes)
+4,지방으로,지방,NNG,28,substantivo comum
+4,지방으로,으로,JKB,28,partícula adverbial (locativo/direcional/etc)
+5,물러가어,물러가,VV,28,verbo (ação)
+5,물러가어,어,EC,28,terminação conectiva (liga orações)
+6,나사레디이라는,나사레디,NNP,28,substantivo próprio
+6,나사레디이라는,이,VCP,28,cópula ('ser/estar')
+6,나사레디이라는,라는,ETM,28,terminação que transforma verbo em modificador
+7,도시에,도시,NNG,28,substantivo comum
+7,도시에,에,JKB,28,partícula adverbial (locativo/direcional/etc)
+8,이르어,이르,VV-I,28,verbo (raiz irregular)
+8,이르어,어,EC,28,terminação conectiva (liga orações)
+9,사시었다,사,VV,28,verbo (ação)
+9,사시었다,시,EP,28,"terminação pré-final (tempo, honorífico)"
+9,사시었다,었,EP,28,"terminação pré-final (tempo, honorífico)"
+9,사시었다,다,EF,28,terminação final (fecha a frase)
+0,이는,이,NP,29,pronome
+0,이는,는,JX,29,"partícula auxiliar (tópico, ênfase, etc — inclui 은/는)"
+1,선지자들이,선지자,NNG,29,substantivo comum
+1,선지자들이,들,XSN,29,sufixo formador de substantivo
+1,선지자들이,이,JKS,29,partícula de sujeito
+2,예언한,예언,NNG,29,substantivo comum
+2,예언한,하,XSV,29,sufixo formador de verbo
+2,예언한,ᆫ,ETM,29,terminação que transforma verbo em modificador
+3,그는,그,NP,29,pronome
+3,그는,는,JX,29,"partícula auxiliar (tópico, ênfase, etc — inclui 은/는)"
+4,나사래,나사래,NNP,29,substantivo próprio
+5,사람이라,사람,NNG,29,substantivo comum
+5,사람이라,이,VCP,29,cópula ('ser/estar')
+5,사람이라,라,EC,29,terminação conectiva (liga orações)
+6,불릴,불리,VV,29,verbo (ação)
+6,불릴,ᆯ,ETM,29,terminação que transforma verbo em modificador
+7,것이다,것,NNB,29,substantivo dependente (só existe com outra palavra antes)
+7,것이다,이,VCP,29,cópula ('ser/estar')
+7,것이다,다,EF,29,terminação final (fecha a frase)
+8,이라는,이,VCP,29,cópula ('ser/estar')
+8,이라는,라는,ETM,29,terminação que transforma verbo em modificador
+9,말씀이,말씀,NNG,29,substantivo comum
+9,말씀이,이,JKS,29,partícula de sujeito
+10,이루어지게,이루어지,VV,29,verbo (ação)
+10,이루어지게,게,EC,29,terminação conectiva (liga orações)
+11,하려,하,VX,29,verbo auxiliar
+11,하려,려,EC,29,terminação conectiva (liga orações)
+12,하심이었다,하,VX,29,verbo auxiliar
+12,하심이었다,시,EP,29,"terminação pré-final (tempo, honorífico)"
+12,하심이었다,ᆷ,ETN,29,terminação nominalizadora
+12,하심이었다,이,VCP,29,cópula ('ser/estar')
+12,하심이었다,었,EP,29,"terminação pré-final (tempo, honorífico)"
+12,하심이었다,다,EF,29,terminação final (fecha a frase)
