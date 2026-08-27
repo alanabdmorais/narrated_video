@@ -449,3 +449,29 @@ como discordar.
 > ⚠️ Vídeos já queimados mantêm as cores antigas — a legenda da descrição
 > precisa bater com a paleta usada naquele `.ass`. Pra atualizar um vídeo
 > antigo, é regerar o `.ass` (`caption-multicolor-*-generate`) e requeimar.
+
+### Cores por idioma (vídeo multi-idioma cor única)
+
+Paleta diferente da de cima em **uso** — aqui é 1 cor por IDIOMA, não por classe
+gramatical — mas sai das mesmas 21 cores com emoji. Fica em
+`config.CORES_IDIOMAS`; a legenda vem de
+`cores.legenda_youtube_idiomas(config.CORES_IDIOMAS, ordem)`.
+
+| Ordem na tela | Idioma | Emoji | Cor | Hex |
+|---|---|---|---|---|
+| y=100 | Português | 🟡 | amarelo | `#FFFF00` |
+| y=180 | Inglês | 📗 | verde claro | `#66BB6A` |
+| y=260 | Espanhol | 🟠 | laranja | `#FFA500` |
+| y=340 | Francês | 🩵 | azul claro | `#87CEEB` |
+| y=420 | Coreano | 🩷 | rosa | `#FF69B4` |
+| y=500 | Chinês | 🟣 | roxo | `#800080` |
+
+Cada idioma manteve a cor que já tinha, só migrada pro tom equivalente da
+paleta — **com uma exceção**: o chinês. O tom mais próximo do `#B388FF` antigo
+seria o lilás 🪻, mas as legendas ficam **empilhadas** e o chinês cai logo
+abaixo do coreano — lilás encostado em rosa é o par mais parecido da paleta
+inteira. Virou roxo 🟣, que mantém a família e contrasta com o vizinho.
+
+Como as cores por idioma e as por classe gramatical nunca aparecem no mesmo
+vídeo (são níveis diferentes — `_final_idiomas` vs `_final_multicolor`), elas
+podem reusar os mesmos tons sem conflito.

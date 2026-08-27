@@ -195,6 +195,45 @@ def cor_ass(classe: str) -> str:
     return f"&H00{b}{g}{r}"
 
 
+def emoji_por_cor(hex_cor: str) -> str:
+    """Emoji da paleta pra esse hex, ou "" se a cor não faz parte dela.
+
+    Usado pra resolver o emoji de cores que não vêm de CORES_HTML — o caso
+    principal é CORES_IDIOMAS (config.py), que é 1 cor por IDIOMA, não por
+    classe gramatical, mas sai da mesma paleta.
+    """
+    return PALETA_EMOJI.get(hex_cor.upper(), ("", ""))[0]
+
+
+# Nome de cada idioma pra legenda da descrição (o mesmo NOMES_IDIOMA de
+# constants.py, repetido aqui pra cores.py não depender de nada do projeto).
+NOMES_IDIOMA_LEGENDA: dict[str, str] = {
+    "pt": "Português", "en": "Inglês", "es": "Espanhol",
+    "fr": "Francês", "ko": "Coreano", "zh": "Chinês",
+}
+
+
+def legenda_youtube_idiomas(cores_idiomas: dict[str, str],
+                            ordem: list[str] | None = None) -> str:
+    """Bloco de legenda do vídeo MULTI-IDIOMA (1 cor por idioma) pra colar na
+    descrição do YouTube.
+
+    Recebe o `config.CORES_IDIOMAS` do vídeo. `ordem` define a sequência
+    (idealmente a mesma de cima pra baixo na tela, POSICOES_Y); o padrão segue
+    a ordem do próprio dict. Idioma cuja cor não estiver na paleta sai com
+    "⬜" e o hex, pra ficar evidente que falta emoji pra ela.
+    """
+    linhas = []
+    for lang in (ordem if ordem is not None else cores_idiomas):
+        cor = cores_idiomas.get(lang)
+        if not cor:
+            continue
+        emoji = emoji_por_cor(cor)
+        nome = NOMES_IDIOMA_LEGENDA.get(lang, lang.upper())
+        linhas.append(f"{emoji} {nome}" if emoji else f"⬜ {nome} (cor {cor} sem emoji)")
+    return "\n".join(linhas)
+
+
 def legenda_youtube(classes: list[str] | None = None) -> str:
     """Monta o bloco de legenda pra colar na descrição do YouTube:
     uma linha por classe, com o emoji da cor.

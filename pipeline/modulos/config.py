@@ -143,13 +143,21 @@ class PipelineConfig:
 
     def __post_init__(self):
         if self.CORES_IDIOMAS is None:
+            # Cores tiradas da paleta emoji de cores.py (PALETA_EMOJI), pra
+            # dar pra sinalizar cada idioma na descrição do YouTube — mesmo
+            # critério da legenda multicor. Cada idioma manteve sua cor de
+            # sempre, só migrada pro tom equivalente da paleta.
+            # A ordem importa: os idiomas ficam EMPILHADOS na tela (POSICOES_Y
+            # 100→500), então vizinhos não podem se parecer. Por isso o chinês
+            # é roxo 🟣 e não lilás 🪻 — lilás encostaria no rosa 🩷 do
+            # coreano, que é a linha logo acima dele.
             object.__setattr__(self, 'CORES_IDIOMAS', {
-                'pt': '#FFD600',   # amarelo
-                'en': '#69F0AE',   # verde
-                'es': '#FF6D00',   # laranja
-                'fr': '#40C4FF',   # azul claro
-                'ko': '#FF4081',   # rosa/magenta
-                'zh': '#B388FF',   # roxo claro
+                'pt': '#FFFF00',   # 🟡 amarelo
+                'en': '#66BB6A',   # 📗 verde claro
+                'es': '#FFA500',   # 🟠 laranja
+                'fr': '#87CEEB',   # 🩵 azul claro
+                'ko': '#FF69B4',   # 🩷 rosa
+                'zh': '#800080',   # 🟣 roxo
             })
 
     # ── Layout de legenda ─────────────────────────────────────────────────────
