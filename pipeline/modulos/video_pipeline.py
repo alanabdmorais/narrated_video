@@ -786,11 +786,20 @@ class VideoPipeline:
 
     # ── Fase 7: Vídeo base ───────────────────────────────────────────────────
 
-    def criar_video_base(self, clipes: list[Clipe]) -> Path:
+    def criar_video_base(self, clipes: list[Clipe], trilha_path: Optional[Path] = None) -> Path:
         """Concatena os clipes já cortados e creditados, adiciona narração e trilha.
 
         Crédito, logo e padronização de resolução/fps já foram aplicados em
         baixar_clipes() — aqui só falta juntar tudo.
+
+        `trilha_path`: quando informado, usa ESSE arquivo de áudio como
+        trilha de fundo diretamente, sem passar por _resolver_trilha_sonora()
+        (que só sabe pegar 1 arquivo fixo de assets/trilha/). Usado pelos
+        notebooks *-trilhas.ipynb, que montam a trilha antes (ver
+        trilha_pipeline.calcular_segmentos_trilha + ffmpeg_utils.
+        montar_trilha_sequencial) e só entregam o resultado pronto aqui.
+        Se None (padrão), comportamento inalterado -- cai no arquivo único
+        de assets/trilha/, como sempre.
         """
         logger.info("── Vídeo base: concatenando")
 
@@ -805,7 +814,7 @@ class VideoPipeline:
         adicionar_audio(video_sem_audio, audio_path, video_com_audio)
         video_sem_audio.unlink(missing_ok=True)
 
-        musica_path = self._resolver_trilha_sonora()
+        musica_path = trilha_path if (trilha_path and Path(trilha_path).exists()) else self._resolver_trilha_sonora()
         video_base = Path(self._cfg.NOME_VIDEO_BASE)
         if musica_path and musica_path.exists():
             adicionar_trilha_fundo(

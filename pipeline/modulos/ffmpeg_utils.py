@@ -13,6 +13,7 @@ Funções principais:
     adicionar_credito_e_logo(video, saida, credito, logo, tamanho)
     adicionar_audio(video, audio, saida)
     adicionar_trilha_fundo(video, musica, saida, volume)
+    montar_trilha_sequencial(segmentos, saida) → Path
     gerar_ass(legendas_por_idioma, config)     → Path   ← CRÍTICO
     queimar_legendas_ass(video, ass_path, saida)
     obter_duracao(arquivo)                     → float
@@ -21,6 +22,7 @@ from __future__ import annotations
 
 import logging
 import os
+import shutil
 import subprocess
 import unicodedata
 from pathlib import Path
@@ -354,6 +356,78 @@ def adicionar_trilha_fundo(
     )
     logger.info("adicionar_trilha_fundo: narração=%.0f%% trilha=%.0f%% (%.1fs) → %s",
                 volume_narracao * 100, volume * 100, duracao_video, saida.name)
+    return saida
+
+
+def montar_trilha_sequencial(
+    segmentos: list[dict],
+    saida: Path | str,
+) -> Path:
+    """
+    Concatena vários trechos de trilha (cada um trimado/looped pra uma
+    duração exata) numa única faixa de áudio contínua -- pensada como
+    entrada de adicionar_trilha_fundo() no lugar de uma trilha única (ver
+    trilha_pipeline.calcular_segmentos_trilha, que monta o plano de
+    segmentos casando o clima de cada trecho de evento com um pool de
+    trilhas candidatas).
+
+    `segmentos`: lista de dicts com pelo menos "duracao_seg" (float) e
+    "arquivo" (Path do áudio já baixado, ou None). Segmento com
+    "arquivo": None vira SILÊNCIO daquela duração (acontece quando
+    nenhuma trilha do pool bateu o clima do evento naquele trecho).
+
+    Cada pedaço é re-codificado pro MESMO formato (AAC 44.1kHz estéreo)
+    antes de concatenar -- os arquivos de origem vêm de fontes bem
+    diferentes (Freesound, YouTube Audio Library, Pixabay), cada um com
+    seu próprio sample rate/canais/codec; concatenar sem padronizar
+    quebra o demuxer concat do FFmpeg (exige parâmetros idênticos), igual
+    ao que já acontecia com os clipes de vídeo antes da padronização em
+    adicionar_credito_e_logo().
+    """
+    saida = Path(saida)
+    pasta_temp = saida.parent / f"_trilha_pedacos_{saida.stem}"
+    pasta_temp.mkdir(parents=True, exist_ok=True)
+
+    pedacos: list[Path] = []
+    for i, seg in enumerate(segmentos):
+        pedaco = pasta_temp / f"pedaco_{i:03d}.m4a"
+        duracao = max(0.5, float(seg["duracao_seg"]))
+        arquivo = seg.get("arquivo")
+
+        if arquivo and Path(arquivo).exists():
+            _run(
+                ["ffmpeg", "-y",
+                 "-stream_loop", "-1", "-i", str(arquivo),
+                 "-t", f"{duracao:.3f}",
+                 "-ar", "44100", "-ac", "2", "-c:a", "aac",
+                 str(pedaco)],
+                "montar_trilha_sequencial (trecho)",
+            )
+        else:
+            _run(
+                ["ffmpeg", "-y",
+                 "-f", "lavfi", "-i", "anullsrc=r=44100:cl=stereo",
+                 "-t", f"{duracao:.3f}",
+                 "-c:a", "aac",
+                 str(pedaco)],
+                "montar_trilha_sequencial (silêncio)",
+            )
+        pedacos.append(pedaco)
+
+    lista_txt = pasta_temp / "lista.txt"
+    with open(lista_txt, "w", encoding="utf-8") as fh:
+        for p in pedacos:
+            fh.write(f"file '{p.resolve()}'\n")
+
+    _run(
+        ["ffmpeg", "-y",
+         "-f", "concat", "-safe", "0", "-i", str(lista_txt),
+         "-c", "copy", str(saida)],
+        "montar_trilha_sequencial (concat)",
+    )
+
+    shutil.rmtree(pasta_temp, ignore_errors=True)
+    logger.info("montar_trilha_sequencial: %d segmento(s) → %s", len(segmentos), saida.name)
     return saida
 
 

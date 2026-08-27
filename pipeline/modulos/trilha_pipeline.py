@@ -98,6 +98,149 @@ def pontuar_trilhas(tags_clima_alvo, trilha_stock):
     return sorted(candidatos, key=lambda c: -c["score"])
 
 
+# ==============================================
+# MATCH DE TRILHA POR EVENTO -- agrupa versículos consecutivos do MESMO
+# evento bíblico sob a MESMA trilha (o clima muda quando a cena muda, não
+# verso a verso -- diferente do match de cena/imagem, que é por versículo).
+# Mesma ideia de match_pipeline.calcular_segmentos_versiculo, só que a
+# CHAVE de agrupamento é o evento, e o candidato vem de um pool pequeno
+# escolhido à mão (não a trilha_stock inteira) -- ver notebook
+# video-base-imagem-versiculo-trilhas.ipynb.
+# ==============================================
+
+
+def carregar_evento_clima(aba_evento_tags):
+    """Dict {evento_id: {"tags_clima": [...], "tags_clima_semelhantes": [...]}}
+    lido DIRETO da planilha evento_tags -- diferente de
+    match_pipeline.carregar_evento_tags (que só lê tags/tags_semelhantes,
+    a dimensão VISUAL, não a de clima)."""
+    resultado = {}
+    for linha in aba_evento_tags.get_all_records():
+        evento_id = str(linha.get("evento_id", "")).strip()
+        if not evento_id:
+            continue
+        resultado[evento_id] = {
+            "tags_clima": [t.strip() for t in str(linha.get("tags_clima", "")).split(",") if t.strip()],
+            "tags_clima_semelhantes": [t.strip() for t in str(linha.get("tags_clima_semelhantes", "")).split(",") if t.strip()],
+        }
+    return resultado
+
+
+def calcular_segmentos_trilha(versiculos_texto, tempos_versiculo, duracao_total_ms,
+                                 livro_pt, capitulo, titulos_biblicos, eventos_biblicos,
+                                 evento_clima_dict, trilha_pool):
+    """
+    Monta o plano de segmentos de TRILHA: um item por trecho contínuo de
+    versículos do MESMO evento bíblico, com a trilha escolhida (melhor
+    candidato do `trilha_pool` pelo clima do evento) e a duração exata
+    daquele trecho no áudio.
+
+    `trilha_pool`: lista pequena e curada à mão (não a trilha_stock
+    inteira) -- ver carregar_trilha_stock_da_planilha() + filtro pelos
+    ids/urls colados na Configuração do notebook.
+
+    Segmento sem evento reconhecido no léxico, ou sem clima cadastrado
+    pro evento, ou sem nenhuma trilha do pool batendo tag nenhuma, fica
+    com "trilha": None -- SILÊNCIO nesse trecho, não é erro (ver
+    relatorio_lacunas_trilha pra revisar depois; normalmente resolve
+    ampliando o trilha_pool ou preenchendo tags_clima do evento).
+
+    Retorna lista de dicts: [{"evento_id", "titulo_evento", "versiculos":
+    [1,2,3], "inicio_ms", "fim_ms", "duracao_seg", "trilha": {...} ou None}]
+    """
+    from match_pipeline import buscar_contexto_biblico
+
+    versos_ordenados = sorted(tempos_versiculo.keys())
+
+    # ── 1. evento de cada versículo (mesma busca léxica do match de cena) ──
+    evento_por_verso = {}
+    for v in versos_ordenados:
+        contexto = buscar_contexto_biblico(livro_pt, capitulo, v, titulos_biblicos, eventos_biblicos)
+        evento_por_verso[v] = (contexto.get("evento_id"), contexto.get("titulo_evento"))
+
+    # ── 2. limites brutos de cada versículo ─────────────────────────────
+    brutos = []
+    for i, v in enumerate(versos_ordenados):
+        inicio = tempos_versiculo[v]
+        fim = tempos_versiculo[versos_ordenados[i + 1]] if i + 1 < len(versos_ordenados) else duracao_total_ms
+        evento_id, titulo_evento = evento_por_verso[v]
+        brutos.append({"versiculos": [v], "inicio_ms": inicio, "fim_ms": fim,
+                        "evento_id": evento_id, "titulo_evento": titulo_evento})
+
+    # ── 3. funde versículos consecutivos do MESMO evento num só segmento ──
+    segmentos = []
+    for seg in brutos:
+        anterior = segmentos[-1] if segmentos else None
+        if anterior and anterior["evento_id"] == seg["evento_id"]:
+            anterior["fim_ms"] = seg["fim_ms"]
+            anterior["versiculos"].extend(seg["versiculos"])
+        else:
+            segmentos.append(seg)
+
+    # ── 4. casa a trilha de cada segmento pelo clima do evento ──────────
+    plano = []
+    for seg in segmentos:
+        trilha_escolhida = None
+        if seg["evento_id"] and seg["evento_id"] in evento_clima_dict:
+            tags_clima_evento = evento_clima_dict[seg["evento_id"]]["tags_clima_semelhantes"] \
+                or evento_clima_dict[seg["evento_id"]]["tags_clima"]
+            if tags_clima_evento:
+                candidatos = pontuar_trilhas(tags_clima_evento, trilha_pool)
+                if candidatos:
+                    trilha_escolhida = candidatos[0]
+
+        plano.append({
+            "evento_id": seg["evento_id"],
+            "titulo_evento": seg["titulo_evento"],
+            "versiculos": seg["versiculos"],
+            "inicio_ms": seg["inicio_ms"],
+            "fim_ms": seg["fim_ms"],
+            "duracao_seg": max(0.5, (seg["fim_ms"] - seg["inicio_ms"]) / 1000.0),
+            "trilha": trilha_escolhida,
+        })
+
+    return plano
+
+
+def relatorio_lacunas_trilha(plano_segmentos):
+    """
+    Texto legível com os segmentos que ficaram SEM trilha (ver
+    calcular_segmentos_trilha) -- pra você revisar e decidir se amplia o
+    trilha_pool, cadastra tags_clima que faltam no evento, ou aceita o
+    silêncio ali mesmo. Retorna None se não há lacuna nenhuma.
+    """
+    lacunas = [s for s in plano_segmentos if not s["trilha"]]
+    if not lacunas:
+        return None
+    linhas = [f"{len(lacunas)} segmento(s) SEM TRILHA (silêncio nesse trecho):\n"]
+    for s in lacunas:
+        v_ini, v_fim = s["versiculos"][0], s["versiculos"][-1]
+        faixa = f"v{v_ini}" if v_ini == v_fim else f"v{v_ini}-{v_fim}"
+        motivo = "evento não reconhecido no léxico" if not s["evento_id"] else \
+            f"evento '{s['titulo_evento']}' sem trilha do pool com clima em comum"
+        linhas.append(f"  {faixa:>10s}  ({s['duracao_seg']:.1f}s) -- {motivo}")
+    return "\n".join(linhas)
+
+
+def baixar_trilha(url, destino):
+    """Baixa um arquivo de trilha (url_download, ou url_preview como
+    alternativa) pro caminho local `destino`. Retorna True se deu certo."""
+    import requests
+    from pathlib import Path
+
+    destino = Path(destino)
+    try:
+        r = requests.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=30, stream=True)
+        r.raise_for_status()
+        with open(destino, "wb") as fh:
+            for chunk in r.iter_content(chunk_size=8192):
+                if chunk:
+                    fh.write(chunk)
+    except Exception:
+        return False
+    return destino.exists() and destino.stat().st_size > 1000
+
+
 # ── Vocabulário fechado de clima (1 palavra representante por grupo do
 # dicionario_sinonimos_clima.py) -- dado pra IA como opções, pra sempre
 # sugerir algo que já bate com um grupo de sinônimo conhecido, em vez de
