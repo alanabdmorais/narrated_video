@@ -126,46 +126,76 @@ def carregar_evento_clima(aba_evento_tags):
     return resultado
 
 
+def carregar_titulo_clima(aba_titulo_tags):
+    """Dict {titulo_id: {"tags_clima": [...], "tags_clima_semelhantes": [...]}}
+    -- mesma ideia de carregar_evento_clima, granularidade de versículo
+    (mais fina que evento). Usado como PRIMEIRA tentativa em
+    calcular_segmentos_trilha -- só cai pro clima do evento se o título
+    que cobre aquele trecho não tiver clima próprio (mesmo cascata
+    título→evento já usado no match visual, ver match_pipeline.py)."""
+    resultado = {}
+    for linha in aba_titulo_tags.get_all_records():
+        titulo_id = str(linha.get("titulo_id", "")).strip()
+        if not titulo_id:
+            continue
+        resultado[titulo_id] = {
+            "tags_clima": [t.strip() for t in str(linha.get("tags_clima", "")).split(",") if t.strip()],
+            "tags_clima_semelhantes": [t.strip() for t in str(linha.get("tags_clima_semelhantes", "")).split(",") if t.strip()],
+        }
+    return resultado
+
+
 def calcular_segmentos_trilha(versiculos_texto, tempos_versiculo, duracao_total_ms,
                                  livro_pt, capitulo, titulos_biblicos, eventos_biblicos,
-                                 evento_clima_dict, trilha_pool):
+                                 evento_clima_dict, trilha_pool, titulo_clima_dict=None):
     """
     Monta o plano de segmentos de TRILHA: um item por trecho contínuo de
     versículos do MESMO evento bíblico, com a trilha escolhida (melhor
-    candidato do `trilha_pool` pelo clima do evento) e a duração exata
-    daquele trecho no áudio.
+    candidato do `trilha_pool` pelo clima) e a duração exata daquele
+    trecho no áudio.
+
+    O AGRUPAMENTO em segmentos é sempre por EVENTO (é o que dá o "vários
+    versículos seguidos com a mesma trilha, depois troca" -- clima muda
+    quando a cena muda, não verso a verso). Já as TAGS de clima usadas
+    pra escolher a trilha de cada segmento seguem a mesma cascata do
+    match visual: tenta primeiro o TÍTULO do primeiro versículo do
+    segmento (mais específico, se `titulo_clima_dict` foi passado e
+    tiver clima cadastrado) -- só cai pro clima do EVENTO como um todo
+    se o título não tiver clima próprio.
 
     `trilha_pool`: lista pequena e curada à mão (não a trilha_stock
     inteira) -- ver carregar_trilha_stock_da_planilha() + filtro pelos
     ids/urls colados na Configuração do notebook.
 
     Segmento sem evento reconhecido no léxico, ou sem clima cadastrado
-    pro evento, ou sem nenhuma trilha do pool batendo tag nenhuma, fica
-    com "trilha": None -- SILÊNCIO nesse trecho, não é erro (ver
-    relatorio_lacunas_trilha pra revisar depois; normalmente resolve
-    ampliando o trilha_pool ou preenchendo tags_clima do evento).
+    (nem no título nem no evento), ou sem nenhuma trilha do pool batendo
+    tag nenhuma, fica com "trilha": None -- SILÊNCIO nesse trecho, não é
+    erro (ver relatorio_lacunas_trilha pra revisar depois; normalmente
+    resolve ampliando o trilha_pool ou preenchendo tags_clima do
+    evento/título em sincronizar-evento-titulo-tags.ipynb).
 
     Retorna lista de dicts: [{"evento_id", "titulo_evento", "versiculos":
     [1,2,3], "inicio_ms", "fim_ms", "duracao_seg", "trilha": {...} ou None}]
     """
     from match_pipeline import buscar_contexto_biblico
 
+    titulo_clima_dict = titulo_clima_dict or {}
     versos_ordenados = sorted(tempos_versiculo.keys())
 
-    # ── 1. evento de cada versículo (mesma busca léxica do match de cena) ──
-    evento_por_verso = {}
+    # ── 1. evento/título de cada versículo (mesma busca léxica do match de cena) ──
+    contexto_por_verso = {}
     for v in versos_ordenados:
-        contexto = buscar_contexto_biblico(livro_pt, capitulo, v, titulos_biblicos, eventos_biblicos)
-        evento_por_verso[v] = (contexto.get("evento_id"), contexto.get("titulo_evento"))
+        contexto_por_verso[v] = buscar_contexto_biblico(livro_pt, capitulo, v, titulos_biblicos, eventos_biblicos)
 
     # ── 2. limites brutos de cada versículo ─────────────────────────────
     brutos = []
     for i, v in enumerate(versos_ordenados):
         inicio = tempos_versiculo[v]
         fim = tempos_versiculo[versos_ordenados[i + 1]] if i + 1 < len(versos_ordenados) else duracao_total_ms
-        evento_id, titulo_evento = evento_por_verso[v]
+        contexto = contexto_por_verso[v]
         brutos.append({"versiculos": [v], "inicio_ms": inicio, "fim_ms": fim,
-                        "evento_id": evento_id, "titulo_evento": titulo_evento})
+                        "evento_id": contexto.get("evento_id"), "titulo_evento": contexto.get("titulo_evento"),
+                        "titulo_id": contexto.get("titulo_id")})
 
     # ── 3. funde versículos consecutivos do MESMO evento num só segmento ──
     segmentos = []
@@ -177,17 +207,22 @@ def calcular_segmentos_trilha(versiculos_texto, tempos_versiculo, duracao_total_
         else:
             segmentos.append(seg)
 
-    # ── 4. casa a trilha de cada segmento pelo clima do evento ──────────
+    # ── 4. casa a trilha de cada segmento (título → evento) ─────────────
     plano = []
     for seg in segmentos:
-        trilha_escolhida = None
-        if seg["evento_id"] and seg["evento_id"] in evento_clima_dict:
-            tags_clima_evento = evento_clima_dict[seg["evento_id"]]["tags_clima_semelhantes"] \
+        tags_clima = []
+        if seg["titulo_id"] and seg["titulo_id"] in titulo_clima_dict:
+            tags_clima = titulo_clima_dict[seg["titulo_id"]]["tags_clima_semelhantes"] \
+                or titulo_clima_dict[seg["titulo_id"]]["tags_clima"]
+        if not tags_clima and seg["evento_id"] and seg["evento_id"] in evento_clima_dict:
+            tags_clima = evento_clima_dict[seg["evento_id"]]["tags_clima_semelhantes"] \
                 or evento_clima_dict[seg["evento_id"]]["tags_clima"]
-            if tags_clima_evento:
-                candidatos = pontuar_trilhas(tags_clima_evento, trilha_pool)
-                if candidatos:
-                    trilha_escolhida = candidatos[0]
+
+        trilha_escolhida = None
+        if tags_clima:
+            candidatos = pontuar_trilhas(tags_clima, trilha_pool)
+            if candidatos:
+                trilha_escolhida = candidatos[0]
 
         plano.append({
             "evento_id": seg["evento_id"],
