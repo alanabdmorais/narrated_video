@@ -142,7 +142,8 @@ Tudo isso vem de propriedades/métodos de `PipelineConfig` em `modulos/config.py
 | `nome_legenda_unica` | = `NOME_LEGENDA_UNICA` (se preenchido) senão `NOME_SRT_PT_WHISPER` | SRT escolhido pro vídeo de legenda única. |
 | `nome_legenda_mestre` | = `NOME_LEGENDA_MESTRE` (se preenchido) senão `nome_legenda_unica` | Molde de segmentação/tempos pros outros idiomas (Language Subtitles) — é o mestre de SEGMENTAÇÃO, ver seção 6b. |
 | `nome_ass(lang)` | `<nome>_legendas_<lang>.ass` | Legenda queimada (ASS), por idioma. |
-| `nome_srt_versiculo` | `<nome>_versiculo.srt` | Indicador de livro:versículo (overlay). |
+| `nome_srt_versiculo` | `<nome>_versiculo.srt` | Indicador de livro:versículo (overlay) NUM SÓ IDIOMA (o mestre, ex: "Matt 2:4") — usado pelo vídeo de legenda única (`caption_pipeline.py`). |
+| `nome_srt_versiculo_multilingue` | `<nome>_versiculo_multilingue.srt` | Mesmo indicador, mas combinando as abreviações de TODOS os idiomas configurados (ex: "Matt/Mt/마 2:4") — usado pelo vídeo de legendas multi-idioma (`language_captions_pipeline.py`), que já empilha vários idiomas na tela. |
 
 `PROTEGER_LEGENDA_MESTRE` (bool, padrão `True`) — impede sobrescrever a legenda
 mestre sem querer.
@@ -261,3 +262,11 @@ legados que apontam todos pra `pasta_oracao`.
   é de fato consumido/mesclado pelo pipeline; os outros 2 são "documentação
   configurável" — apontam pro arquivo certo, mas a mescla em si (quando
   existe) é sempre feita por você fora do pipeline.
+- `nome_srt_versiculo` virou NUM SÓ IDIOMA (mestre) e `nome_srt_versiculo_multilingue`
+  (novo) ficou com a combinação de todos os idiomas — antes as duas legendas
+  de idioma único e multi-idioma geravam/liam o MESMO nome (`_versiculo.srt`)
+  com conteúdo sempre multilíngue, o que não batia com o arquivo real do
+  `40_Matt_02` (`40_Matt_02_versiculo_multilingue.srt`, já com o sufixo). Com
+  a mudança, o nome real do Drive passou a corresponder ao novo
+  `nome_srt_versiculo_multilingue` (usado por `language_captions_pipeline.py`)
+  automaticamente — nenhuma ação manual no Drive foi necessária pra esse caso.

@@ -450,8 +450,21 @@ class PipelineConfig:
 
     @property
     def nome_srt_versiculo(self) -> str:
-        """SRT do indicador de livro:versículo (combinado, multilíngue)."""
+        """SRT do indicador de livro:versículo NUM SÓ IDIOMA (o mestre --
+        ex: "Matt 2:4") -- usado pelo vídeo de legenda única
+        (caption_pipeline.py/queimar_legenda_unica), que só tem 1 idioma na
+        tela. Pra várias legendas empilhadas ao mesmo tempo, ver
+        nome_srt_versiculo_multilingue abaixo."""
         return f"{self.NOME_ORACAO}_versiculo.srt"
+
+    @property
+    def nome_srt_versiculo_multilingue(self) -> str:
+        """SRT do indicador de livro:versículo combinando as abreviações de
+        TODOS os idiomas configurados (ABREVIACOES_LIVRO) num só bloco --
+        ex: "Matt/Mt/마 2:4". Usado pelo vídeo de legendas multi-idioma
+        (language_captions_pipeline.py/queimar_idiomas), onde já tem
+        vários idiomas empilhados na tela ao mesmo tempo."""
+        return f"{self.NOME_ORACAO}_versiculo_multilingue.srt"
 
     def nome_match_json(self, capitulo: int) -> str:
         """JSON com o resultado do match versículo↔vídeo/imagem (match-scene-verse.ipynb)."""

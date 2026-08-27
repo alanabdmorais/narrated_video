@@ -169,11 +169,16 @@ class CaptionPipeline:
 
     def gerar_legenda_versiculo(self, texto_com_versiculos: str) -> Path:
         """
-        Gera o SRT do indicador de livro:versículo — alinha o texto
-        fornecido (com números de versículo isolados no meio do fluxo, ex:
-        "1 Now when Jesus... 2 Where is he...") contra a legenda única
-        (que aqui faz o papel de referência de tempo), e salva como
-        config.nome_srt_versiculo no Drive.
+        Gera o SRT do indicador de livro:versículo NUM SÓ IDIOMA (o mestre)
+        — alinha o texto fornecido (com números de versículo isolados no
+        meio do fluxo, ex: "1 Now when Jesus... 2 Where is he...") contra a
+        legenda única (que aqui faz o papel de referência de tempo), e
+        salva como config.nome_srt_versiculo no Drive.
+
+        Só 1 idioma na tela aqui (legenda única) — por isso a abreviação
+        usada é só a do IDIOMA_MESTRE, não a combinação de todos os
+        idiomas (isso é o vídeo de legendas multi-idioma, ver
+        language_captions_pipeline.py).
 
         Opcional — só use em vídeos de estudo bíblico por versículo. Para
         vídeos de oração/conteúdo livre, sem citação bíblica, não chame
@@ -188,8 +193,8 @@ class CaptionPipeline:
             )
 
         fim_video_ms = legendas_referencia[-1].fim_ms
-        abreviacoes = list(self._cfg.ABREVIACOES_LIVRO.values())
-        legendas_versiculo = gerar_legendas_versiculo(tempos, self._cfg.CAPITULO, abreviacoes, fim_video_ms)
+        abreviacao_mestre = self._cfg.ABREVIACOES_LIVRO.get(self._cfg.IDIOMA_MESTRE, self._cfg.IDIOMA_MESTRE)
+        legendas_versiculo = gerar_legendas_versiculo(tempos, self._cfg.CAPITULO, [abreviacao_mestre], fim_video_ms)
 
         destino = Path(self._cfg.nome_srt_versiculo)
         salvar_srt(legendas_versiculo, destino)

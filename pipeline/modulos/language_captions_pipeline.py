@@ -352,15 +352,19 @@ class LanguageCaptionsPipeline:
 
     def gerar_legenda_versiculo(self, texto_com_versiculos: str) -> Path:
         """
-        Gera o SRT do indicador de livro:versículo — alinha o texto
-        fornecido (com números de versículo isolados no meio do fluxo, ex:
-        "1 Now when Jesus... 2 Where is he...") contra a legenda mestre, e
-        salva como config.nome_srt_versiculo no Drive.
+        Gera o SRT do indicador de livro:versículo COMBINANDO TODOS OS
+        IDIOMAS — alinha o texto fornecido (com números de versículo
+        isolados no meio do fluxo, ex: "1 Now when Jesus... 2 Where is
+        he...") contra a legenda mestre, e salva como
+        config.nome_srt_versiculo_multilingue no Drive.
 
         As abreviações do livro (config.ABREVIACOES_LIVRO, uma por idioma)
         e o capítulo (config.CAPITULO) definem o texto de cada bloco —
         ex: "Matt/Mt/마 2:4" — combinando as abreviações únicas na ordem
-        configurada, trocando só o número do versículo.
+        configurada, trocando só o número do versículo. Faz sentido aqui
+        porque já tem vários idiomas empilhados na tela ao mesmo tempo
+        (pro vídeo de legenda única, ver caption_pipeline.py -- só 1
+        idioma, usa nome_srt_versiculo sem a combinação).
         """
         legendas_mestre = self.carregar_legenda_mestre()
         tempos = alinhar_versiculos(texto_com_versiculos, legendas_mestre)
@@ -374,7 +378,7 @@ class LanguageCaptionsPipeline:
         abreviacoes = list(self._cfg.ABREVIACOES_LIVRO.values())
         legendas_versiculo = gerar_legendas_versiculo(tempos, self._cfg.CAPITULO, abreviacoes, fim_video_ms)
 
-        destino = Path(self._cfg.nome_srt_versiculo)
+        destino = Path(self._cfg.nome_srt_versiculo_multilingue)
         salvar_srt(legendas_versiculo, destino)
         self._drive.upload(destino, self._cfg.pasta_oracao, "text/plain")
         self._cp.salvar("legenda_versiculo_gerada", {
@@ -388,8 +392,8 @@ class LanguageCaptionsPipeline:
         classificação morfológica) empilhados no vídeo base.
 
         Se incluir_versiculo=True, também queima o indicador de
-        livro:versículo (config.nome_srt_versiculo, gerado antes via
-        gerar_legenda_versiculo()) no canto superior esquerdo — camada
+        livro:versículo (config.nome_srt_versiculo_multilingue, gerado antes
+        via gerar_legenda_versiculo()) no canto superior esquerdo — camada
         separada das legendas empilhadas, no mesmo passe de codificação.
         """
         if not legendas_idiomas:
@@ -412,7 +416,7 @@ class LanguageCaptionsPipeline:
         )]
 
         if incluir_versiculo:
-            nome_versiculo = self._cfg.nome_srt_versiculo
+            nome_versiculo = self._cfg.nome_srt_versiculo_multilingue
             destino_versiculo = Path(nome_versiculo)
             self._drive.download(self._cfg.pasta_oracao, nome_versiculo, destino_versiculo)
             if not destino_versiculo.exists():
