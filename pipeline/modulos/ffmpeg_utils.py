@@ -377,13 +377,20 @@ def montar_trilha_sequencial(
     "arquivo": None vira SILÊNCIO daquela duração (acontece quando
     nenhuma trilha do pool bateu o clima do evento naquele trecho).
 
-    Cada pedaço é re-codificado pro MESMO formato (AAC 44.1kHz estéreo)
-    antes de concatenar -- os arquivos de origem vêm de fontes bem
-    diferentes (Freesound, YouTube Audio Library, Pixabay), cada um com
-    seu próprio sample rate/canais/codec; concatenar sem padronizar
-    quebra o demuxer concat do FFmpeg (exige parâmetros idênticos), igual
-    ao que já acontecia com os clipes de vídeo antes da padronização em
-    adicionar_credito_e_logo().
+    Cada pedaço é re-codificado pro MESMO formato (PCM 44.1kHz estéreo,
+    sem compressão) antes de concatenar -- os arquivos de origem vêm de
+    fontes bem diferentes (Freesound, YouTube Audio Library, Pixabay),
+    cada um com seu próprio sample rate/canais/codec; concatenar sem
+    padronizar quebra o demuxer concat do FFmpeg (exige parâmetros
+    idênticos), igual ao que já acontecia com os clipes de vídeo antes
+    da padronização em adicionar_credito_e_logo().
+
+    ⚠️ `saida` deve ter extensão `.wav` -- o passo final regrava
+    explicitamente em PCM (não faz stream copy cego dos pedaços em AAC
+    pra dentro do container de saída, o que gerava um arquivo com
+    cabeçalho válido mas ÁUDIO CORROMPIDO -- AAC dentro de um container
+    WAV via `-c copy` não é válido, e o FFmpeg não avisa na hora de
+    gravar, só quando alguém tenta decodificar depois).
     """
     saida = Path(saida)
     pasta_temp = saida.parent / f"_trilha_pedacos_{saida.stem}"
@@ -391,7 +398,7 @@ def montar_trilha_sequencial(
 
     pedacos: list[Path] = []
     for i, seg in enumerate(segmentos):
-        pedaco = pasta_temp / f"pedaco_{i:03d}.m4a"
+        pedaco = pasta_temp / f"pedaco_{i:03d}.wav"
         duracao = max(0.5, float(seg["duracao_seg"]))
         arquivo = seg.get("arquivo")
 
@@ -400,7 +407,7 @@ def montar_trilha_sequencial(
                 ["ffmpeg", "-y",
                  "-stream_loop", "-1", "-i", str(arquivo),
                  "-t", f"{duracao:.3f}",
-                 "-ar", "44100", "-ac", "2", "-c:a", "aac",
+                 "-ar", "44100", "-ac", "2", "-c:a", "pcm_s16le",
                  str(pedaco)],
                 "montar_trilha_sequencial (trecho)",
             )
@@ -409,7 +416,7 @@ def montar_trilha_sequencial(
                 ["ffmpeg", "-y",
                  "-f", "lavfi", "-i", "anullsrc=r=44100:cl=stereo",
                  "-t", f"{duracao:.3f}",
-                 "-c:a", "aac",
+                 "-c:a", "pcm_s16le",
                  str(pedaco)],
                 "montar_trilha_sequencial (silêncio)",
             )
@@ -420,10 +427,14 @@ def montar_trilha_sequencial(
         for p in pedacos:
             fh.write(f"file '{p.resolve()}'\n")
 
+    # Regrava explicitamente em PCM (não usa "-c copy") -- os pedaços já
+    # são todos PCM idênticos, então stream copy TAMBÉM funcionaria aqui,
+    # mas ser explícito garante que `saida` sempre sai com áudio válido
+    # de verdade, mesmo que o formato dos pedaços mude no futuro.
     _run(
         ["ffmpeg", "-y",
          "-f", "concat", "-safe", "0", "-i", str(lista_txt),
-         "-c", "copy", str(saida)],
+         "-c:a", "pcm_s16le", str(saida)],
         "montar_trilha_sequencial (concat)",
     )
 
