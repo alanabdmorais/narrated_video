@@ -1,10 +1,10 @@
 # Pixabay_YT_Audio_Stock
 
 > Nota de migração: exportação CSV nativa (`exportMimeType: text/csv`) retornou vazia
-> para este arquivo (a planilha tem múltiplas abas; a exportação parece pegar apenas
-> a aba ativa/primeira). O conteúdo abaixo é uma representação em texto/markdown obtida
-> via leitura de conteúdo — pode estar truncada/incompleta para planilhas grandes.
-> Para os dados completos e atualizados, consulte a planilha original no Google Drive.
+> para este arquivo (a aba ativa/primeira, "Página1", está vazia — os dados reais
+> ficam na aba `trilha_stock`, abaixo). Conteúdo obtido via leitura de conteúdo
+> (`read_file_content`) e **verificado como completo** em 2026-08-27 (20/20 linhas
+> batem com a fonte no Drive).
 
 |  |  |  |  |  |  |  |  |  |  |
 | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: |
