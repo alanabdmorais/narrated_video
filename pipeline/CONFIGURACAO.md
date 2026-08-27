@@ -125,11 +125,24 @@ Tudo isso vem de propriedades/métodos de `PipelineConfig` em `modulos/config.py
 |---|---|---|
 | `NOME_AUDIO` | `<nome>_audio.wav` | Narração. |
 | `nome_audio_idioma(lang)` | `<nome>_audio_<lang>.wav` | Dublagem automática baixada do YouTube. |
-| `NOME_VIDEO_BASE` | `<nome>_video_base[_img].mp4` | Sufixo `_img` só quando `MODO_CLIPE="imagem"`. **Nome canônico** — todos os notebooks de legenda/burn leem exatamente este arquivo, inclusive as variantes trilhas/efeitos (que sobrescrevem o mesmo nome). |
-| `NOME_VIDEO_FINAL` | `<nome>_final[_img].mp4` | Legenda única (Single Subtitle). |
-| `NOME_VIDEO_FINAL_IDIOMAS` | `<nome>_final_idiomas[_img].mp4` | Legendas multi-idioma empilhadas. |
-| `NOME_VIDEO_FINAL_MULTICOLOR` | `<nome>_com_legenda_colorida[_img].mp4` | Legenda multicor (classificação morfológica). |
-| `NOME_VIDEO_FINAL_CLASSIFICACAO(_BASICO)` | `<nome>_final_classificacao[_basico].mp4` | ⚠️ Obsoleto — só compatibilidade com vídeos antigos. |
+| `NOME_VIDEO_BASE` | `<nome>_video_base[_img].mp4` | Sufixo `_img` só quando `MODO_CLIPE="imagem"`. **Nome canônico** — todos os notebooks de legenda/burn leem exatamente este arquivo, inclusive as variantes trilhas/efeitos (que sobrescrevem o mesmo nome). Nível 0 dos vídeos finais (ver tabela de níveis abaixo). |
+| `NOME_VIDEO_FINAL` | `<nome>_final[_img].mp4` | Nível 1 — legenda única (Single Subtitle). |
+| `NOME_VIDEO_FINAL_IDIOMAS` | `<nome>_final_idiomas[_img].mp4` | Nível 2 — legendas multi-idioma empilhadas (1 cor por idioma). |
+| `NOME_VIDEO_FINAL_MULTICOLOR` | `<nome>_final_multicolor[_img].mp4` | Nível 3 — mesmo nível 2, com classificação gramatical (Stanza/Kiwi, cor por classe). Nome renomeado de `_com_legenda_colorida` pra alinhar com o padrão `_final`/`_final_idiomas` — ver aviso de migração abaixo. |
+| `NOME_VIDEO_FINAL_CLASSIFICACAO(_BASICO)` | `<nome>_final_classificacao[_basico].mp4` | ⚠️ Obsoleto — ramo antigo (IA), não é um nível — só compatibilidade com vídeos antigos. |
+
+**Os 4 níveis de vídeo final** (cada um soma um recurso em cima do anterior, todos coexistem na mesma pasta):
+
+```
+NOME_VIDEO_BASE  →  NOME_VIDEO_FINAL  →  NOME_VIDEO_FINAL_IDIOMAS  →  NOME_VIDEO_FINAL_MULTICOLOR
+ (sem legenda)      (legenda única)       (multi-idioma, cor única)    (multi-idioma, cor gramatical)
+```
+
+> **Migração do rename `_com_legenda_colorida`→`_final_multicolor`:** vídeos já
+> gerados antes dessa mudança (ex: `40_Matt_02`) têm o arquivo real no Drive
+> com o nome antigo (`40_Matt_02_com_legenda_colorida.mp4`) — renomeie
+> manualmente pra `_final_multicolor` antes de rodar `caption-multicolor-burn.ipynb`
+> de novo pra esse vídeo.
 
 ### Legendas (SRT/ASS)
 

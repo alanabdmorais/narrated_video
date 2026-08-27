@@ -205,6 +205,18 @@ class PipelineConfig:
     def NOME_VIDEO_BASE(self) -> str:
         return f"{self.NOME_ORACAO}_video_base{self._sufixo_modo}.mp4"
 
+    # ── Níveis de vídeo final ──────────────────────────────────────────────────
+    # Cada nível soma um recurso em cima do anterior -- todos coexistem na
+    # mesma pasta, sem um sobrescrever o outro (nomes diferentes de propósito).
+    #   0. NOME_VIDEO_BASE            -- narração + clipes + trilha, sem legenda
+    #   1. NOME_VIDEO_FINAL            -- + legenda única (1 idioma, texto simples)
+    #   2. NOME_VIDEO_FINAL_IDIOMAS    -- + legendas multi-idioma empilhadas
+    #                                     (1 cor por idioma, sem classificação)
+    #   3. NOME_VIDEO_FINAL_MULTICOLOR -- mesmo nível 2, mas com classificação
+    #                                     gramatical (Stanza/Kiwi, cor por classe)
+    # NOME_VIDEO_FINAL_CLASSIFICACAO(_BASICO) é um ramo obsoleto, não um nível
+    # -- ver docstring dele abaixo.
+
     @property
     def NOME_VIDEO_FINAL(self) -> str:
         """Vídeo final com legenda única (1 faixa simples) — Single Subtitle."""
@@ -233,11 +245,13 @@ class PipelineConfig:
     @property
     def NOME_VIDEO_FINAL_MULTICOLOR(self) -> str:
         """Vídeo final com legenda multicor (classificação morfológica via
-        Tanza/Kiwi, 5 idiomas) -- gerado por caption-multicolor-burn.ipynb.
-        Nome mantido igual ao que já existe em vídeos já gerados
-        (ex: 40_Matt_02_com_legenda_colorida.mp4) -- não renomear sem
-        renomear também o arquivo já salvo no Drive."""
-        return f"{self.NOME_ORACAO}_com_legenda_colorida{self._sufixo_modo}.mp4"
+        Stanza/Kiwi, 5 idiomas) -- gerado por caption-multicolor-burn.ipynb.
+        Nível 3 dos vídeos finais (ver bloco "Níveis de vídeo final" acima
+        de NOME_VIDEO_FINAL) -- nome alinhado ao padrão _final/_final_idiomas
+        dos outros níveis (antes era _com_legenda_colorida; vídeos já
+        gerados antes dessa mudança, ex: 40_Matt_02, têm o arquivo real no
+        Drive com o nome antigo -- renomeie manualmente)."""
+        return f"{self.NOME_ORACAO}_final_multicolor{self._sufixo_modo}.mp4"
 
     @property
     def NOME_SRT_PT_WHISPER(self) -> str:
