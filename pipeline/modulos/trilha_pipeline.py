@@ -41,7 +41,8 @@ def carregar_trilha_stock_freesound(linhas_planilha, coluna_tags="Tags", coluna_
                                        coluna_titulo="Título", coluna_url="URL Preview", coluna_autor="Autor"):
     """Lê a aba Página1 do Freesound_Audio_Manager (linhas já como
     dict, via worksheet.get_all_records()) e devolve uma lista no
-    formato comum {id, titulo, url, autor, tags_clima, fonte}."""
+    formato comum {id, titulo, url, autor, tags_clima, categoria, fonte}
+    -- categoria="trilha", pronta pra sincronizar_estoque_som()."""
     resultado = []
     for linha in linhas_planilha:
         tags_brutas = [t.strip() for t in str(linha.get(coluna_tags, "")).split(",") if t.strip()]
@@ -54,6 +55,7 @@ def carregar_trilha_stock_freesound(linhas_planilha, coluna_tags="Tags", coluna_
             "url": linha.get(coluna_url, ""),
             "autor": linha.get(coluna_autor, ""),
             "tags_clima": tags_clima,
+            "categoria": "trilha",
             "fonte": "freesound",
         })
     return resultado
@@ -78,6 +80,7 @@ def carregar_trilha_stock_manual(linhas_planilha, coluna_genero="Gênero", colun
             "url": "",  # arquivo local (YouTube Audio Library) -- sem URL, so o nome/creditos
             "autor": linha.get(coluna_creditos, ""),
             "tags_clima": tags_clima,
+            "categoria": "trilha",
             "fonte": "manual",
         })
     return resultado
@@ -163,9 +166,9 @@ def calcular_segmentos_trilha(versiculos_texto, tempos_versiculo, duracao_total_
     tiver clima cadastrado) -- só cai pro clima do EVENTO como um todo
     se o título não tiver clima próprio.
 
-    `trilha_pool`: lista pequena e curada à mão (não a trilha_stock
-    inteira) -- ver carregar_trilha_stock_da_planilha() + filtro pelos
-    ids/urls colados na Configuração do notebook.
+    `trilha_pool`: lista pequena e curada à mão (não o estoque inteiro)
+    -- ver carregar_estoque_som_da_planilha(aba, "trilha") + filtro
+    pelos ids/urls colados na Configuração do notebook.
 
     Segmento sem evento reconhecido no léxico, ou sem clima cadastrado
     (nem no título nem no evento), ou sem nenhuma trilha do pool batendo
@@ -433,83 +436,127 @@ def gravar_tags_clima(aba, climas_por_id, coluna_id="evento_id"):
     return atualizados
 
 
+# ── Estoque ÚNICO de som (trilha + efeito) ──────────────────────────────────
+# Uma aba só, ainda chamada "trilha_stock" de propósito -- é o nome que o
+# painel de revisão (Apps Script, fora deste repo) já espera; renomear a
+# aba quebraria o painel sem a gente conseguir perceber daqui. As 10
+# primeiras colunas são EXATAMENTE as de sempre, na mesma ordem -- as 3
+# novas (categoria, tags_concretas*) vão sempre no FINAL, nunca no meio.
 COLUNAS_TRILHA_STOCK = ["id", "titulo", "url_preview", "url_download", "autor", "duracao_s",
                           "tags_clima", "tags_clima_semelhantes", "fonte", "data_sincronizacao"]
+COLUNAS_ESTOQUE_SOM = COLUNAS_TRILHA_STOCK + ["categoria", "tags_concretas", "tags_concretas_semelhantes"]
 
 
-def garantir_aba_trilha_stock(spreadsheet, nome_aba="trilha_stock"):
-    """Acha (ou cria) a aba de estoque de trilha -- mesma planilha da
-    Biblioteca de Match. `url_preview` é o que o painel usa pra tocar um
-    trechinho antes de escolher (Freesound: link direto do MP3 de
-    prévia; manual: vazio, é arquivo local do YouTube Audio Library)."""
+def garantir_aba_estoque_som(spreadsheet, nome_aba="trilha_stock"):
+    """Acha (ou cria) a aba única de estoque de som -- guarda TANTO
+    trilha quanto efeito sonoro, diferenciados pela coluna `categoria`
+    ("trilha", "efeito" ou "ambos") -- mesma planilha da Biblioteca de
+    Match. `url_preview` é o que o painel usa pra tocar um trechinho
+    antes de escolher (Freesound: link direto do MP3 de prévia; manual:
+    vazio, é arquivo local do YouTube Audio Library).
+
+    Migra o cabeçalho sozinha se a aba já existir no formato antigo (só
+    as 10 colunas de trilha) -- ACRESCENTA as 3 colunas novas no final,
+    nunca reordena as que já existem (ver nota de COLUNAS_ESTOQUE_SOM)."""
     try:
         aba = spreadsheet.worksheet(nome_aba)
     except Exception:
-        aba = spreadsheet.add_worksheet(title=nome_aba, rows=200, cols=len(COLUNAS_TRILHA_STOCK))
-        aba.append_row(COLUNAS_TRILHA_STOCK)
+        aba = spreadsheet.add_worksheet(title=nome_aba, rows=200, cols=len(COLUNAS_ESTOQUE_SOM))
+        aba.append_row(COLUNAS_ESTOQUE_SOM)
         return aba
 
     cabecalho_atual = aba.row_values(1)
-    if cabecalho_atual != COLUNAS_TRILHA_STOCK:
-        if len(COLUNAS_TRILHA_STOCK) > aba.col_count:
-            aba.add_cols(len(COLUNAS_TRILHA_STOCK) - aba.col_count)
-        aba.update(values=[COLUNAS_TRILHA_STOCK], range_name=f"A1:{_col_letra(len(COLUNAS_TRILHA_STOCK))}1")
+    if cabecalho_atual != COLUNAS_ESTOQUE_SOM:
+        if len(COLUNAS_ESTOQUE_SOM) > aba.col_count:
+            aba.add_cols(len(COLUNAS_ESTOQUE_SOM) - aba.col_count)
+        aba.update(values=[COLUNAS_ESTOQUE_SOM], range_name=f"A1:{_col_letra(len(COLUNAS_ESTOQUE_SOM))}1")
     return aba
 
 
-def sincronizar_trilha_stock(aba_trilha_stock, trilha_stock_normalizado):
+def sincronizar_estoque_som(aba_estoque_som, itens_normalizados):
     """
-    Escreve o estoque de trilha (já normalizado -- ver
-    carregar_trilha_stock_freesound()/carregar_trilha_stock_manual(),
-    junte as duas listas antes de passar aqui) na aba trilha_stock --
-    ATUALIZA quem já existe (mesmo id+fonte), SÓ ADICIONA quem é novo.
-    Não duplica rodando de novo."""
+    Escreve o estoque de som (trilha e/ou efeito, já normalizado -- ver
+    carregar_trilha_stock_freesound()/carregar_trilha_stock_manual()/
+    carregar_trilha_stock_pasta_drive() [categoria="trilha"] e
+    carregar_efeitos_stock_freesound()/carregar_efeitos_stock_pasta_drive()
+    [categoria="efeito"]) na aba única -- ATUALIZA quem já existe (mesmo
+    id+fonte), SÓ ADICIONA quem é novo. Não duplica rodando de novo.
+
+    Cada item já vem com "categoria" e a lista de tags correspondente
+    ("tags_clima" pra trilha, "tags_concretas" pra efeito) -- a outra
+    coluna de tag fica em branco pra esse item (a menos que você preencha
+    os dois na mão, na planilha, pra marcar um som de uso duplo)."""
     from datetime import datetime
     existentes = {}  # (id, fonte) -> numero da linha (1-based, já contando cabecalho)
-    dados_atuais = aba_trilha_stock.get_all_records()
+    dados_atuais = aba_estoque_som.get_all_records()
     for i, linha in enumerate(dados_atuais):
         existentes[(str(linha.get("id", "")), linha.get("fonte", ""))] = i + 2
 
     corpo_update = []
     linhas_novas = []
     agora = datetime.now().strftime("%Y-%m-%d %H:%M")
-    for trilha in trilha_stock_normalizado:
-        chave = (str(trilha["id"]), trilha["fonte"])
+    for item in itens_normalizados:
+        chave = (str(item["id"]), item["fonte"])
+        tags_clima = item.get("tags_clima", [])
+        tags_concretas = item.get("tags_concretas", [])
         valores = [
-            trilha["id"], trilha["titulo"], trilha["url"], trilha.get("url_download", ""),
-            trilha["autor"], trilha.get("duracao_s", ""),
-            ", ".join(trilha["tags_clima"]), ", ".join(expandir_tags_clima(trilha["tags_clima"])),
-            trilha["fonte"], agora,
+            item["id"], item["titulo"], item["url"], item.get("url_download", ""),
+            item["autor"], item.get("duracao_s", ""),
+            ", ".join(tags_clima), ", ".join(expandir_tags_clima(tags_clima)) if tags_clima else "",
+            item["fonte"], agora,
+            item.get("categoria", ""),
+            ", ".join(tags_concretas), ", ".join(_expandir_visual(tags_concretas)) if tags_concretas else "",
         ]
         if chave in existentes:
             num_linha = existentes[chave]
-            corpo_update.append({"range": f"A{num_linha}:{_col_letra(len(COLUNAS_TRILHA_STOCK))}{num_linha}", "values": [valores]})
+            corpo_update.append({"range": f"A{num_linha}:{_col_letra(len(COLUNAS_ESTOQUE_SOM))}{num_linha}", "values": [valores]})
         else:
             linhas_novas.append(valores)
 
     if corpo_update:
-        aba_trilha_stock.batch_update(corpo_update)
+        aba_estoque_som.batch_update(corpo_update)
     if linhas_novas:
-        aba_trilha_stock.append_rows(linhas_novas, value_input_option="USER_ENTERED")
+        aba_estoque_som.append_rows(linhas_novas, value_input_option="USER_ENTERED")
 
     return len(linhas_novas), len(corpo_update)
 
 
-def carregar_trilha_stock_da_planilha(aba_trilha_stock):
-    """Lê a aba trilha_stock já sincronizada e devolve no MESMO formato
-    comum {id, titulo, url, autor, tags_clima, fonte} que
-    pontuar_trilhas() espera -- pronto pro painel/notebook usar sem
-    precisar abrir as 2 planilhas de origem de novo."""
+def carregar_estoque_som_da_planilha(aba_estoque_som, categoria):
+    """
+    Lê a aba única de estoque de som e devolve no formato pronto pro
+    match, filtrado por `categoria` ("trilha" ou "efeito" -- itens
+    marcados "ambos" na planilha entram nos dois).
+
+    Pra "trilha": {id, titulo, url, autor, tags_clima, fonte} (lê
+    tags_clima_semelhantes) -- formato que pontuar_trilhas() espera.
+    Pra "efeito": {id, titulo, url, autor, tags, fonte} (lê
+    tags_concretas_semelhantes) -- formato que pontuar_efeitos() espera.
+
+    Linha sem a coluna `categoria` preenchida (ex: dado antigo, de antes
+    dessa migração) não entra em nenhum dos dois -- rode
+    organizar-trilha-audio.ipynb/organizar-efeitos-audio.ipynb de novo
+    pra preencher a categoria retroativamente.
+    """
+    if categoria not in ("trilha", "efeito"):
+        raise ValueError(f"categoria inválida: {categoria!r} (use 'trilha' ou 'efeito')")
+
     resultado = []
-    for linha in aba_trilha_stock.get_all_records():
-        resultado.append({
+    for linha in aba_estoque_som.get_all_records():
+        cat_linha = str(linha.get("categoria", "")).strip().lower()
+        if cat_linha not in (categoria, "ambos"):
+            continue
+        item = {
             "id": str(linha.get("id", "")),
             "titulo": linha.get("titulo", ""),
             "url": linha.get("url_preview", ""),
             "autor": linha.get("autor", ""),
-            "tags_clima": [t.strip() for t in str(linha.get("tags_clima_semelhantes", "")).split(",") if t.strip()],
             "fonte": linha.get("fonte", ""),
-        })
+        }
+        if categoria == "trilha":
+            item["tags_clima"] = [t.strip() for t in str(linha.get("tags_clima_semelhantes", "")).split(",") if t.strip()]
+        else:
+            item["tags"] = [t.strip() for t in str(linha.get("tags_concretas_semelhantes", "")).split(",") if t.strip()]
+        resultado.append(item)
     return resultado
 
 
@@ -671,7 +718,7 @@ def carregar_trilha_stock_pasta_drive(drive_service, pasta_raiz_id, tornar_publi
     por arquivo (não duplica se já estiver público).
 
     Devolve no MESMO formato comum que carregar_trilha_stock_freesound/
-    manual -- pronto pra sincronizar_trilha_stock()."""
+    manual -- pronto pra sincronizar_estoque_som()."""
     resultado = []
     subpastas = listar_subpastas(drive_service, pasta_raiz_id)
     print(f"   📁 {len(subpastas)} subpasta(s) de clima encontrada(s): {', '.join(p['name'] for p in subpastas)}")
@@ -695,6 +742,7 @@ def carregar_trilha_stock_pasta_drive(drive_service, pasta_raiz_id, tornar_publi
                 "url": url_drive_tocavel(arquivo["id"], url_proxy_apps_script),
                 "autor": info["autor"],
                 "tags_clima": expandir_tags_clima(climas),
+                "categoria": "trilha",
                 "fonte": info["fonte"],
                 "nome_arquivo": arquivo["name"],
             })
@@ -726,7 +774,8 @@ def extrair_tags_efeito_de_lista_bruta(tags_brutas):
 def carregar_efeitos_stock_freesound(linhas_planilha, coluna_tags="Tags", coluna_id="ID",
                                         coluna_titulo="Título", coluna_url="URL Preview", coluna_autor="Autor"):
     """Igual carregar_trilha_stock_freesound, mas filtra por tag
-    CONCRETA (visual), não clima."""
+    CONCRETA (visual), não clima -- devolve categoria="efeito", pronta
+    pra sincronizar_estoque_som()."""
     resultado = []
     for linha in linhas_planilha:
         tags_brutas = [t.strip() for t in str(linha.get(coluna_tags, "")).split(",") if t.strip()]
@@ -739,6 +788,7 @@ def carregar_efeitos_stock_freesound(linhas_planilha, coluna_tags="Tags", coluna
             "url": linha.get(coluna_url, ""),
             "autor": linha.get(coluna_autor, ""),
             "tags_concretas": tags_concretas,
+            "categoria": "efeito",
             "fonte": "freesound",
         })
     return resultado
@@ -750,8 +800,9 @@ def carregar_efeitos_stock_pasta_drive(drive_service, pasta_raiz_id, tornar_publ
     OBJETO/AÇÃO concreta (ex: efeitos/porta/, efeitos/trovao/,
     efeitos/cavalo/), não um clima -- expande via dicionário VISUAL.
 
-    Devolve no formato {id, titulo, url, autor, tags_concretas, fonte,
-    nome_arquivo} -- pronto pra sincronizar_efeitos_stock()."""
+    Devolve no formato {id, titulo, url, autor, tags_concretas,
+    categoria, fonte, nome_arquivo} -- pronto pra
+    sincronizar_estoque_som()."""
     resultado = []
     subpastas = listar_subpastas(drive_service, pasta_raiz_id)
     print(f"   📁 {len(subpastas)} subpasta(s) de efeito encontrada(s): {', '.join(p['name'] for p in subpastas)}")
@@ -773,83 +824,11 @@ def carregar_efeitos_stock_pasta_drive(drive_service, pasta_raiz_id, tornar_publ
                 "url": url_drive_tocavel(arquivo["id"]),  # não usado pelo painel (bloqueio do Drive) -- só referência
                 "autor": info["autor"],
                 "tags_concretas": _expandir_visual(objetos),
+                "categoria": "efeito",
                 "fonte": info["fonte"],
                 "nome_arquivo": arquivo["name"],
             })
 
-    return resultado
-
-
-COLUNAS_EFEITOS_STOCK = ["id", "titulo", "url_preview", "url_download", "autor", "duracao_s",
-                           "tags", "tags_semelhantes", "fonte", "data_sincronizacao"]
-
-
-def garantir_aba_efeitos_stock(spreadsheet, nome_aba="efeitos_stock"):
-    """Acha (ou cria) a aba de estoque de efeitos sonoros -- mesma
-    planilha da Biblioteca_Match_Audio (do lado de trilha_stock)."""
-    try:
-        aba = spreadsheet.worksheet(nome_aba)
-    except Exception:
-        aba = spreadsheet.add_worksheet(title=nome_aba, rows=500, cols=len(COLUNAS_EFEITOS_STOCK))
-        aba.append_row(COLUNAS_EFEITOS_STOCK)
-        return aba
-
-    cabecalho_atual = aba.row_values(1)
-    if cabecalho_atual != COLUNAS_EFEITOS_STOCK:
-        if len(COLUNAS_EFEITOS_STOCK) > aba.col_count:
-            aba.add_cols(len(COLUNAS_EFEITOS_STOCK) - aba.col_count)
-        aba.update(values=[COLUNAS_EFEITOS_STOCK], range_name=f"A1:{_col_letra(len(COLUNAS_EFEITOS_STOCK))}1")
-    return aba
-
-
-def sincronizar_efeitos_stock(aba_efeitos_stock, efeitos_normalizados):
-    """Igual sincronizar_trilha_stock, mas pro estoque de efeitos --
-    ATUALIZA quem já existe (mesmo id+fonte), só ADICIONA quem é novo."""
-    from datetime import datetime
-    existentes = {}
-    dados_atuais = aba_efeitos_stock.get_all_records()
-    for i, linha in enumerate(dados_atuais):
-        existentes[(str(linha.get("id", "")), linha.get("fonte", ""))] = i + 2
-
-    corpo_update = []
-    linhas_novas = []
-    agora = datetime.now().strftime("%Y-%m-%d %H:%M")
-    for efeito in efeitos_normalizados:
-        chave = (str(efeito["id"]), efeito["fonte"])
-        tags_semelhantes = _expandir_visual(efeito["tags_concretas"])
-        valores = [
-            efeito["id"], efeito["titulo"], efeito["url"], efeito.get("url_download", ""),
-            efeito["autor"], efeito.get("duracao_s", ""),
-            ", ".join(efeito["tags_concretas"]), ", ".join(tags_semelhantes),
-            efeito["fonte"], agora,
-        ]
-        if chave in existentes:
-            num_linha = existentes[chave]
-            corpo_update.append({"range": f"A{num_linha}:{_col_letra(len(COLUNAS_EFEITOS_STOCK))}{num_linha}", "values": [valores]})
-        else:
-            linhas_novas.append(valores)
-
-    if corpo_update:
-        aba_efeitos_stock.batch_update(corpo_update)
-    if linhas_novas:
-        aba_efeitos_stock.append_rows(linhas_novas, value_input_option="USER_ENTERED")
-
-    return len(linhas_novas), len(corpo_update)
-
-
-def carregar_efeitos_stock_da_planilha(aba_efeitos_stock):
-    """Lê a aba efeitos_stock já sincronizada, no formato pronto pro
-    match (usado pelo painel/notebook)."""
-    resultado = []
-    for linha in aba_efeitos_stock.get_all_records():
-        resultado.append({
-            "id": str(linha.get("id", "")),
-            "titulo": linha.get("titulo", ""),
-            "url": linha.get("url_preview", ""),
-            "autor": linha.get("autor", ""),
-            "tags": [t.strip() for t in str(linha.get("tags_semelhantes", "")).split(",") if t.strip()],
-            "fonte": linha.get("fonte", ""),
-        })
     return resultado
 
 
