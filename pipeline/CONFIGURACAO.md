@@ -192,9 +192,10 @@ não calcula segmentação própria por idioma).
 override de `NOME_LEGENDA_UNICA`/`NOME_LEGENDA_MESTRE`: preencha só se quiser
 apontar pra um arquivo com outro nome já salvo em `pasta_oracao`.
 
-> `<nome>_audio_edge.wav`/`<nome>_audio_edge_<lang>.wav` — nome reservado pra
+> `<nome>_edge_audio.wav`/`<nome>_edge_audio_<lang>.wav` — nome reservado pra
 > quando o áudio for **especificamente gerado pelo Edge TTS** (não em uso
-> agora, não implementado).
+> agora, não implementado). Ordem confirmada: "edge" vem ANTES de "audio" —
+> já existe um arquivo real nesse padrão no Drive (`40_Matt_02_edge_audio.wav`).
 
 ### Classificação morfológica / relatório
 
