@@ -851,3 +851,67 @@ def carregar_efeitos_stock_da_planilha(aba_efeitos_stock):
             "fonte": linha.get("fonte", ""),
         })
     return resultado
+
+
+def pontuar_efeitos(tags_alvo, efeitos_pool):
+    """Mesma lógica de pontuar_trilhas(), pro universo de EFEITO sonoro:
+    pontua cada efeito do `efeitos_pool` pela sobreposição de tags
+    CONCRETAS (porta, trovão, cavalo...) contra o alvo (palavras-chave do
+    versículo), ordena do melhor pro pior."""
+    alvo_normalizado = {_normalizar_palavra(t) for t in tags_alvo}
+    candidatos = []
+    for efeito in efeitos_pool:
+        tags_efeito_normalizadas = {_normalizar_palavra(t) for t in efeito["tags"]}
+        batidas = alvo_normalizado & tags_efeito_normalizadas
+        if batidas:
+            candidatos.append({**efeito, "score": len(batidas), "tags_batidas": sorted(batidas)})
+    return sorted(candidatos, key=lambda c: -c["score"])
+
+
+def calcular_efeitos_pontuais(tempos_versiculo, livro_pt, capitulo, versiculo_tags_dict,
+                                 efeitos_pool, dist_min_repeticao=2):
+    """
+    Casa um efeito sonoro pontual pra cada versículo cujas palavras-chave
+    (`tags_semelhantes`, já calculadas no match de cena -- ver
+    match_pipeline.carregar_versiculo_tags/registrar_tags_versiculo)
+    baterem com alguma candidata do `efeitos_pool` (curado à mão, igual
+    o trilha_pool). Diferente da trilha: é por VERSÍCULO individual (não
+    agrupa em segmentos) e a maioria dos versículos fica SEM efeito
+    nenhum -- é pontual de propósito, só pros momentos concretos (porta
+    batendo, trovão, cavalo...), não uma trilha de fundo contínua.
+
+    Evita repetir o MESMO efeito em versículos muito próximos
+    (`dist_min_repeticao`), igual à anti-repetição do match de cena.
+
+    Versículo sem tags_semelhantes cadastradas (match de cena não achou
+    palavra-chave nenhuma) ou sem nenhum efeito do pool batendo é
+    simplesmente OMITIDO do resultado -- não é lacuna, é o esperado (nem
+    todo versículo precisa de efeito).
+
+    Retorna lista só com os versículos que TIVERAM match:
+    [{"versiculo", "inicio_ms", "efeito": {...}}]
+    """
+    ultimo_uso = {}
+    pontos = []
+    for v in sorted(tempos_versiculo.keys()):
+        chave = (str(livro_pt), str(capitulo), str(v))
+        linha = versiculo_tags_dict.get(chave)
+        if not linha:
+            continue
+        tags_alvo = [t.strip() for t in str(linha.get("tags_semelhantes", "")).split(",") if t.strip()]
+        if not tags_alvo:
+            continue
+
+        candidatos = pontuar_efeitos(tags_alvo, efeitos_pool)
+        escolhido = None
+        for candidato in candidatos:
+            ultima_vez = ultimo_uso.get(candidato["id"])
+            if ultima_vez is None or (v - ultima_vez) >= dist_min_repeticao:
+                escolhido = candidato
+                break
+
+        if escolhido:
+            ultimo_uso[escolhido["id"]] = v
+            pontos.append({"versiculo": v, "inicio_ms": tempos_versiculo[v], "efeito": escolhido})
+
+    return pontos

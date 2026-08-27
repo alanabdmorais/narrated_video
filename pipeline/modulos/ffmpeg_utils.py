@@ -14,6 +14,7 @@ Funções principais:
     adicionar_audio(video, audio, saida)
     adicionar_trilha_fundo(video, musica, saida, volume)
     montar_trilha_sequencial(segmentos, saida) → Path
+    adicionar_efeitos_pontuais(video, efeitos, saida)
     gerar_ass(legendas_por_idioma, config)     → Path   ← CRÍTICO
     queimar_legendas_ass(video, ass_path, saida)
     obter_duracao(arquivo)                     → float
@@ -428,6 +429,70 @@ def montar_trilha_sequencial(
 
     shutil.rmtree(pasta_temp, ignore_errors=True)
     logger.info("montar_trilha_sequencial: %d segmento(s) → %s", len(segmentos), saida.name)
+    return saida
+
+
+def adicionar_efeitos_pontuais(
+    video_entrada: Path | str,
+    efeitos: list[dict],
+    saida: Path | str,
+    volume_efeito: float = 0.8,
+) -> Path:
+    """
+    Sobrepõe efeitos sonoros pontuais (curtos, tipo porta/trovão/cavalo)
+    no áudio já existente do vídeo (narração + trilha, se houver) -- cada
+    efeito entra no tempo exato do versículo que casou com ele (ver
+    trilha_pipeline.calcular_efeitos_pontuais), sem cortar nem repetir o
+    resto do áudio.
+
+    `efeitos`: lista de dicts com "inicio_ms" (int) e "arquivo" (Path do
+    áudio do efeito já baixado). Efeito sem "arquivo" (download falhou)
+    é ignorado silenciosamente.
+
+    Usa `amix` com `normalize=0` (soma direta, sem dividir o volume pelo
+    número de entradas) -- com o normalize padrão do FFmpeg, cada efeito
+    novo abafaria um pouco mais a narração/trilha, o que não é o efeito
+    pretendido aqui (a narração deve continuar no mesmo volume; é o
+    efeito que entra por cima, já ajustado por `volume_efeito`).
+
+    Lista de efeitos vazia (ou nenhum com "arquivo" válido) devolve o
+    vídeo de entrada copiado pra `saida`, sem re-codificar.
+    """
+    saida = Path(saida)
+    validos = [e for e in efeitos if e.get("arquivo") and Path(e["arquivo"]).exists()]
+
+    if not validos:
+        shutil.copy2(video_entrada, saida)
+        logger.info("adicionar_efeitos_pontuais: nenhum efeito válido -- vídeo copiado sem alteração")
+        return saida
+
+    entradas = ["-i", str(video_entrada)]
+    for efeito in validos:
+        entradas += ["-i", str(efeito["arquivo"])]
+
+    partes_filtro = []
+    rotulos_efeito = []
+    for i, efeito in enumerate(validos, start=1):
+        delay_ms = max(0, int(efeito["inicio_ms"]))
+        rotulo = f"e{i}"
+        partes_filtro.append(f"[{i}:a]adelay={delay_ms}|{delay_ms},volume={volume_efeito}[{rotulo}]")
+        rotulos_efeito.append(f"[{rotulo}]")
+
+    entradas_mix = "[0:a]" + "".join(rotulos_efeito)
+    partes_filtro.append(
+        f"{entradas_mix}amix=inputs={1 + len(validos)}:duration=first:dropout_transition=0:normalize=0[a]"
+    )
+    filtro = ";".join(partes_filtro)
+
+    _run(
+        ["ffmpeg", "-y", *entradas,
+         "-filter_complex", filtro,
+         "-map", "0:v", "-map", "[a]",
+         "-c:v", "copy", "-c:a", "aac",
+         str(saida)],
+        "adicionar_efeitos_pontuais",
+    )
+    logger.info("adicionar_efeitos_pontuais: %d efeito(s) sobreposto(s) → %s", len(validos), saida.name)
     return saida
 
 
