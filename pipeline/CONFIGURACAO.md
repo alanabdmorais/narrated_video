@@ -393,3 +393,59 @@ sem isso cairia no fallback `adverbio`.
   `config.fonte_cjk(lang)`. Verificado com snapshot antes/depois: os 5
   idiomas saem **byte a byte idênticos** (hash do `.ass` igual nos dois
   fluxos, mais classificação e cores).
+
+## 10. Paleta de cores — emoji-first (legenda multicor)
+
+As cores das 20 classes gramaticais foram repadronizadas pra uma paleta de
+**21 cores que têm emoji equivalente** — o critério deixou de ser "nome oficial
+CSS" e passou a ser "dá pra sinalizar na descrição do YouTube?".
+
+`cores.legenda_youtube()` monta o bloco pronto pra colar na descrição
+(uma linha por classe: emoji + nome). Aceita uma lista pra filtrar/ordenar,
+ex: `legenda_youtube(["substantivo", "verbo", ...])` num vídeo sem coreano.
+
+| Classe | Emoji | Cor | Hex | Origem |
+|---|---|---|---|---|
+| substantivo | 🖤 | preto | `#000000` | Montessori |
+| verbo | 🔴 | vermelho | `#FF0000` | Montessori |
+| pronome | 🟣 | roxo | `#800080` | Montessori |
+| adverbio | 🟠 | laranja | `#FFA500` | Montessori |
+| conjuncao | 🩷 | rosa | `#FF69B4` | Montessori |
+| interjeicao | 🏆 | dourado | `#FFD700` | Montessori |
+| artigo | 🩵 | azul claro | `#87CEEB` | Montessori — **passou a bater** (era `#0000FF`) |
+| adjetivo | 🔵 | azul | `#0000FF` | Montessori (azul escuro) |
+| preposicao | 🧶 | verde escuro | `#2E7D32` | Montessori (verde) |
+| nome_proprio | 🟡 | amarelo | `#FFFF00` | mantido |
+| pontuacao | 🩶 | cinza | `#808080` | mantido |
+| auxiliar | 🤍 | branco | `#FFFFFF` | mantido |
+| numeral | 🏻 | pele muito clara | `#FFDFC4` | novo |
+| modal | 🏿 | pele escura | `#8D5524` | novo (mantém a família marrom) |
+| particula | 🪻 | lilás | `#C8A2C8` | novo |
+| terminacao_honorifica | 🪖 | verde oliva | `#556B2F` | mantém a identidade oliva |
+| terminacao_nominal | 📗 | verde claro | `#66BB6A` | novo |
+| terminacao_adjetival | 🏾 | pele morena | `#C68642` | novo |
+| terminacao_final | 🍷 | vinho | `#722F37` | era crimson — mesma família |
+| sufixo | 🏼 | pele clara | `#F1C27D` | novo |
+| *(reserva)* | 🏽 | pele média | `#E0AC69` | sem classe — ver abaixo |
+
+**Os 5 tons de pele são muito parecidos entre si**, então foram distribuídos
+pra ficar o mais longe possível uns dos outros nas classes que podem aparecer
+lado a lado:
+
+- `numeral` 🏻 (o mais claro) e `modal` 🏿 (o mais escuro) ficam nos extremos —
+  são os dois que podem dividir a mesma linha (numeral existe em todos os
+  idiomas, modal só no inglês).
+- `terminacao_adjetival` 🏾 e `sufixo` 🏼 são **exclusivos do coreano**, então
+  nunca caem na mesma linha que `modal` (só inglês) — dá pra usar tons
+  vizinhos ali sem risco.
+- 🏽 pele média fica **de reserva, sem classe**, de propósito: deixa um degrau
+  vazio no meio da escala, afastando os tons que estão em uso.
+
+`CORES_TEXTO` (preto ou branco por cima do fundo) agora é **derivado** da mesma
+regra de luminância que `ffmpeg_utils`/`renderizacao` aplicam ao desenhar
+(`> 128 → preto`), em vez de uma tabela escrita à mão — as duas não têm mais
+como discordar.
+
+> ⚠️ Vídeos já queimados mantêm as cores antigas — a legenda da descrição
+> precisa bater com a paleta usada naquele `.ass`. Pra atualizar um vídeo
+> antigo, é regerar o `.ass` (`caption-multicolor-*-generate`) e requeimar.

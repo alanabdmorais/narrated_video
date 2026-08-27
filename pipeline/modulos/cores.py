@@ -1,88 +1,137 @@
 # -*- coding: utf-8 -*-
 """
-cores.py — Paleta oficial: uma cor por classe gramatical, usando nomes de
-cor reconhecidos pelo padrão CSS Color Module (W3C) — 20 classes.
+cores.py — Paleta oficial: uma cor por classe gramatical — 20 classes.
 
-Alinhado com o método Montessori de ensino de gramática onde ele define
-categoria própria (substantivo=preto, verbo=vermelho, pronome=roxo,
-advérbio=laranja, conjunção=rosa, interjeição=dourado — 6 de 20 batendo
-exato). Nas classes que o Montessori não cobre (nome próprio, numeral,
-pontuação, extensões de inglês/coreano), usa as cores obrigatórias
-restantes da lista aprovada.
+Paleta EMOJI-FIRST: cada cor foi escolhida por ter um emoji equivalente, pra
+dar pra sinalizar a legenda na descrição do YouTube (onde só existe emoji, não
+quadradinho colorido arbitrário). Por isso os nomes de cor aqui não são mais
+os do CSS Color Module — o critério que manda agora é "tem emoji?".
+
+Alinhado com o método Montessori de ensino de gramática nas 9 classes que ele
+define (substantivo=preto, verbo=vermelho, pronome=roxo, advérbio=laranja,
+conjunção=rosa, interjeição=dourado, artigo=azul claro, adjetivo=azul escuro,
+preposição=verde). As classes que o Montessori não cobre (nome próprio,
+numeral, pontuação, extensões de inglês/coreano) usam o resto da paleta.
 """
 from __future__ import annotations
 
-CORES_HTML: dict[str, str] = {
-    "substantivo": "#000000",
-    "nome_proprio": "#FFFF00",
-    "verbo": "#FF0000",
-    "pronome": "#800080",
-    "artigo": "#0000FF",
-    "adjetivo": "#000080",
-    "numeral": "#C0C0C0",
-    "preposicao": "#2E8B57",
-    "conjuncao": "#FFC0CB",
-    "adverbio": "#FFA500",
-    "interjeicao": "#FFD700",
-    "pontuacao": "#808080",
-    "modal": "#A52A2A",
-    "auxiliar": "#FFFFFF",
-    "particula": "#7FFFD4",
-    "terminacao_honorifica": "#808000",
-    "terminacao_nominal": "#FA8072",
-    "terminacao_adjetival": "#4B0082",
-    "terminacao_final": "#DC143C",
-    "sufixo": "#008080",
+# ── A PALETA: 21 cores com emoji ──────────────────────────────────────────────
+# hex -> (emoji, nome legível). Uma cor sobra sem classe (21 cores, 20 classes)
+# -- fica de reserva pra quando surgir uma classe nova.
+PALETA_EMOJI: dict[str, tuple[str, str]] = {
+    "#FF0000": ("🔴", "vermelho"),
+    "#FFA500": ("🟠", "laranja"),
+    "#FFFF00": ("🟡", "amarelo"),
+    "#0000FF": ("🔵", "azul"),
+    "#800080": ("🟣", "roxo"),
+    "#000000": ("🖤", "preto"),
+    "#FFFFFF": ("🤍", "branco"),
+    "#FFDFC4": ("🏻", "pele muito clara"),
+    "#F1C27D": ("🏼", "pele clara"),
+    "#E0AC69": ("🏽", "pele média"),
+    "#C68642": ("🏾", "pele morena"),
+    "#8D5524": ("🏿", "pele escura"),
+    "#FF69B4": ("🩷", "rosa"),
+    "#87CEEB": ("🩵", "azul claro"),
+    "#808080": ("🩶", "cinza"),
+    "#2E7D32": ("🧶", "verde escuro"),
+    "#66BB6A": ("📗", "verde claro"),
+    "#C8A2C8": ("🪻", "lilás"),
+    "#556B2F": ("🪖", "verde oliva"),
+    "#722F37": ("🍷", "vinho"),
+    "#FFD700": ("🏆", "dourado"),
 }
+
+# ── CLASSE -> COR ─────────────────────────────────────────────────────────────
+# As 9 do Montessori mantêm a cor dele. As outras 11 foram distribuídas no
+# resto da paleta com uma regra: os 5 tons de pele são muito parecidos entre
+# si, então ficam o mais longe possível UNS DOS OUTROS nas classes que podem
+# aparecer lado a lado. Ajuda que várias dessas classes são exclusivas de um
+# idioma -- "modal" só existe em inglês e as terminações só em coreano, então
+# nunca caem na mesma linha de legenda e podem usar tons vizinhos sem risco.
+CORES_HTML: dict[str, str] = {
+    # ── Montessori (mesma cor do método) ──────────────────────────────────
+    "substantivo":  "#000000",   # 🖤 preto
+    "verbo":        "#FF0000",   # 🔴 vermelho
+    "pronome":      "#800080",   # 🟣 roxo
+    "adverbio":     "#FFA500",   # 🟠 laranja
+    "conjuncao":    "#FF69B4",   # 🩷 rosa
+    "interjeicao":  "#FFD700",   # 🏆 dourado
+    "artigo":       "#87CEEB",   # 🩵 azul claro
+    "adjetivo":     "#0000FF",   # 🔵 azul (o "azul escuro" do Montessori)
+    "preposicao":   "#2E7D32",   # 🧶 verde escuro
+    # ── Fora do Montessori — genéricas ────────────────────────────────────
+    "nome_proprio": "#FFFF00",   # 🟡 amarelo
+    "pontuacao":    "#808080",   # 🩶 cinza
+    "numeral":      "#FFDFC4",   # 🏻 pele muito clara — o tom mais claro:
+                                 #    numeral aparece em TODOS os idiomas,
+                                 #    então precisa destoar de todo o resto
+    # ── Extensão do inglês ────────────────────────────────────────────────
+    "auxiliar":     "#FFFFFF",   # 🤍 branco
+    "modal":        "#8D5524",   # 🏿 pele escura — o tom mais escuro, no
+                                 #    extremo oposto do numeral (é com ele
+                                 #    que pode dividir linha, em inglês)
+    # ── Extensão do coreano ───────────────────────────────────────────────
+    "particula":              "#C8A2C8",   # 🪻 lilás
+    "terminacao_honorifica":  "#556B2F",   # 🪖 verde oliva
+    "terminacao_nominal":     "#66BB6A",   # 📗 verde claro
+    "terminacao_adjetival":   "#C68642",   # 🏾 pele morena
+    "terminacao_final":       "#722F37",   # 🍷 vinho
+    "sufixo":                 "#F1C27D",   # 🏼 pele clara
+}
+
+# 🏽 pele média (#E0AC69) fica de reserva, sem classe — de propósito: deixa
+# um degrau vazio entre os tons de pele usados, aumentando a distância entre
+# eles.
+COR_RESERVA: str = "#E0AC69"
+
+
+def _cor_texto_por_luminancia(hex_cor: str) -> str:
+    """Preto ou branco, o que contrastar melhor com o fundo.
+
+    MESMA regra (luminância > 128 -> texto preto) que ffmpeg_utils e
+    renderizacao aplicam na hora de desenhar a legenda. Derivar daqui, em vez
+    de manter uma tabela escrita à mão, garante que as duas nunca discordem.
+    """
+    r, g, b = int(hex_cor[1:3], 16), int(hex_cor[3:5], 16), int(hex_cor[5:7], 16)
+    return "#000000" if (0.299 * r + 0.587 * g + 0.114 * b) > 128 else "#FFFFFF"
+
 
 CORES_TEXTO: dict[str, str] = {
-    "substantivo": "#FFFFFF",
-    "nome_proprio": "#000000",
-    "verbo": "#FFFFFF",
-    "pronome": "#FFFFFF",
-    "artigo": "#FFFFFF",
-    "adjetivo": "#FFFFFF",
-    "numeral": "#000000",
-    "preposicao": "#FFFFFF",
-    "conjuncao": "#000000",
-    "adverbio": "#000000",
-    "interjeicao": "#000000",
-    "pontuacao": "#FFFFFF",
-    "modal": "#FFFFFF",
-    "auxiliar": "#000000",
-    "particula": "#000000",
-    "terminacao_honorifica": "#FFFFFF",
-    "terminacao_nominal": "#000000",
-    "terminacao_adjetival": "#FFFFFF",
-    "terminacao_final": "#FFFFFF",
-    "sufixo": "#FFFFFF",
+    classe: _cor_texto_por_luminancia(cor) for classe, cor in CORES_HTML.items()
 }
 
-# nome oficial (CSS Color Module / W3C) de cada cor -- útil pra documentação
-# e pra bater com a Central de Decisão (central-decisao-cores.html)
-NOMES_COR_OFICIAL: dict[str, str] = {
-    "substantivo": "black",
-    "nome_proprio": "yellow",
-    "verbo": "red",
-    "pronome": "purple",
-    "artigo": "blue",
-    "adjetivo": "navy",
-    "numeral": "silver",
-    "preposicao": "seagreen",
-    "conjuncao": "pink",
-    "adverbio": "orange",
-    "interjeicao": "gold",
-    "pontuacao": "gray",
-    "modal": "brown",
-    "auxiliar": "white",
-    "particula": "aquamarine",
-    "terminacao_honorifica": "olive",
-    "terminacao_nominal": "salmon",
-    "terminacao_adjetival": "indigo",
-    "terminacao_final": "crimson",
-    "sufixo": "teal",
+# Emoji e nome de cada classe — é isso que vai pra descrição do YouTube.
+EMOJI_CLASSE: dict[str, str] = {
+    classe: PALETA_EMOJI[cor][0] for classe, cor in CORES_HTML.items()
+}
+NOMES_COR: dict[str, str] = {
+    classe: PALETA_EMOJI[cor][1] for classe, cor in CORES_HTML.items()
 }
 
+# Nome legível de cada classe, pra montar a legenda da descrição do YouTube.
+NOMES_CLASSE: dict[str, str] = {
+    "substantivo": "Substantivo",
+    "nome_proprio": "Nome próprio",
+    "verbo": "Verbo",
+    "pronome": "Pronome",
+    "artigo": "Artigo",
+    "adjetivo": "Adjetivo",
+    "numeral": "Numeral",
+    "preposicao": "Preposição",
+    "conjuncao": "Conjunção",
+    "adverbio": "Advérbio",
+    "interjeicao": "Interjeição",
+    "pontuacao": "Pontuação",
+    "modal": "Partícula modal (inglês)",
+    "auxiliar": "Partícula auxiliar (inglês)",
+    "particula": "Partícula (coreano/chinês)",
+    "terminacao_honorifica": "Terminação honorífica (coreano)",
+    "terminacao_nominal": "Terminação nominal (coreano)",
+    "terminacao_adjetival": "Terminação adjetival (coreano)",
+    "terminacao_final": "Terminação final (coreano)",
+    "sufixo": "Sufixo (coreano)",
+}
 
 # ── Classes finas do coreano (classificacao_ko.py) -> uma das 20 cores    ──
 # ── oficiais acima. Decisão documentada em assets/central-decisao-      ──
@@ -129,9 +178,14 @@ def cor_texto(classe: str) -> str:
     return CORES_TEXTO.get(_resolver_classe(classe), "#000000")
 
 
-def nome_cor_oficial(classe: str) -> str:
-    """Nome oficial CSS da cor dessa classe (ex: "gold", "royalblue")."""
-    return NOMES_COR_OFICIAL.get(_resolver_classe(classe), "")
+def nome_cor(classe: str) -> str:
+    """Nome legível da cor dessa classe (ex: "verde oliva", "lilás")."""
+    return NOMES_COR.get(_resolver_classe(classe), "")
+
+
+def emoji_classe(classe: str) -> str:
+    """Emoji da cor dessa classe — é o que vai pra descrição do YouTube."""
+    return EMOJI_CLASSE.get(_resolver_classe(classe), "")
 
 
 def cor_ass(classe: str) -> str:
@@ -139,3 +193,18 @@ def cor_ass(classe: str) -> str:
     h = cor_html(classe).replace("#", "").upper().zfill(6)
     r, g, b = h[0:2], h[2:4], h[4:6]
     return f"&H00{b}{g}{r}"
+
+
+def legenda_youtube(classes: list[str] | None = None) -> str:
+    """Monta o bloco de legenda pra colar na descrição do YouTube:
+    uma linha por classe, com o emoji da cor.
+
+    `classes` limita/ordena a lista (ex: só as que aparecem num vídeo sem
+    coreano); o padrão traz as 20 na ordem de CORES_HTML.
+    """
+    linhas = []
+    for classe in (classes if classes is not None else CORES_HTML):
+        if classe not in CORES_HTML:
+            continue
+        linhas.append(f"{EMOJI_CLASSE[classe]} {NOMES_CLASSE.get(classe, classe)}")
+    return "\n".join(linhas)
