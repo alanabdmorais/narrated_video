@@ -488,9 +488,6 @@ class PipelineConfig:
         """JSON de classificação morfológica básica."""
         return f"{self.NOME_ORACAO}_classificacao_basico_{lang}.json"
 
-    def nome_ass(self, lang: str) -> str:
-        return f"{self.NOME_ORACAO}_legendas_{lang}.ass"
-
     # ─────────────────────────────────────────────────────────────────────────
     # PASTAS DO DRIVE
     # Estrutura: narrated_video/

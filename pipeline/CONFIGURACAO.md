@@ -141,12 +141,26 @@ Tudo isso vem de propriedades/métodos de `PipelineConfig` em `modulos/config.py
 | `NOME_SRT_PT` / `nome_srt(lang)` | `<nome>_<IDIOMA_MESTRE ou lang>.srt` | Legenda já distribuída/corrigida por idioma. |
 | `nome_legenda_unica` | = `NOME_LEGENDA_UNICA` (se preenchido) senão `NOME_SRT_PT_WHISPER` | SRT escolhido pro vídeo de legenda única. |
 | `nome_legenda_mestre` | = `NOME_LEGENDA_MESTRE` (se preenchido) senão `nome_legenda_unica` | Molde de segmentação/tempos pros outros idiomas (Language Subtitles) — é o mestre de SEGMENTAÇÃO, ver seção 6b. |
-| `nome_ass(lang)` | `<nome>_legendas_<lang>.ass` | Legenda queimada (ASS), por idioma. |
 | `nome_srt_versiculo` | `<nome>_versiculo.srt` | Indicador de livro:versículo (overlay) NUM SÓ IDIOMA (o mestre, ex: "Matt 2:4") — usado pelo vídeo de legenda única (`caption_pipeline.py`). |
 | `nome_srt_versiculo_multilingue` | `<nome>_versiculo_multilingue.srt` | Mesmo indicador, mas combinando as abreviações de TODOS os idiomas configurados (ex: "Matt/Mt/마 2:4") — usado pelo vídeo de legendas multi-idioma (`language_captions_pipeline.py`), que já empilha vários idiomas na tela. |
 
 `PROTEGER_LEGENDA_MESTRE` (bool, padrão `True`) — impede sobrescrever a legenda
 mestre sem querer.
+
+### Arquivos `.ass` (legenda já queimável, gerados por `renderizacao.py`/`ffmpeg_utils.py`)
+
+Não vêm de propriedade de `config.py` — cada função de geração usa seu próprio
+nome fixo (`caminho_saida`, default se não for passado outro):
+
+| Função | Nome padrão | Usada por |
+|---|---|---|
+| `gerar_ass_simples()` | `legenda_unica_<nome>.ass` | Legenda única (1 idioma) — `caption_pipeline.py` |
+| `gerar_ass()` | `legendas_idiomas_<nome>.ass` (passado explícito) | Multi-idioma **cor única** (1 cor por idioma) — `language_captions_pipeline.py` |
+| `gerar_ass()` (mesma função, default) | `legendas_<nome>.ass` | Multi-idioma **multicolor** (1 cor por função gramatical, Stanza/Kiwi) — `caption-multicolor-generate.ipynb` |
+| `gerar_ass_versiculo()` | `versiculo_<nome>.ass` | Indicador de livro:versículo (ASS, camada separada) |
+
+Sempre 1 arquivo `.ass` por vídeo (nunca por idioma — mesmo no multi-idioma,
+todos os idiomas já vêm empilhados dentro do mesmo arquivo).
 
 > **Migração do rename edge→whisper:** vídeos já gerados antes dessa mudança
 > (ex: `40_Matt_02`) têm arquivos reais no Drive com o nome antigo
@@ -270,3 +284,12 @@ legados que apontam todos pra `pasta_oracao`.
   a mudança, o nome real do Drive passou a corresponder ao novo
   `nome_srt_versiculo_multilingue` (usado por `language_captions_pipeline.py`)
   automaticamente — nenhuma ação manual no Drive foi necessária pra esse caso.
+- `classificacao.py` (filtro Stanza→20 classes, contraparte do `classificacao_ko.py`)
+  faltava no repositório — nunca tinha sido migrado do Drive pro GitHub, e
+  `caption-multicolor-generate.ipynb` quebrava no import. Recuperado do Drive
+  e adicionado em `pipeline/modulos/classificacao.py`.
+- **`nome_ass(lang)` REMOVIDO** de `config.py` — não era usado em lugar
+  nenhum do pipeline (nem legenda única, nem multi-idioma cor única, nem
+  multicolor — as 3 variantes geram só 1 `.ass` por vídeo, cada uma com seu
+  próprio nome fixo, nunca 1 arquivo por idioma). Ver tabela de `.ass` na
+  seção 6 pros nomes reais.
