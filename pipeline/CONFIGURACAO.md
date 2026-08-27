@@ -475,3 +475,28 @@ inteira. Virou roxo 🟣, que mantém a família e contrasta com o vizinho.
 Como as cores por idioma e as por classe gramatical nunca aparecem no mesmo
 vídeo (são níveis diferentes — `_final_idiomas` vs `_final_multicolor`), elas
 podem reusar os mesmos tons sem conflito.
+
+### As duas centrais de cores
+
+| Arquivo | Idiomas |
+|---|---|
+| `assets/central-decisao-cores.html` | 5 (pt/en/es/fr/ko) |
+| `assets/central-decisao-cores-zh.html` | 6 (+ chinês) |
+
+**As 20 classes e as 21 cores são idênticas nas duas** — o chinês não trouxe
+categoria nova. O que difere: exemplos por idioma, a lista de cores por idioma,
+o nome/definição de `particula` (que no chinês também se aplica) e os textos de
+cabeçalho.
+
+As duas saem de `assets/gerar-central-cores.py`, que lê o `cores.py` como fonte
+única e usa o próprio `central-decisao-cores.html` como template de
+estrutura/CSS/JS:
+
+```bash
+python3 assets/gerar-central-cores.py
+```
+
+É idempotente (rodar duas vezes dá o mesmo arquivo). **Depois de mexer em
+`cores.py`, rode-o** — senão as centrais ficam mostrando a paleta antiga.
+Editar as duas à mão é o que se quer evitar: uma correção entraria numa e não
+na outra.
