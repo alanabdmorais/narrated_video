@@ -1,9 +1,4 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Painel de Classificação — Legenda Multicor (20 classes)</title>
+<title>Painel de Classificação — Legenda Multicor, 6 idiomas (20 classes)</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
@@ -134,12 +129,10 @@
     .divisor { height: 1px; }
   }
 </style>
-</head>
-<body>
 
 <div class="wrap">
   <header>
-    <p class="eyebrow">Legenda Multicor · 5 Idiomas · 20 classes</p>
+    <p class="eyebrow">Legenda Multicor · 6 Idiomas (com chinês) · 20 classes</p>
     <h1>Central de decisão — cores por classe gramatical</h1>
     <p class="lede">
       Paleta <b>emoji-first</b>: as 21 cores foram escolhidas por terem um emoji
@@ -153,7 +146,7 @@
       propor outra cor. Só clique em "salvar proposta" no final — isso copia só o que você
       mudou, pra você colar e me mandar.
     </p>
-    <p class="lede" style="margin-top:12px">Versão de <b>5 idiomas</b> (pt/en/es/fr/ko). Para a de 6, com chinês, veja <code>central-decisao-cores-zh.html</code> — mesmas 20 classes e mesmas 21 cores, já que o chinês não precisou de nenhuma categoria nova.</p>
+    <p class="lede" style="margin-top:12px">Versão de <b>6 idiomas</b>, com chinês (zh-Hans). Mesmas 20 classes e mesmas 21 cores da versão de 5 — o chinês <b>não precisou de categoria nova</b>: reaproveita as 14 genéricas + <code>particula</code>. As 6 exclusivas do coreano não se aplicam porque coreano é aglutinante (sufixos transformam a palavra) e chinês é isolante (palavras são blocos independentes).</p>
   </header>
 
   <section class="bloco" style="margin-top:32px">
@@ -296,7 +289,7 @@ const DADOS = {
   "pontuacao": "Pontuação",
   "modal": "Partícula Modal (inglês)",
   "auxiliar": "Partícula Auxiliar (inglês)",
-  "particula": "Partícula (coreano)",
+  "particula": "Partícula (coreano/chinês)",
   "terminacao_honorifica": "Terminação Honorífica (coreano)",
   "terminacao_nominal": "Terminação Nominal (coreano)",
   "terminacao_adjetival": "Terminação Adjetival (coreano)",
@@ -521,7 +514,7 @@ const DADOS = {
     "stanza": [
      "ADV",
      "EN: PART “not”",
-     "fallback (PART fora do EN, X, SYM, tag imprevista)"
+     "fallback (PART fora do EN/ZH, X, SYM, tag imprevista)"
     ],
     "kiwi": [
      "MAG",
@@ -602,7 +595,7 @@ const DADOS = {
    }
   },
   "particula": {
-   "definicao": "Coreano: marca a função de uma palavra na frase. Conceito sem equivalente direto nos outros 4 idiomas.",
+   "definicao": "Coreano e chinês: marca a função de uma palavra na frase. Conceito sem equivalente direto nos idiomas latinos. No chinês é a classe mais frequente da língua (o 的 sozinho é o caractere mais comum) — por isso o chinês reaproveita esta categoria em vez de precisar de uma cor própria.",
    "subclasses": [
     {
      "nome": "sujeito",
@@ -630,7 +623,9 @@ const DADOS = {
     }
    ],
    "origem": {
-    "stanza": [],
+    "stanza": [
+     "ZH: PART (的, 了, 吗, 着, 过...)"
+    ],
     "kiwi": [
      "JKS",
      "JKO",
@@ -757,140 +752,160 @@ const DADOS = {
    "en": "path",
    "es": "camino",
    "fr": "chemin",
-   "ko": "길"
+   "ko": "길",
+   "zh": "路"
   },
   "nome_proprio": {
    "pt": "Davi",
    "en": "David",
    "es": "David",
    "fr": "David",
-   "ko": "다윗"
+   "ko": "다윗",
+   "zh": "大卫"
   },
   "verbo": {
    "pt": "andar",
    "en": "walk",
    "es": "andar",
    "fr": "marcher",
-   "ko": "걷다"
+   "ko": "걷다",
+   "zh": "走"
   },
   "pronome": {
    "pt": "ela",
    "en": "she",
    "es": "ella",
    "fr": "elle",
-   "ko": "그녀"
+   "ko": "그녀",
+   "zh": "她"
   },
   "artigo": {
    "pt": "o",
    "en": "the",
    "es": "el",
    "fr": "le",
-   "ko": "—"
+   "ko": "—",
+   "zh": "这"
   },
   "adjetivo": {
    "pt": "forte",
    "en": "strong",
    "es": "fuerte",
    "fr": "fort",
-   "ko": "강한"
+   "ko": "강한",
+   "zh": "强"
   },
   "numeral": {
    "pt": "sete",
    "en": "seven",
    "es": "siete",
    "fr": "sept",
-   "ko": "일곱"
+   "ko": "일곱",
+   "zh": "七"
   },
   "preposicao": {
    "pt": "sobre",
    "en": "on",
    "es": "sobre",
    "fr": "sur",
-   "ko": "—"
+   "ko": "—",
+   "zh": "在"
   },
   "conjuncao": {
    "pt": "mas",
    "en": "but",
    "es": "pero",
    "fr": "mais",
-   "ko": "그러나"
+   "ko": "그러나",
+   "zh": "但是"
   },
   "adverbio": {
    "pt": "hoje",
    "en": "today",
    "es": "hoy",
    "fr": "aujourd'hui",
-   "ko": "오늘"
+   "ko": "오늘",
+   "zh": "今天"
   },
   "interjeicao": {
    "pt": "ah!",
    "en": "oh!",
    "es": "¡ay!",
    "fr": "ah!",
-   "ko": "아"
+   "ko": "아",
+   "zh": "啊"
   },
   "pontuacao": {
    "pt": ".",
    "en": ".",
    "es": ".",
    "fr": ".",
-   "ko": "."
+   "ko": ".",
+   "zh": "。"
   },
   "modal": {
    "pt": "—",
    "en": "will / can / must",
    "es": "—",
    "fr": "—",
-   "ko": "—"
+   "ko": "—",
+   "zh": "—"
   },
   "auxiliar": {
    "pt": "—",
    "en": "do",
    "es": "—",
    "fr": "—",
-   "ko": "—"
+   "ko": "—",
+   "zh": "—"
   },
   "particula": {
    "pt": "—",
    "en": "—",
    "es": "—",
    "fr": "—",
-   "ko": "가/는/를"
+   "ko": "가/는/를",
+   "zh": "的/了/吗"
   },
   "terminacao_honorifica": {
    "pt": "—",
    "en": "—",
    "es": "—",
    "fr": "—",
-   "ko": "습니다"
+   "ko": "습니다",
+   "zh": "—"
   },
   "terminacao_nominal": {
    "pt": "—",
    "en": "—",
    "es": "—",
    "fr": "—",
-   "ko": "기/ㅁ"
+   "ko": "기/ㅁ",
+   "zh": "—"
   },
   "terminacao_adjetival": {
    "pt": "—",
    "en": "—",
    "es": "—",
    "fr": "—",
-   "ko": "ㄴ/ㄹ/는"
+   "ko": "ㄴ/ㄹ/는",
+   "zh": "—"
   },
   "terminacao_final": {
    "pt": "—",
    "en": "—",
    "es": "—",
    "fr": "—",
-   "ko": "다 / 어라"
+   "ko": "다 / 어라",
+   "zh": "—"
   },
   "sufixo": {
    "pt": "—",
    "en": "—",
    "es": "—",
    "fr": "—",
-   "ko": "히"
+   "ko": "히",
+   "zh": "—"
   }
  },
  "montessori": [
@@ -1125,12 +1140,20 @@ const DADOS = {
    "nome": "Coreano",
    "nome_cor": "rosa",
    "y": 420
+  },
+  {
+   "lang": "zh",
+   "hex": "#800080",
+   "emoji": "🟣",
+   "nome": "Chinês",
+   "nome_cor": "roxo",
+   "y": 500
   }
  ],
- "nota_variante": "Versão de <b>5 idiomas</b> (pt/en/es/fr/ko). Para a de 6, com chinês, veja <code>central-decisao-cores-zh.html</code> — mesmas 20 classes e mesmas 21 cores, já que o chinês não precisou de nenhuma categoria nova."
+ "nota_variante": "Versão de <b>6 idiomas</b>, com chinês (zh-Hans). Mesmas 20 classes e mesmas 21 cores da versão de 5 — o chinês <b>não precisou de categoria nova</b>: reaproveita as 14 genéricas + <code>particula</code>. As 6 exclusivas do coreano não se aplicam porque coreano é aglutinante (sufixos transformam a palavra) e chinês é isolante (palavras são blocos independentes)."
 };
-const BANDEIRAS = { pt: "PT", en: "EN", es: "ES", fr: "FR", ko: "KO" };
-const TODOS_IDIOMAS = ["pt", "en", "es", "fr", "ko"];
+const BANDEIRAS = { pt: "PT", en: "EN", es: "ES", fr: "FR", ko: "KO", zh: "ZH" };
+const TODOS_IDIOMAS = ["pt", "en", "es", "fr", "ko", "zh"];
 
 // estado das propostas -- so guarda o que foi de fato alterado
 const propostas = {};
@@ -1508,6 +1531,3 @@ document.addEventListener('click', e => {
   }
 });
 </script>
-
-</body>
-</html>

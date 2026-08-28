@@ -150,8 +150,8 @@
       tags brutas do Stanza (PT/EN/ES/FR) e do Kiwi (coreano) essa classe vem — é o mapeamento
       que o código (classificacao.py, classificacao_ko.py, cores.MAPA_CLASSES_FINAS) realmente
       usa hoje. Exemplos fora do roteiro, lado a lado: o que está valendo agora e um espaço pra
-      propor outra cor. Só rode "salvar proposta" no final — isso baixa um arquivo com só o que
-      você mudou, pra me mandar depois.
+      propor outra cor. Só clique em "salvar proposta" no final — isso copia só o que você
+      mudou, pra você colar e me mandar.
     </p>
     <p class="lede" style="margin-top:12px">Versão de <b>6 idiomas</b>, com chinês (zh-Hans). Mesmas 20 classes e mesmas 21 cores da versão de 5 — o chinês <b>não precisou de categoria nova</b>: reaproveita as 14 genéricas + <code>particula</code>. As 6 exclusivas do coreano não se aplicam porque coreano é aglutinante (sufixos transformam a palavra) e chinês é isolante (palavras são blocos independentes).</p>
   </header>
@@ -180,7 +180,7 @@
     <input type="text" id="busca" placeholder="Buscar por classe ou exemplo…">
     <span class="contagem-filtro" id="contagem-filtro"></span>
     <span id="contador-mudancas"></span>
-    <button class="btn-salvar" id="btn-salvar" disabled>Salvar proposta (0)</button>
+    <button class="btn-salvar" id="btn-salvar" disabled>Copiar proposta (0)</button>
     <button class="btn-legenda" id="btn-abrir-legenda">Ver as 21 cores da paleta</button>
   </div>
 
@@ -1362,11 +1362,11 @@ function atualizarContadorMudancas() {
   document.getElementById('contador-mudancas').textContent = n > 0 ? `${n} pendente${n>1?'s':''}` : '';
   const btn = document.getElementById('btn-salvar');
   btn.disabled = n === 0;
-  btn.textContent = `Salvar proposta (${n})`;
+  btn.textContent = `Copiar proposta (${n})`;
 }
 
 // ── salvar / baixar proposta ──────────────────────────────────────────
-document.getElementById('btn-salvar').addEventListener('click', () => {
+document.getElementById('btn-salvar').addEventListener('click', async () => {
   const saida = {
     video_referencia: "40_Matt_02",
     data_geracao: new Date().toISOString().slice(0,10),
@@ -1374,13 +1374,22 @@ document.getElementById('btn-salvar').addEventListener('click', () => {
       classe, nome: DADOS.nomes[classe], ...dados
     }))
   };
-  const blob = new Blob([JSON.stringify(saida, null, 2)], {type: 'application/json'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'proposta-cores-legenda-multicor.json';
-  a.click();
-  URL.revokeObjectURL(url);
+  // Copia em vez de baixar: publicada como página, esta central roda num
+  // visualizador que bloqueia download -- o link sairia mudo. Copiar funciona
+  // nos dois lugares, e a proposta vai ser colada numa conversa de qualquer
+  // jeito.
+  const texto = JSON.stringify(saida, null, 2);
+  const btn = document.getElementById('btn-salvar');
+  const antes = btn.textContent;
+  try {
+    await navigator.clipboard.writeText(texto);
+  } catch (e) {
+    const ta = document.createElement('textarea');
+    ta.value = texto; document.body.appendChild(ta); ta.select();
+    document.execCommand('copy'); ta.remove();
+  }
+  btn.textContent = 'Copiado ✓';
+  setTimeout(() => { btn.textContent = antes; }, 1800);
 });
 
 // ── busca ─────────────────────────────────────────────────────────────

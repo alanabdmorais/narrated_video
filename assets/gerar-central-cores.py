@@ -176,6 +176,10 @@ def gerar(nome_saida: str, v: dict, template: str) -> None:
     (ASSETS / nome_saida).write_text(raw, encoding="utf-8")
     print(f"  -> {nome_saida}  ({len(v['idiomas'])} idiomas)")
 
+    nome_art = nome_saida.replace(".html", "-artifact.html")
+    (ASSETS / nome_art).write_text(para_artifact(raw), encoding="utf-8")
+    print(f"  -> {nome_art}  (mesma central, formato Artifact)")
+
 
 # ── Colinha pra descrição do YouTube ──────────────────────────────────────────
 # Blocos prontos pra copiar, um por tipo de vídeo. Gerada do mesmo cores.py que
@@ -237,6 +241,25 @@ COLINHA_CSS = """
     color:var(--text-muted);font-size:12px;font-family:'IBM Plex Mono',monospace}
   code{background:var(--surface-2);padding:1px 5px;border-radius:4px;font-size:.92em}
 """
+
+
+def para_artifact(html: str) -> str:
+    """Converte a página autônoma na versão que o Artifact publica.
+
+    O Artifact monta o esqueleto (<!doctype>/<html>/<head>/<body>) na hora de
+    publicar, então o arquivo tem que trazer só o CONTEÚDO -- <title>, <style>
+    e o corpo. Deixar as tags de invólucro aninha html dentro de html, e o
+    navegador conserta do jeito dele, que não é o nosso.
+
+    Gerado do MESMO html da versão autônoma, de propósito: são dois destinos
+    (arquivo local e página publicada) de uma fonte só, então não existe
+    "qual das duas está certa".
+    """
+    for tag in ("<!DOCTYPE html>", "</head>", "<body>", "</body>", "</html>"):
+        html = html.replace(tag, "")
+    html = re.sub(r'<html[^>]*>|<head>|<meta[^>]*>', "", html)
+    # Sobram linhas em branco onde as tags saíram.
+    return re.sub(r"\n{3,}", "\n\n", html).strip() + "\n"
 
 
 def gerar_colinha(nome_saida: str) -> None:
@@ -321,6 +344,10 @@ document.querySelectorAll('[data-copiar]').forEach(btn => {{
 """
     (ASSETS / nome_saida).write_text(html, encoding="utf-8")
     print(f"  -> {nome_saida}  ({len(COLINHA_BLOCOS)} blocos)")
+
+    nome_art = nome_saida.replace(".html", "-artifact.html")
+    (ASSETS / nome_art).write_text(para_artifact(html), encoding="utf-8")
+    print(f"  -> {nome_art}  (mesma colinha, formato Artifact)")
 
 
 def main() -> None:

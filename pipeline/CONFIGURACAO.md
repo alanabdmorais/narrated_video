@@ -887,6 +887,33 @@ colinha; agora são fonte única em `cores.py` e a central os recebe injetados,
 como já acontecia com cores, emoji e paleta. Verificado que as duas centrais
 saem **byte a byte idênticas** depois da mudança de casa.
 
+### Onde as páginas moram: Artifact, não Drive
+
+As três páginas — as duas centrais e a colinha — são publicadas como
+**Artifact**, cada uma com URL fixa. Republicar o mesmo caminho de arquivo
+atualiza a página no lugar.
+
+O motivo é evitar versão conflitante. Enquanto elas viviam como cópias no
+Drive, toda mudança de cor exigia subir três arquivos de novo, e esquecer um
+deixava você olhando uma legenda que não existe mais. As cópias do Drive foram
+pra lixeira; a fonte continua sendo o `cores.py`, e o Artifact é a vista
+renderizada dela.
+
+O gerador emite **duas formas** de cada página, da mesma fonte:
+
+| Arquivo | Pra quê |
+|---|---|
+| `<nome>.html` | página autônoma — abre local, tem `<!doctype>`/`<head>`/`<body>` |
+| `<nome>-artifact.html` | mesma página sem o invólucro, que o Artifact monta na publicação |
+
+Deixar as tags de invólucro no arquivo publicado aninha html dentro de html, e
+o navegador conserta do jeito dele, que não é o nosso.
+
+> ⚠️ **O botão de proposta copia, não baixa.** O visualizador de Artifact
+> bloqueia download — o link de arquivo sairia mudo, sem erro. Como a proposta
+> ia ser colada numa conversa de qualquer jeito, copiar resolve nos dois
+> contextos: página publicada e arquivo local.
+
 ### A colinha da descrição do YouTube
 
 `assets/colinha-emojis-youtube.html` — abre no navegador, clica em **Copiar** no
