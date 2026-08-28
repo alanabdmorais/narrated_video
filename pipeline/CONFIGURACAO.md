@@ -810,6 +810,43 @@ python3 assets/gerar-central-cores.py
 Editar as duas à mão é o que se quer evitar: uma correção entraria numa e não
 na outra.
 
+### Legenda poliglota — o público é poliglota, a legenda também
+
+Três sabores por vídeo multicolor, e para um vídeo você cola **os dois
+primeiros**:
+
+| Sabor | O que é | Por quê |
+|---|---|---|
+| **básica (inglês)** | `🔴 verb` | É o que o tradutor automático do YouTube tem chance de converter pra língua de quem assiste |
+| **poliglota** | `🔴 verbo · verb · verbo · verbe · 동사 · 动词 → andar · walk · andar · marcher · 걷다 · 走` | A garantia: não depende de tradutor, e o exemplo ensina a cor melhor que o nome da classe sozinho |
+| **só português** | `🔴 Verbo` | Pra você conferir |
+
+A primeira linha do bloco poliglota é `PT · EN · ES · FR · KO · ZH` — **sigla,
+não nome por extenso**: "Português · Inglês · …" só serve pra quem já lê
+português, e a legenda é justamente pra quem não lê. A sigla é a mesma que
+aparece ao lado da faixa no vídeo, então o espectador liga a linha da descrição
+com o que está vendo na tela.
+
+#### Duas decisões de formato que a realidade forçou
+
+**O separador é `·`, não `/`.** Vários exemplos já têm barra por dentro
+(`will / can / must`, `가/는/를`): com `/` entre idiomas, `modal` sairia como
+`— / will / can / must / — / —` e não dá pra saber onde termina um idioma e
+começa o outro. Nenhum texto das tabelas contém `·` — há um teste que garante.
+
+**Idioma sem exemplo entra como `—`, não some.** A posição é o que identifica
+o idioma: o 3º item é sempre espanhol. Se o vazio sumisse, o leitor contaria
+errado e atribuiria a palavra ao idioma errado. E o `—` é informação: mostra
+que aquela classe não existe naquele idioma.
+
+#### `NOMES_CLASSE_IDIOMA` e `EXEMPLOS_CLASSE` (`cores.py`)
+
+Nome da classe e palavra de exemplo, nos 6 idiomas. Os exemplos **viviam
+soltos dentro do HTML da central**, sem quem os validasse e fora do alcance da
+colinha; agora são fonte única em `cores.py` e a central os recebe injetados,
+como já acontecia com cores, emoji e paleta. Verificado que as duas centrais
+saem **byte a byte idênticas** depois da mudança de casa.
+
 ### A colinha da descrição do YouTube
 
 `assets/colinha-emojis-youtube.html` — abre no navegador, clica em **Copiar** no

@@ -133,6 +133,66 @@ NOMES_CLASSE: dict[str, str] = {
     "sufixo": "Sufixo (coreano)",
 }
 
+# ── Legenda poliglota: nome da classe e exemplo, em cada idioma ──────────────
+# O público é poliglota, então a legenda da descrição também é. Estas duas
+# tabelas são a fonte ÚNICA -- as centrais de cores injetam os exemplos daqui
+# (antes eles viviam soltos dentro do HTML, sem quem os validasse).
+#
+# "—" = a classe não existe nesse idioma. modal/auxiliar são só do inglês; as
+# terminações e o sufixo, só do coreano.
+
+NOMES_CLASSE_IDIOMA: dict[str, dict[str, str]] = {
+    "substantivo": {"pt": "substantivo", "en": "noun", "es": "sustantivo", "fr": "nom", "ko": "명사", "zh": "名词"},
+    "verbo": {"pt": "verbo", "en": "verb", "es": "verbo", "fr": "verbe", "ko": "동사", "zh": "动词"},
+    "pronome": {"pt": "pronome", "en": "pronoun", "es": "pronombre", "fr": "pronom", "ko": "대명사", "zh": "代词"},
+    "adverbio": {"pt": "advérbio", "en": "adverb", "es": "adverbio", "fr": "adverbe", "ko": "부사", "zh": "副词"},
+    "conjuncao": {"pt": "conjunção", "en": "conjunction", "es": "conjunción", "fr": "conjonction", "ko": "접속사", "zh": "连词"},
+    "interjeicao": {"pt": "interjeição", "en": "interjection", "es": "interjección", "fr": "interjection", "ko": "감탄사", "zh": "叹词"},
+    "artigo": {"pt": "artigo", "en": "article", "es": "artículo", "fr": "article", "ko": "관사", "zh": "冠词"},
+    "adjetivo": {"pt": "adjetivo", "en": "adjective", "es": "adjetivo", "fr": "adjectif", "ko": "형용사", "zh": "形容词"},
+    "preposicao": {"pt": "preposição", "en": "preposition", "es": "preposición", "fr": "préposition", "ko": "전치사", "zh": "介词"},
+    "nome_proprio": {"pt": "nome próprio", "en": "proper noun", "es": "nombre propio", "fr": "nom propre", "ko": "고유명사", "zh": "专有名词"},
+    "pontuacao": {"pt": "pontuação", "en": "punctuation", "es": "puntuación", "fr": "ponctuation", "ko": "문장부호", "zh": "标点"},
+    "numeral": {"pt": "numeral", "en": "numeral", "es": "numeral", "fr": "numéral", "ko": "수사", "zh": "数词"},
+    "auxiliar": {"pt": "auxiliar", "en": "auxiliary", "es": "auxiliar", "fr": "auxiliaire", "ko": "조동사", "zh": "助动词"},
+    "modal": {"pt": "modal", "en": "modal", "es": "modal", "fr": "modal", "ko": "조동사", "zh": "情态动词"},
+    "particula": {"pt": "partícula", "en": "particle", "es": "partícula", "fr": "particule", "ko": "조사", "zh": "助词"},
+    "terminacao_honorifica": {"pt": "terminação honorífica", "en": "honorific ending", "es": "terminación honorífica", "fr": "terminaison honorifique", "ko": "존댓말 어미", "zh": "敬语词尾"},
+    "terminacao_nominal": {"pt": "terminação nominal", "en": "nominal ending", "es": "terminación nominal", "fr": "terminaison nominale", "ko": "명사형 어미", "zh": "名词化词尾"},
+    "terminacao_adjetival": {"pt": "terminação adjetival", "en": "adjectival ending", "es": "terminación adjetival", "fr": "terminaison adjectivale", "ko": "관형사형 어미", "zh": "定语词尾"},
+    "terminacao_final": {"pt": "terminação final", "en": "final ending", "es": "terminación final", "fr": "terminaison finale", "ko": "종결어미", "zh": "句末词尾"},
+    "sufixo": {"pt": "sufixo", "en": "suffix", "es": "sufijo", "fr": "suffixe", "ko": "접미사", "zh": "后缀"},
+}
+
+EXEMPLOS_CLASSE: dict[str, dict[str, str]] = {
+    "substantivo": {"pt": "caminho", "en": "path", "es": "camino", "fr": "chemin", "ko": "길", "zh": "路"},
+    "verbo": {"pt": "andar", "en": "walk", "es": "andar", "fr": "marcher", "ko": "걷다", "zh": "走"},
+    "pronome": {"pt": "ela", "en": "she", "es": "ella", "fr": "elle", "ko": "그녀", "zh": "她"},
+    "adverbio": {"pt": "hoje", "en": "today", "es": "hoy", "fr": "aujourd'hui", "ko": "오늘", "zh": "今天"},
+    "conjuncao": {"pt": "mas", "en": "but", "es": "pero", "fr": "mais", "ko": "그러나", "zh": "但是"},
+    "interjeicao": {"pt": "ah!", "en": "oh!", "es": "¡ay!", "fr": "ah!", "ko": "아", "zh": "啊"},
+    "artigo": {"pt": "o", "en": "the", "es": "el", "fr": "le", "ko": "—", "zh": "这"},
+    "adjetivo": {"pt": "forte", "en": "strong", "es": "fuerte", "fr": "fort", "ko": "강한", "zh": "强"},
+    "preposicao": {"pt": "sobre", "en": "on", "es": "sobre", "fr": "sur", "ko": "—", "zh": "在"},
+    "nome_proprio": {"pt": "Davi", "en": "David", "es": "David", "fr": "David", "ko": "다윗", "zh": "大卫"},
+    "pontuacao": {"pt": ".", "en": ".", "es": ".", "fr": ".", "ko": ".", "zh": "。"},
+    "numeral": {"pt": "sete", "en": "seven", "es": "siete", "fr": "sept", "ko": "일곱", "zh": "七"},
+    "auxiliar": {"pt": "—", "en": "do", "es": "—", "fr": "—", "ko": "—", "zh": "—"},
+    "modal": {"pt": "—", "en": "will / can / must", "es": "—", "fr": "—", "ko": "—", "zh": "—"},
+    "particula": {"pt": "—", "en": "—", "es": "—", "fr": "—", "ko": "가/는/를", "zh": "的/了/吗"},
+    "terminacao_honorifica": {"pt": "—", "en": "—", "es": "—", "fr": "—", "ko": "습니다", "zh": "—"},
+    "terminacao_nominal": {"pt": "—", "en": "—", "es": "—", "fr": "—", "ko": "기/ㅁ", "zh": "—"},
+    "terminacao_adjetival": {"pt": "—", "en": "—", "es": "—", "fr": "—", "ko": "ㄴ/ㄹ/는", "zh": "—"},
+    "terminacao_final": {"pt": "—", "en": "—", "es": "—", "fr": "—", "ko": "다 / 어라", "zh": "—"},
+    "sufixo": {"pt": "—", "en": "—", "es": "—", "fr": "—", "ko": "히", "zh": "—"},
+}
+
+SEM_EXEMPLO = "—"
+
+assert set(NOMES_CLASSE_IDIOMA) == set(CORES_HTML), "NOMES_CLASSE_IDIOMA divergiu das classes"
+assert set(EXEMPLOS_CLASSE) == set(CORES_HTML), "EXEMPLOS_CLASSE divergiu das classes"
+
+
 # ── Classes finas do coreano (classificacao_ko.py) -> uma das 20 cores    ──
 # ── oficiais acima. Decisão documentada em assets/central-decisao-      ──
 # ── cores.html (subclasses de cada card) -- as duas exceções sem        ──
@@ -281,6 +341,93 @@ def nome_classe_legenda(classe: str, idiomas: list[str] | None = None) -> str:
             nome = "Partícula ({})".format(
                 "/".join(NOMES_IDIOMA_LEGENDA[l].lower() for l in donos))
     return nome
+
+
+# Separador entre idiomas na legenda poliglota. NÃO é "/" de propósito: vários
+# exemplos já têm barra por dentro ("will / can / must", "가/는/를"), e aí a
+# linha ficaria ambígua -- não dá pra saber onde termina um idioma e começa o
+# outro. O "·" não aparece em exemplo nenhum.
+SEPARADOR_IDIOMA = " · "
+
+ORDEM_IDIOMAS_PADRAO = ("pt", "en", "es", "fr", "ko", "zh")
+
+
+def _idiomas_validos(idiomas: list[str] | None) -> list[str]:
+    ordem = list(idiomas) if idiomas else list(ORDEM_IDIOMAS_PADRAO)
+    desconhecidos = [l for l in ordem if l not in NOMES_IDIOMA_LEGENDA]
+    if desconhecidos:
+        raise KeyError(f"idioma(s) sem nome cadastrado: {desconhecidos}")
+    return ordem
+
+
+def cabecalho_poliglota(idiomas: list[str] | None = None) -> str:
+    """Linha que ensina a ordem dos idiomas nas linhas de baixo.
+
+    Sem ela a legenda poliglota é ilegível: o leitor vê seis palavras separadas
+    por ponto e não sabe qual é qual.
+    """
+    # Sigla, não o nome por extenso: "Português · Inglês · ..." só serve pra
+    # quem já lê português, e a legenda é justamente pra quem não lê. A sigla
+    # em maiúscula é a mesma que aparece ao lado da faixa no vídeo, então o
+    # espectador liga a linha da descrição com o que está vendo na tela.
+    ordem = _idiomas_validos(idiomas)
+    return SEPARADOR_IDIOMA.join(l.upper() for l in ordem)
+
+
+def legenda_youtube_basica(classes: list[str] | None = None,
+                           idioma: str = "en") -> str:
+    """Legenda curta, num idioma só -- o bloco que o YouTube tem chance de
+    traduzir automaticamente pra quem assiste.
+
+        🔴 verb
+        🖤 noun
+
+    Padrão inglês, que é a língua franca do público e a que o tradutor
+    automático do YouTube costuma cobrir melhor como origem.
+    """
+    linhas = []
+    for classe in (classes if classes is not None else CORES_HTML):
+        if classe not in CORES_HTML:
+            continue
+        nome = NOMES_CLASSE_IDIOMA[classe].get(idioma, classe)
+        linhas.append(f"{EMOJI_CLASSE[classe]} {nome}")
+    return "\n".join(linhas)
+
+
+def legenda_youtube_poliglota(classes: list[str] | None = None,
+                              idiomas: list[str] | None = None,
+                              com_exemplo: bool = True,
+                              com_cabecalho: bool = True) -> str:
+    """Legenda poliglota: o nome da classe em cada idioma e, opcionalmente,
+    uma palavra de exemplo em cada um.
+
+        PT · EN · ES · FR · Coreano · Chinês
+        🔴 verbo · verb · verbo · verbe · 동사 · 动词 → andar · walk · andar · marcher · 걷다 · 走
+
+    A posição é fixa: o 3º item é sempre espanhol, tenha exemplo ou não. Por
+    isso idioma sem exemplo entra como "—" em vez de sumir -- se sumisse, o
+    leitor contaria errado e atribuiria a palavra ao idioma errado. E o "—" é
+    informação: mostra que aquela classe não existe naquele idioma.
+    """
+    ordem = _idiomas_validos(idiomas)
+    linhas = [cabecalho_poliglota(ordem)] if com_cabecalho else []
+
+    for classe in (classes if classes is not None else CORES_HTML):
+        if classe not in CORES_HTML:
+            continue
+        nomes = NOMES_CLASSE_IDIOMA[classe]
+        parte_nomes = SEPARADOR_IDIOMA.join(nomes.get(l, classe) for l in ordem)
+        linha = f"{EMOJI_CLASSE[classe]} {parte_nomes}"
+
+        if com_exemplo:
+            ex = EXEMPLOS_CLASSE[classe]
+            parte_ex = SEPARADOR_IDIOMA.join(ex.get(l, SEM_EXEMPLO) for l in ordem)
+            # Classe sem exemplo em idioma nenhum não ganha metade vazia.
+            if parte_ex.replace(SEM_EXEMPLO, "").strip(SEPARADOR_IDIOMA + " "):
+                linha = f"{linha} → {parte_ex}"
+        linhas.append(linha)
+
+    return "\n".join(linhas)
 
 
 def legenda_youtube(classes: list[str] | None = None,

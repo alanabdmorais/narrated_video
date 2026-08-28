@@ -33,18 +33,6 @@ from config import PipelineConfig  # noqa: E402
 ASSETS = RAIZ / "assets"
 TEMPLATE = ASSETS / "central-decisao-cores.html"
 
-# ── Exemplos em chinês, por classe ────────────────────────────────────────────
-# "—" = a classe não existe nesse idioma (modal/auxiliar são só do inglês; as
-# terminações e o sufixo, só do coreano).
-EXEMPLOS_ZH = {
-    "substantivo": "路", "nome_proprio": "大卫", "verbo": "走", "pronome": "她",
-    "artigo": "这", "adjetivo": "强", "numeral": "七", "preposicao": "在",
-    "conjuncao": "但是", "adverbio": "今天", "interjeicao": "啊", "pontuacao": "。",
-    "modal": "—", "auxiliar": "—", "particula": "的/了/吗",
-    "terminacao_honorifica": "—", "terminacao_nominal": "—",
-    "terminacao_adjetival": "—", "terminacao_final": "—", "sufixo": "—",
-}
-
 DEF_PARTICULA_KO = (
     "Coreano: marca a função de uma palavra na frase. Conceito sem equivalente "
     "direto nos outros 4 idiomas."
@@ -104,12 +92,19 @@ def construir_dados(base: dict, v: dict) -> dict:
     d["paleta"] = {h: {"emoji": e, "nome": n} for h, (e, n) in cores.PALETA_EMOJI.items()}
     d["cor_reserva"] = cores.COR_RESERVA
 
-    # ── exemplos por idioma ───────────────────────────────────────────────
-    for classe, ex in d["exemplos"].items():
-        if v["com_chines"]:
-            ex["zh"] = EXEMPLOS_ZH.get(classe, "—")
-        else:
-            ex.pop("zh", None)
+    # ── exemplos por idioma: fonte é o cores.py ───────────────────────────
+    # Antes viviam soltos dentro deste HTML, sem quem os validasse, e a
+    # colinha do YouTube não tinha como alcançá-los. Agora saem da mesma
+    # tabela que a legenda poliglota da descrição usa.
+    # Itera d["exemplos"] (não cores.EXEMPLOS_CLASSE) pra preservar a ordem
+    # das chaves do template -- ordem diferente reescreveria o arquivo
+    # inteiro sem nenhuma mudança de conteúdo.
+    idiomas_ex = list(v["idiomas"])
+    d["exemplos"] = {
+        classe: {l: cores.EXEMPLOS_CLASSE[classe].get(l, cores.SEM_EXEMPLO)
+                 for l in idiomas_ex}
+        for classe in d["exemplos"]
+    }
 
     # ── o que muda de texto entre as versões ──────────────────────────────
     d["nomes"]["particula"] = v["nome_particula"]
@@ -177,19 +172,33 @@ def gerar(nome_saida: str, v: dict, template: str) -> None:
 # Blocos prontos pra copiar, um por tipo de vídeo. Gerada do mesmo cores.py que
 # as centrais -- é o ponto de gerar em vez de escrever à mão: mexeu na cor ou no
 # emoji, roda o script e a colinha acompanha, sem chance de ficar desatualizada.
+# Três sabores por vídeo multicolor:
+#   basica     -- inglês só. É o bloco que o tradutor automático do YouTube
+#                 tem chance de converter pra língua de quem assiste.
+#   poliglota  -- nome da classe nos 6 idiomas + uma palavra de exemplo em
+#                 cada um. É a garantia: não depende de tradutor nenhum, e o
+#                 exemplo ensina a cor melhor que o nome da classe sozinho.
+#   portugues  -- só português, pra você conferir.
+SEIS = ["pt", "en", "es", "fr", "ko", "zh"]
+CINCO = ["pt", "en", "es", "fr", "ko"]
+
 COLINHA_BLOCOS = [
-    ("Multi-idioma cor única — 6 idiomas (com chinês)", "idiomas",
-     ["pt", "en", "es", "fr", "ko", "zh"]),
-    ("Multi-idioma cor única — 5 idiomas", "idiomas",
-     ["pt", "en", "es", "fr", "ko"]),
-    ("Multicolor — 6 idiomas (com chinês)", "classes",
-     ["pt", "en", "es", "fr", "ko", "zh"]),
-    ("Multicolor — 5 idiomas", "classes",
-     ["pt", "en", "es", "fr", "ko"]),
-    ("Multicolor — sem coreano (pt/en/es/fr)", "classes",
-     ["pt", "en", "es", "fr"]),
-    ("Multicolor — só latinos (pt/es/fr)", "classes",
-     ["pt", "es", "fr"]),
+    ("Multi-idioma cor única — 6 idiomas (com chinês)", "idiomas", SEIS),
+    ("Multi-idioma cor única — 5 idiomas", "idiomas", CINCO),
+
+    ("Multicolor 6 idiomas — básica (inglês)", "basica", SEIS),
+    ("Multicolor 6 idiomas — poliglota, com exemplos", "poliglota", SEIS),
+    ("Multicolor 6 idiomas — só português", "portugues", SEIS),
+
+    ("Multicolor 5 idiomas — básica (inglês)", "basica", CINCO),
+    ("Multicolor 5 idiomas — poliglota, com exemplos", "poliglota", CINCO),
+    ("Multicolor 5 idiomas — só português", "portugues", CINCO),
+
+    ("Multicolor sem coreano — básica (inglês)", "basica", ["pt", "en", "es", "fr"]),
+    ("Multicolor sem coreano — poliglota, com exemplos", "poliglota", ["pt", "en", "es", "fr"]),
+
+    ("Multicolor só latinos — básica (inglês)", "basica", ["pt", "es", "fr"]),
+    ("Multicolor só latinos — poliglota, com exemplos", "poliglota", ["pt", "es", "fr"]),
 ]
 
 COLINHA_CSS = """
@@ -224,15 +233,23 @@ COLINHA_CSS = """
 def gerar_colinha(nome_saida: str) -> None:
     blocos_html = []
     for titulo, tipo, idiomas in COLINHA_BLOCOS:
+        cfg = PipelineConfig(NOME_ORACAO="x")
+        ordem = sorted(idiomas, key=lambda l: cfg.POSICOES_Y.get(l, 999))
+
         if tipo == "idiomas":
-            cfg = PipelineConfig(NOME_ORACAO="x")
-            ordem = sorted(idiomas, key=lambda l: cfg.POSICOES_Y.get(l, 999))
             texto = cores.legenda_youtube_idiomas(cfg.CORES_IDIOMAS, ordem)
             qtd = f"{len(ordem)} idiomas · na ordem da tela"
         else:
             classes = cores.classes_para_idiomas(idiomas)
-            texto = cores.legenda_youtube(classes, idiomas)
-            qtd = f"{len(classes)} classes"
+            if tipo == "basica":
+                texto = cores.legenda_youtube_basica(classes, idioma="en")
+                qtd = f"{len(classes)} classes · inglês"
+            elif tipo == "poliglota":
+                texto = cores.legenda_youtube_poliglota(classes, ordem)
+                qtd = f"{len(classes)} classes · {len(ordem)} idiomas · com exemplo"
+            else:
+                texto = cores.legenda_youtube(classes, idiomas)
+                qtd = f"{len(classes)} classes · português"
         blocos_html.append(f"""  <section class="bloco">
     <div class="bloco-cab">
       <h2>{titulo}</h2>
@@ -261,6 +278,11 @@ def gerar_colinha(nome_saida: str) -> None:
       Cada linha é o emoji da cor + o que ela significa naquele vídeo. Escolha o bloco pelos
       idiomas que o vídeo realmente tem — um vídeo sem coreano não deve listar as terminações
       coreanas, e um só com idiomas latinos não tem as partículas do inglês.</p>
+    <p class="lede" style="margin-top:12px">O público é poliglota, então a legenda também é.
+      Para um vídeo multicolor, cole <b>as duas</b>: a <b>básica em inglês</b>, que é o que o
+      tradutor automático do YouTube tem chance de converter pra língua de quem assiste, e a
+      <b>poliglota</b>, que é a garantia — não depende de tradutor e ainda traz uma palavra de
+      exemplo por idioma, que ensina a cor melhor que o nome da classe sozinho.</p>
   </header>
 {chr(10).join(blocos_html)}
   <footer>Gerada por <code>assets/gerar-central-cores.py</code> a partir de
