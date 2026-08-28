@@ -12,7 +12,58 @@ from __future__ import annotations
 import re
 import subprocess
 import json
+import unicodedata
 from pathlib import Path
+
+PREFIXO_COMPILACAO = "comp"
+
+
+def nome_compilacao(tema: str, prefixo: str = PREFIXO_COMPILACAO) -> str:
+    """Transforma um tema editorial livre no nome de projeto da compilação.
+
+        nome_compilacao("Salmos Esperança")  ->  "comp_salmos_esperanca"
+
+    O tema é escolha sua e muda a cada vídeo -- não dá pra o código adivinhar,
+    então ele vem da célula de Configuração. O que o código faz é só deixar o
+    texto utilizável como nome de pasta e de arquivo: acento, cedilha, espaço e
+    pontuação atravessam Drive, shell e linha de comando do ffmpeg, e cada um
+    desses quebra de um jeito diferente e chato de diagnosticar.
+
+    O prefixo separa compilação de capítulo. Sem ele, `salmos_esperanca` e
+    `19_Ps_023` moram juntos em videos/ sem nada dizendo o que é o quê -- e uma
+    compilação batizada por acaso com o nome de um capítulo sobrescreveria a
+    pasta dele.
+    """
+    limpo = unicodedata.normalize("NFKD", tema)
+    limpo = "".join(c for c in limpo if not unicodedata.combining(c))
+    limpo = re.sub(r"[^a-zA-Z0-9]+", "_", limpo).strip("_").lower()
+
+    if not limpo:
+        raise ValueError(
+            f"O tema {tema!r} não sobrou nada depois de normalizar -- "
+            f"use pelo menos uma letra ou número.")
+
+    return f"{prefixo}_{limpo}" if prefixo else limpo
+
+
+def conflita_com_capitulo(nome: str) -> bool:
+    """O nome colide com o de algum dos 1189 capítulos da Bíblia?
+
+    Serve pra célula de Configuração avisar antes de criar a pasta, não pra
+    proibir. Com o prefixo padrão isso nunca acontece; a checagem existe pra
+    quem passar `prefixo=""`.
+    """
+    try:
+        import biblia_livros as bl
+    except ImportError:
+        return False
+    # Sem diferenciar maiúscula: o normalizador devolve tudo minúsculo, e
+    # "40_matt_02" contra "40_Matt_02" é a mesma pasta pra qualquer efeito
+    # prático (o Drive e o macOS nem distinguem). Comparar sensível deixaria
+    # passar exatamente a colisão que esta função existe pra pegar.
+    alvo = nome.casefold()
+    return any(livro.nome_projeto(cap).casefold() == alvo
+               for livro, cap in bl.todos_capitulos())
 
 
 def parsear_srt_por_versiculo(caminho_srt):

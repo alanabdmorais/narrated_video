@@ -530,6 +530,36 @@ Diz de uma vez quais capítulos de uma seleção ainda precisam de transcrição
 em vez de você descobrir um por um no meio do processo. É o que responde
 "quais áudios vou precisar" no fluxo da compilação.
 
+## 8g. Nome de uma compilação
+
+O tema é **editorial e livre** — muda a cada vídeo, o código não tem como
+adivinhar. Vem da célula de Configuração, como qualquer outra escolha sua:
+
+```python
+TEMA = "Salmos Esperança"     # -> comp_salmos_esperanca
+```
+
+`compilacao_pipeline.nome_compilacao()` só deixa o texto utilizável como nome
+de pasta e de arquivo. Acento, cedilha, espaço e pontuação atravessam Drive,
+shell e linha de comando do ffmpeg, e cada um quebra de um jeito diferente e
+chato de diagnosticar.
+
+Ele é **estável**: `"Salmos Esperança"`, `"salmos  esperanca"`,
+`"SALMOS-ESPERANÇA"` e `"Salmos, Esperança!"` dão todos o mesmo
+`comp_salmos_esperanca` — reescrever o tema com outra pontuação não cria uma
+pasta nova por engano.
+
+### Por que o prefixo `comp_`
+
+Separa compilação de capítulo. Sem ele, `salmos_esperanca` e `19_Ps_023` moram
+juntos em `videos/` sem nada dizendo o que é o quê — e uma compilação batizada
+por acaso com o nome de um capítulo **sobrescreveria a pasta dele**.
+
+`conflita_com_capitulo()` confere contra os 1189 capítulos, **sem diferenciar
+maiúscula**: `40_matt_02` e `40_Matt_02` são a mesma pasta pra qualquer efeito
+prático (Drive e macOS nem distinguem). Comparar sensível deixaria passar
+exatamente a colisão que a função existe pra pegar.
+
 ## 9. Lacunas conhecidas / pontos de atenção
 
 - Os notebooks `video-base-video-padrao.ipynb` e `video-base-video-versiculo.ipynb`
