@@ -146,6 +146,23 @@ e a conferência, não a fábrica:
 | capítulo | `biblia_livros.Livro.nome_projeto()` |
 | compilação | `compilacao_pipeline.nome_compilacao()` |
 
+### A ação vai por último
+
+`biblia-audio-baixar`, não `baixar-biblia-audio`. Vale pra notebook, e a
+conferência é separada da grafia — um nome pode estar em kebab-case impecável
+e ainda assim com o verbo na frente.
+
+Não é preciosismo: **verbo no fim faz a ordenação alfabética agrupar por
+assunto**. Com o verbo na frente, `organizar-trilha-audio` aparece longe de
+`trilha-*`, que é justamente o que ele manipula — e você procura pelo assunto,
+não pela ação.
+
+Quatro nomes atuais violam e ficam registrados: `organizar-efeitos-audio`,
+`organizar-trilha-audio`, `sincronizar-evento-titulo-tags` e
+`pixabay-image-seed-biblia-completa` (a ação no meio). A mensagem do
+verificador já sugere o conserto: *"a ação 'organizar' não está no fim — tente
+trilha-audio-organizar"*.
+
 ### O idioma é sempre sufixo
 
 `40_Matt_02_whisper_en.srt`, nunca `40_Matt_02_en_whisper.srt`. Assim

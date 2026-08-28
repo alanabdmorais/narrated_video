@@ -29,9 +29,16 @@ Aqui fica a regra que todos obedecem, e a conferência.
 ## Por que as exceções são registradas, e não consertadas
 
 `EXCECOES` lista nome fora do padrão que fica como está, com o motivo. Sem esse
-registro o `verificar()` acusaria os mesmos oito nomes pra sempre, e um
+registro o `verificar_repo()` acusaria os mesmos 20 nomes pra sempre, e um
 verificador que sempre reclama é um verificador que ninguém lê -- a mesma
 armadilha da checagem de fonte no portão de qualidade.
+
+## Dois defeitos diferentes
+
+GRAFIA (`conferir`) é como o nome se escreve: kebab, snake, maiúscula.
+FORMA (`conferir_forma_notebook`) é a ordem das partes: a ação vai por último.
+Um nome pode estar em kebab-case impecável e ainda assim com o verbo na
+frente, então as duas checagens são separadas.
 
 Renomear tem custo real: aba de planilha viva quebra a planilha, e notebook
 renomeado perde o link que você tem salvo no Colab. Exceção registrada é
@@ -48,6 +55,44 @@ from pathlib import Path
 #: kebab-case: minúscula, dígito e hífen. Sem acento, sem underscore, sem
 #: maiúscula -- nome de notebook vira URL no Colab e caminho no Drive.
 PADRAO_NOTEBOOK = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
+
+#: Palavras de AÇÃO usadas em nome de notebook. A regra: quando uma delas
+#: aparece, ela vai POR ÚLTIMO.
+#:
+#:     biblia-audio-baixar        ✓  área, alvo, ação
+#:     organizar-trilha-audio     ✗  ação na frente
+#:
+#: Não é preciosismo: verbo no fim faz a ordenação alfabética agrupar por
+#: assunto. Com o verbo na frente, `organizar-trilha-audio` fica longe de
+#: `trilha-*`, que é justamente o que ele manipula -- e você procura pelo
+#: assunto, não pela ação.
+ACOES = frozenset({
+    # português
+    "baixar", "montar", "gerar", "queimar", "compilar", "organizar",
+    "sincronizar", "extrair", "conferir", "publicar",
+    # inglês, da era em que os notebooks nasceram assim
+    "generate", "burn", "gather", "seed", "match", "build",
+})
+
+
+def conferir_forma_notebook(nome: str) -> str | None:
+    """Confere a FORMA do nome do notebook: ação por último.
+
+    Devolve None se está certo, ou a explicação do que está torto. Separado
+    do `conferir()` de grafia porque são dois defeitos diferentes -- um nome
+    pode estar em kebab-case perfeito e ainda assim com o verbo no lugar
+    errado.
+    """
+    segmentos = nome.split("-")
+    posicoes = [i for i, seg in enumerate(segmentos) if seg in ACOES]
+    if not posicoes:
+        return None  # sem verbo: `portao-qualidade`, `video-base-*`
+    if posicoes[-1] != len(segmentos) - 1:
+        verbo = segmentos[posicoes[-1]]
+        return (f"a ação {verbo!r} não está no fim — "
+                f"tente {'-'.join(s for s in segmentos if s != verbo)}-{verbo}")
+    return None
+
 
 #: snake_case, como manda o PEP 8.
 PADRAO_MODULO = re.compile(r"^[a-z][a-z0-9_]*$")
@@ -104,6 +149,13 @@ EXCECOES: tuple[Excecao, ...] = (
     Excecao("match-scene-verse", "notebook", "Nomeado em inglês na mesma época da cadeia caption-*."),
     Excecao("pixabay-image-descriptions", "notebook", "idem"),
     Excecao("pixabay-video-descriptions", "notebook", "idem"),
+    Excecao("organizar-efeitos-audio", "notebook",
+            "Ação na frente. Renomear quebra o link salvo no Colab; a regra "
+            "vale pros próximos."),
+    Excecao("organizar-trilha-audio", "notebook", "idem"),
+    Excecao("sincronizar-evento-titulo-tags", "notebook", "idem"),
+    Excecao("pixabay-image-seed-biblia-completa", "notebook",
+            "Ação 'seed' no meio, entre o alvo e o qualificador."),
     Excecao("compilar-versiculos-teste", "notebook",
             "Notebook de teste de um capítulo só, anterior ao compilacao-montar. "
             "Fica até a compilação rodar de verdade em produção."),
@@ -177,6 +229,11 @@ def verificar_repo(raiz: Path | str) -> list[Divergencia]:
         d = conferir(caminho.stem, "notebook")
         if d:
             achados.append(d)
+            continue  # grafia torta já foi reportada; forma vem depois
+        if not eh_excecao(caminho.stem, "notebook"):
+            problema = conferir_forma_notebook(caminho.stem)
+            if problema:
+                achados.append(Divergencia("notebook", caminho.stem, problema))
 
     for caminho in sorted((raiz / "pipeline" / "modulos").glob("*.py")):
         if caminho.name == "__init__.py":
