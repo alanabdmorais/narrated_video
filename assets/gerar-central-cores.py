@@ -138,12 +138,18 @@ def construir_dados(base: dict, v: dict) -> dict:
 
 def gerar(nome_saida: str, v: dict, template: str) -> None:
     raw = template
-    base = json.loads(re.search(r"const DADOS = (\{.*\});\n", raw).group(1))
+    # (?s) + não-guloso: o bloco pode estar numa linha só (formato antigo) ou
+    # já indentado -- `};` só aparece no fecho do objeto de fora, então para ali
+    # nos dois casos.
+    base = json.loads(re.search(r"(?s)const DADOS = (\{.*?\});\n", raw).group(1))
     dados = construir_dados(base, v)
 
+    # indent=1: o DADOS é gerado, mas fica versionado -- numa linha só, qualquer
+    # troca de cor reescreve 13 KB de uma vez e o diff não diz nada. Indentado,
+    # o diff mostra as linhas que mudaram, ao custo de ~4 KB.
     raw = re.sub(
-        r"const DADOS = \{.*\};\n",
-        lambda _: "const DADOS = " + json.dumps(dados, ensure_ascii=False, separators=(",", ":")) + ";\n",
+        r"(?s)const DADOS = \{.*?\};\n",
+        lambda _: "const DADOS = " + json.dumps(dados, ensure_ascii=False, indent=1) + ";\n",
         raw, count=1,
     )
 

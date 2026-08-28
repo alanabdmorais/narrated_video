@@ -214,7 +214,951 @@
 </div>
 
 <script>
-const DADOS = {"cores":{"substantivo":"#000000","verbo":"#FF0000","pronome":"#800080","adverbio":"#FFA500","conjuncao":"#FF69B4","interjeicao":"#FFD700","artigo":"#87CEEB","adjetivo":"#0000FF","preposicao":"#2E7D32","nome_proprio":"#FFFF00","pontuacao":"#808080","numeral":"#FFDFC4","auxiliar":"#FFFFFF","modal":"#8D5524","particula":"#C8A2C8","terminacao_honorifica":"#556B2F","terminacao_nominal":"#66BB6A","terminacao_adjetival":"#C68642","terminacao_final":"#722F37","sufixo":"#F1C27D"},"cores_texto":{"substantivo":"#FFFFFF","verbo":"#FFFFFF","pronome":"#FFFFFF","adverbio":"#000000","conjuncao":"#000000","interjeicao":"#000000","artigo":"#000000","adjetivo":"#FFFFFF","preposicao":"#FFFFFF","nome_proprio":"#000000","pontuacao":"#FFFFFF","numeral":"#000000","auxiliar":"#000000","modal":"#FFFFFF","particula":"#000000","terminacao_honorifica":"#FFFFFF","terminacao_nominal":"#000000","terminacao_adjetival":"#000000","terminacao_final":"#FFFFFF","sufixo":"#000000"},"nomes_cor_oficial":{"substantivo":"preto","verbo":"vermelho","pronome":"roxo","adverbio":"laranja","conjuncao":"rosa","interjeicao":"dourado","artigo":"azul claro","adjetivo":"azul","preposicao":"verde escuro","nome_proprio":"amarelo","pontuacao":"cinza","numeral":"pele muito clara","auxiliar":"branco","modal":"pele escura","particula":"lilás","terminacao_honorifica":"verde oliva","terminacao_nominal":"verde claro","terminacao_adjetival":"pele morena","terminacao_final":"vinho","sufixo":"pele clara"},"nomes":{"substantivo":"Substantivo","nome_proprio":"Nome Próprio","verbo":"Verbo","pronome":"Pronome","artigo":"Artigo","adjetivo":"Adjetivo","numeral":"Numeral","preposicao":"Preposição","conjuncao":"Conjunção","adverbio":"Advérbio","interjeicao":"Interjeição","pontuacao":"Pontuação","modal":"Partícula Modal (inglês)","auxiliar":"Partícula Auxiliar (inglês)","particula":"Partícula (coreano/chinês)","terminacao_honorifica":"Terminação Honorífica (coreano)","terminacao_nominal":"Terminação Nominal (coreano)","terminacao_adjetival":"Terminação Adjetival (coreano)","terminacao_final":"Terminação Final (coreano)","sufixo":"Sufixo (coreano)"},"explicacoes":{"substantivo":{"definicao":"Nomeia seres, lugares, objetos e ideias — é o núcleo do sujeito ou do objeto da frase.","subclasses":[{"nome":"masculino singular","exemplo":"o caminho"},{"nome":"masculino plural","exemplo":"os caminhos"},{"nome":"feminino singular","exemplo":"a luz"},{"nome":"feminino plural","exemplo":"as luzes"},{"nome":"neutro (EN/KO)","exemplo":"the light"}],"origem":{"stanza":["NOUN"],"kiwi":["NNG","NNB","XSN","XPN"]}},"nome_proprio":{"definicao":"Substantivo que nomeia algo específico e único — uma pessoa, um lugar, uma nação. Sempre com inicial maiúscula.","subclasses":[],"origem":{"stanza":["PROPN"],"kiwi":["NNP"]}},"verbo":{"definicao":"O núcleo da frase — diz o que está acontecendo, aconteceu, ou pode acontecer.","subclasses":[{"nome":"presente","exemplo":"ele anda"},{"nome":"passado","exemplo":"ele andou"},{"nome":"futuro","exemplo":"ele andará"},{"nome":"condicional","exemplo":"ele andaria"},{"nome":"imperativo","exemplo":"ande!"},{"nome":"subjuntivo","exemplo":"que ele ande"}],"origem":{"stanza":["VERB","AUX (exceto EN: modal / do,does,did)"],"kiwi":["VV","VV-I","VV-R","VA","VA-I","VX","VCP","VCN","XSV","XSA","EP (passado/futuro)"]}},"pronome":{"definicao":"Substitui ou acompanha um substantivo sem repetir o nome.","subclasses":[{"nome":"pessoal","exemplo":"ele, ela"},{"nome":"possessivo","exemplo":"seu, sua"},{"nome":"demonstrativo","exemplo":"este, esse"},{"nome":"relativo","exemplo":"que, quem"}],"origem":{"stanza":["PRON"],"kiwi":["NP","MM (não-numeral)"]}},"artigo":{"definicao":"Determina o substantivo, e também cobre outros determinantes que aparecem colados a um substantivo com função parecida.","subclasses":[{"nome":"definido","exemplo":"o, a"},{"nome":"indefinido","exemplo":"um, uma"},{"nome":"possessivo (como determinante)","exemplo":"sua casa"},{"nome":"demonstrativo (como determinante)","exemplo":"essa casa"}],"origem":{"stanza":["DET"],"kiwi":[]}},"adjetivo":{"definicao":"Qualifica o substantivo, dando uma característica.","subclasses":[{"nome":"descritivo comum","exemplo":"forte, grande"},{"nome":"particípio usado como qualidade","exemplo":"a criança nascida"}],"origem":{"stanza":["ADJ","VERB/AUX quando particípio (VerbForm=Part)"],"kiwi":[]}},"numeral":{"definicao":"Indica quantidade ou posição numa sequência. Categoria própria na gramática — nem substantivo nem adjetivo (confirmado tanto pela gramática tradicional quanto pela forma como o Stanza analisa a palavra).","subclasses":[],"origem":{"stanza":["NUM"],"kiwi":["NR","MM (numeral)"]}},"preposicao":{"definicao":"Liga duas palavras estabelecendo uma relação entre elas.","subclasses":[],"origem":{"stanza":["ADP"],"kiwi":[]}},"conjuncao":{"definicao":"Conecta palavras, frases ou orações.","subclasses":[],"origem":{"stanza":["CCONJ","SCONJ"],"kiwi":["JC","EC"]}},"adverbio":{"definicao":"Modifica um verbo, um adjetivo ou outro advérbio.","subclasses":[],"origem":{"stanza":["ADV","EN: PART “not”","fallback (PART fora do EN/ZH, X, SYM, tag imprevista)"],"kiwi":["MAG","MAJ"]}},"interjeicao":{"definicao":"Expressa uma emoção ou reação súbita, isolada do resto da frase.","subclasses":[],"origem":{"stanza":["INTJ"],"kiwi":["IC"]}},"pontuacao":{"definicao":"Sinais gráficos que organizam a frase.","subclasses":[],"origem":{"stanza":["PUNCT"],"kiwi":["SF","SP"]}},"modal":{"definicao":"Inglês: partícula que acompanha um verbo pra marcar futuro, possibilidade ou obrigação — o inglês não flexiona o verbo pra isso numa palavra só, usa essa peça extra na frente.","subclasses":[{"nome":"futuro","exemplo":"will, shall"},{"nome":"possibilidade/condicional","exemplo":"would, might, could, should, may"},{"nome":"obrigação","exemplo":"must"}],"origem":{"stanza":["EN: AUX (will, shall, would, might, could, should, may, must, can)"],"kiwi":[]}},"auxiliar":{"definicao":"Inglês: palavra sem significado próprio que ajuda a montar a frase.","subclasses":[{"nome":"pergunta/negação","exemplo":"do, does, did"},{"nome":"antes de infinitivo","exemplo":"to"},{"nome":"posse","exemplo":"'s"}],"origem":{"stanza":["EN: AUX (do, does, did)","EN: PART (to, 's)"],"kiwi":[]}},"particula":{"definicao":"Coreano e chinês: marca a função de uma palavra na frase. Conceito sem equivalente direto nos idiomas latinos. No chinês é a classe mais frequente da língua (o 的 sozinho é o caractere mais comum) — por isso o chinês reaproveita esta categoria em vez de precisar de uma cor própria.","subclasses":[{"nome":"sujeito","exemplo":"가/이"},{"nome":"tópico","exemplo":"는/은"},{"nome":"objeto","exemplo":"를/을"},{"nome":"possessiva","exemplo":"의"},{"nome":"locativa","exemplo":"에서"},{"nome":"direcional","exemplo":"으로"}],"origem":{"stanza":["ZH: PART (的, 了, 吗, 着, 过...)"],"kiwi":["JKS","JKO","JKG","JKC","JKV","JKQ","JKB","JX"]}},"terminacao_honorifica":{"definicao":"Coreano: parte da palavra que marca o nível de formalidade/respeito de quem fala — a mesma frase muda de terminação dependendo de quem está ouvindo.","subclasses":[],"origem":{"stanza":[],"kiwi":["EP (시/으시)","EF (습니다, ㅂ니다...)"]}},"terminacao_nominal":{"definicao":"Coreano: transforma um verbo em substantivo — equivalente a \"-ção\"/\"-mento\" em português, só que produtivo e usado o tempo todo na língua.","subclasses":[],"origem":{"stanza":[],"kiwi":["ETN"]}},"terminacao_adjetival":{"definicao":"Coreano: transforma um verbo em modificador de substantivo — equivalente a fazer uma oração inteira funcionar como adjetivo.","subclasses":[],"origem":{"stanza":[],"kiwi":["ETM"]}},"terminacao_final":{"definicao":"Coreano: fecha a frase.","subclasses":[{"nome":"neutra","exemplo":"다"},{"nome":"imperativo","exemplo":"어라"}],"origem":{"stanza":[],"kiwi":["EF (neutra: 다 / imperativa: 어라...)"]}},"sufixo":{"definicao":"Coreano: sufixos diversos que modificam a palavra sem se encaixar nas categorias acima.","subclasses":[],"origem":{"stanza":[],"kiwi":["XSM"]}}},"secoes":[{"titulo":"Substantivo, Nome Próprio, Verbo, Pronome","classes":["substantivo","nome_proprio","verbo","pronome"]},{"titulo":"Artigo, Adjetivo, Numeral","classes":["artigo","adjetivo","numeral"]},{"titulo":"Preposição, Conjunção, Advérbio, Interjeição, Pontuação","classes":["preposicao","conjuncao","adverbio","interjeicao","pontuacao"]},{"titulo":"Extensão — Inglês","classes":["modal","auxiliar"]},{"titulo":"Extensão — Coreano","classes":["particula","terminacao_honorifica","terminacao_nominal","terminacao_adjetival","terminacao_final","sufixo"]}],"exemplos":{"substantivo":{"pt":"caminho","en":"path","es":"camino","fr":"chemin","ko":"길","zh":"路"},"nome_proprio":{"pt":"Davi","en":"David","es":"David","fr":"David","ko":"다윗","zh":"大卫"},"verbo":{"pt":"andar","en":"walk","es":"andar","fr":"marcher","ko":"걷다","zh":"走"},"pronome":{"pt":"ela","en":"she","es":"ella","fr":"elle","ko":"그녀","zh":"她"},"artigo":{"pt":"o","en":"the","es":"el","fr":"le","ko":"—","zh":"这"},"adjetivo":{"pt":"forte","en":"strong","es":"fuerte","fr":"fort","ko":"강한","zh":"强"},"numeral":{"pt":"sete","en":"seven","es":"siete","fr":"sept","ko":"일곱","zh":"七"},"preposicao":{"pt":"sobre","en":"on","es":"sobre","fr":"sur","ko":"—","zh":"在"},"conjuncao":{"pt":"mas","en":"but","es":"pero","fr":"mais","ko":"그러나","zh":"但是"},"adverbio":{"pt":"hoje","en":"today","es":"hoy","fr":"aujourd'hui","ko":"오늘","zh":"今天"},"interjeicao":{"pt":"ah!","en":"oh!","es":"¡ay!","fr":"ah!","ko":"아","zh":"啊"},"pontuacao":{"pt":".","en":".","es":".","fr":".","ko":".","zh":"。"},"modal":{"pt":"—","en":"will / can / must","es":"—","fr":"—","ko":"—","zh":"—"},"auxiliar":{"pt":"—","en":"do","es":"—","fr":"—","ko":"—","zh":"—"},"particula":{"pt":"—","en":"—","es":"—","fr":"—","ko":"가/는/를","zh":"的/了/吗"},"terminacao_honorifica":{"pt":"—","en":"—","es":"—","fr":"—","ko":"습니다","zh":"—"},"terminacao_nominal":{"pt":"—","en":"—","es":"—","fr":"—","ko":"기/ㅁ","zh":"—"},"terminacao_adjetival":{"pt":"—","en":"—","es":"—","fr":"—","ko":"ㄴ/ㄹ/는","zh":"—"},"terminacao_final":{"pt":"—","en":"—","es":"—","fr":"—","ko":"다 / 어라","zh":"—"},"sufixo":{"pt":"—","en":"—","es":"—","fr":"—","ko":"히","zh":"—"}},"montessori":[{"categoria":"Substantivo (Noun)","cor_nome":"Preto","hex":"#000000","forma":"triângulo grande","nossa_classe":"substantivo","hex_atual":"#000000","emoji_atual":"🖤"},{"categoria":"Verbo (Verb)","cor_nome":"Vermelho","hex":"#FF0000","forma":"círculo","nossa_classe":"verbo","hex_atual":"#FF0000","emoji_atual":"🔴"},{"categoria":"Pronome (Pronoun)","cor_nome":"Roxo","hex":"#800080","forma":"triângulo grande","nossa_classe":"pronome","hex_atual":"#800080","emoji_atual":"🟣"},{"categoria":"Advérbio (Adverb)","cor_nome":"Laranja","hex":"#FFA500","forma":"círculo pequeno","nossa_classe":"adverbio","hex_atual":"#FFA500","emoji_atual":"🟠"},{"categoria":"Conjunção (Conjunction)","cor_nome":"Rosa","hex":"#FFC0CB","forma":"faixa/fita","nossa_classe":"conjuncao","hex_atual":"#FF69B4","emoji_atual":"🩷"},{"categoria":"Interjeição (Interjection)","cor_nome":"Dourado","hex":"#FFD700","forma":"ponto de exclamação","nossa_classe":"interjeicao","hex_atual":"#FFD700","emoji_atual":"🏆"},{"categoria":"Artigo (Article)","cor_nome":"Azul claro","hex":"#ADD8E6","forma":"triângulo pequeno","nossa_classe":"artigo","hex_atual":"#87CEEB","emoji_atual":"🩵"},{"categoria":"Adjetivo (Adjective)","cor_nome":"Azul escuro","hex":"#00008B","forma":"triângulo médio","nossa_classe":"adjetivo","hex_atual":"#0000FF","emoji_atual":"🔵"},{"categoria":"Preposição (Preposition)","cor_nome":"Verde","hex":"#008000","forma":"meia-lua/ponte","nossa_classe":"preposicao","hex_atual":"#2E7D32","emoji_atual":"🧶"}],"emoji":{"substantivo":"🖤","verbo":"🔴","pronome":"🟣","adverbio":"🟠","conjuncao":"🩷","interjeicao":"🏆","artigo":"🩵","adjetivo":"🔵","preposicao":"🧶","nome_proprio":"🟡","pontuacao":"🩶","numeral":"🏻","auxiliar":"🤍","modal":"🏿","particula":"🪻","terminacao_honorifica":"🪖","terminacao_nominal":"📗","terminacao_adjetival":"🏾","terminacao_final":"🍷","sufixo":"🏼"},"paleta":{"#FF0000":{"emoji":"🔴","nome":"vermelho"},"#FFA500":{"emoji":"🟠","nome":"laranja"},"#FFFF00":{"emoji":"🟡","nome":"amarelo"},"#0000FF":{"emoji":"🔵","nome":"azul"},"#800080":{"emoji":"🟣","nome":"roxo"},"#000000":{"emoji":"🖤","nome":"preto"},"#FFFFFF":{"emoji":"🤍","nome":"branco"},"#FFDFC4":{"emoji":"🏻","nome":"pele muito clara"},"#F1C27D":{"emoji":"🏼","nome":"pele clara"},"#E0AC69":{"emoji":"🏽","nome":"pele média"},"#C68642":{"emoji":"🏾","nome":"pele morena"},"#8D5524":{"emoji":"🏿","nome":"pele escura"},"#FF69B4":{"emoji":"🩷","nome":"rosa"},"#87CEEB":{"emoji":"🩵","nome":"azul claro"},"#808080":{"emoji":"🩶","nome":"cinza"},"#2E7D32":{"emoji":"🧶","nome":"verde escuro"},"#66BB6A":{"emoji":"📗","nome":"verde claro"},"#C8A2C8":{"emoji":"🪻","nome":"lilás"},"#556B2F":{"emoji":"🪖","nome":"verde oliva"},"#722F37":{"emoji":"🍷","nome":"vinho"},"#FFD700":{"emoji":"🏆","nome":"dourado"}},"cor_reserva":"#E0AC69","cores_idiomas":[{"lang":"pt","hex":"#FFFF00","emoji":"🟡","nome":"Português","nome_cor":"amarelo","y":100},{"lang":"en","hex":"#66BB6A","emoji":"📗","nome":"Inglês","nome_cor":"verde claro","y":180},{"lang":"es","hex":"#FFA500","emoji":"🟠","nome":"Espanhol","nome_cor":"laranja","y":260},{"lang":"fr","hex":"#87CEEB","emoji":"🩵","nome":"Francês","nome_cor":"azul claro","y":340},{"lang":"ko","hex":"#FF69B4","emoji":"🩷","nome":"Coreano","nome_cor":"rosa","y":420},{"lang":"zh","hex":"#800080","emoji":"🟣","nome":"Chinês","nome_cor":"roxo","y":500}],"nota_variante":"Versão de <b>6 idiomas</b>, com chinês (zh-Hans). Mesmas 20 classes e mesmas 21 cores da versão de 5 — o chinês <b>não precisou de categoria nova</b>: reaproveita as 14 genéricas + <code>particula</code>. As 6 exclusivas do coreano não se aplicam porque coreano é aglutinante (sufixos transformam a palavra) e chinês é isolante (palavras são blocos independentes)."};
+const DADOS = {
+ "cores": {
+  "substantivo": "#000000",
+  "verbo": "#FF0000",
+  "pronome": "#800080",
+  "adverbio": "#FFA500",
+  "conjuncao": "#FF69B4",
+  "interjeicao": "#FFD700",
+  "artigo": "#87CEEB",
+  "adjetivo": "#0000FF",
+  "preposicao": "#2E7D32",
+  "nome_proprio": "#FFFF00",
+  "pontuacao": "#808080",
+  "numeral": "#FFDFC4",
+  "auxiliar": "#FFFFFF",
+  "modal": "#8D5524",
+  "particula": "#C8A2C8",
+  "terminacao_honorifica": "#556B2F",
+  "terminacao_nominal": "#66BB6A",
+  "terminacao_adjetival": "#C68642",
+  "terminacao_final": "#722F37",
+  "sufixo": "#F1C27D"
+ },
+ "cores_texto": {
+  "substantivo": "#FFFFFF",
+  "verbo": "#FFFFFF",
+  "pronome": "#FFFFFF",
+  "adverbio": "#000000",
+  "conjuncao": "#000000",
+  "interjeicao": "#000000",
+  "artigo": "#000000",
+  "adjetivo": "#FFFFFF",
+  "preposicao": "#FFFFFF",
+  "nome_proprio": "#000000",
+  "pontuacao": "#FFFFFF",
+  "numeral": "#000000",
+  "auxiliar": "#000000",
+  "modal": "#FFFFFF",
+  "particula": "#000000",
+  "terminacao_honorifica": "#FFFFFF",
+  "terminacao_nominal": "#000000",
+  "terminacao_adjetival": "#000000",
+  "terminacao_final": "#FFFFFF",
+  "sufixo": "#000000"
+ },
+ "nomes_cor_oficial": {
+  "substantivo": "preto",
+  "verbo": "vermelho",
+  "pronome": "roxo",
+  "adverbio": "laranja",
+  "conjuncao": "rosa",
+  "interjeicao": "dourado",
+  "artigo": "azul claro",
+  "adjetivo": "azul",
+  "preposicao": "verde escuro",
+  "nome_proprio": "amarelo",
+  "pontuacao": "cinza",
+  "numeral": "pele muito clara",
+  "auxiliar": "branco",
+  "modal": "pele escura",
+  "particula": "lilás",
+  "terminacao_honorifica": "verde oliva",
+  "terminacao_nominal": "verde claro",
+  "terminacao_adjetival": "pele morena",
+  "terminacao_final": "vinho",
+  "sufixo": "pele clara"
+ },
+ "nomes": {
+  "substantivo": "Substantivo",
+  "nome_proprio": "Nome Próprio",
+  "verbo": "Verbo",
+  "pronome": "Pronome",
+  "artigo": "Artigo",
+  "adjetivo": "Adjetivo",
+  "numeral": "Numeral",
+  "preposicao": "Preposição",
+  "conjuncao": "Conjunção",
+  "adverbio": "Advérbio",
+  "interjeicao": "Interjeição",
+  "pontuacao": "Pontuação",
+  "modal": "Partícula Modal (inglês)",
+  "auxiliar": "Partícula Auxiliar (inglês)",
+  "particula": "Partícula (coreano/chinês)",
+  "terminacao_honorifica": "Terminação Honorífica (coreano)",
+  "terminacao_nominal": "Terminação Nominal (coreano)",
+  "terminacao_adjetival": "Terminação Adjetival (coreano)",
+  "terminacao_final": "Terminação Final (coreano)",
+  "sufixo": "Sufixo (coreano)"
+ },
+ "explicacoes": {
+  "substantivo": {
+   "definicao": "Nomeia seres, lugares, objetos e ideias — é o núcleo do sujeito ou do objeto da frase.",
+   "subclasses": [
+    {
+     "nome": "masculino singular",
+     "exemplo": "o caminho"
+    },
+    {
+     "nome": "masculino plural",
+     "exemplo": "os caminhos"
+    },
+    {
+     "nome": "feminino singular",
+     "exemplo": "a luz"
+    },
+    {
+     "nome": "feminino plural",
+     "exemplo": "as luzes"
+    },
+    {
+     "nome": "neutro (EN/KO)",
+     "exemplo": "the light"
+    }
+   ],
+   "origem": {
+    "stanza": [
+     "NOUN"
+    ],
+    "kiwi": [
+     "NNG",
+     "NNB",
+     "XSN",
+     "XPN"
+    ]
+   }
+  },
+  "nome_proprio": {
+   "definicao": "Substantivo que nomeia algo específico e único — uma pessoa, um lugar, uma nação. Sempre com inicial maiúscula.",
+   "subclasses": [],
+   "origem": {
+    "stanza": [
+     "PROPN"
+    ],
+    "kiwi": [
+     "NNP"
+    ]
+   }
+  },
+  "verbo": {
+   "definicao": "O núcleo da frase — diz o que está acontecendo, aconteceu, ou pode acontecer.",
+   "subclasses": [
+    {
+     "nome": "presente",
+     "exemplo": "ele anda"
+    },
+    {
+     "nome": "passado",
+     "exemplo": "ele andou"
+    },
+    {
+     "nome": "futuro",
+     "exemplo": "ele andará"
+    },
+    {
+     "nome": "condicional",
+     "exemplo": "ele andaria"
+    },
+    {
+     "nome": "imperativo",
+     "exemplo": "ande!"
+    },
+    {
+     "nome": "subjuntivo",
+     "exemplo": "que ele ande"
+    }
+   ],
+   "origem": {
+    "stanza": [
+     "VERB",
+     "AUX (exceto EN: modal / do,does,did)"
+    ],
+    "kiwi": [
+     "VV",
+     "VV-I",
+     "VV-R",
+     "VA",
+     "VA-I",
+     "VX",
+     "VCP",
+     "VCN",
+     "XSV",
+     "XSA",
+     "EP (passado/futuro)"
+    ]
+   }
+  },
+  "pronome": {
+   "definicao": "Substitui ou acompanha um substantivo sem repetir o nome.",
+   "subclasses": [
+    {
+     "nome": "pessoal",
+     "exemplo": "ele, ela"
+    },
+    {
+     "nome": "possessivo",
+     "exemplo": "seu, sua"
+    },
+    {
+     "nome": "demonstrativo",
+     "exemplo": "este, esse"
+    },
+    {
+     "nome": "relativo",
+     "exemplo": "que, quem"
+    }
+   ],
+   "origem": {
+    "stanza": [
+     "PRON"
+    ],
+    "kiwi": [
+     "NP",
+     "MM (não-numeral)"
+    ]
+   }
+  },
+  "artigo": {
+   "definicao": "Determina o substantivo, e também cobre outros determinantes que aparecem colados a um substantivo com função parecida.",
+   "subclasses": [
+    {
+     "nome": "definido",
+     "exemplo": "o, a"
+    },
+    {
+     "nome": "indefinido",
+     "exemplo": "um, uma"
+    },
+    {
+     "nome": "possessivo (como determinante)",
+     "exemplo": "sua casa"
+    },
+    {
+     "nome": "demonstrativo (como determinante)",
+     "exemplo": "essa casa"
+    }
+   ],
+   "origem": {
+    "stanza": [
+     "DET"
+    ],
+    "kiwi": []
+   }
+  },
+  "adjetivo": {
+   "definicao": "Qualifica o substantivo, dando uma característica.",
+   "subclasses": [
+    {
+     "nome": "descritivo comum",
+     "exemplo": "forte, grande"
+    },
+    {
+     "nome": "particípio usado como qualidade",
+     "exemplo": "a criança nascida"
+    }
+   ],
+   "origem": {
+    "stanza": [
+     "ADJ",
+     "VERB/AUX quando particípio (VerbForm=Part)"
+    ],
+    "kiwi": []
+   }
+  },
+  "numeral": {
+   "definicao": "Indica quantidade ou posição numa sequência. Categoria própria na gramática — nem substantivo nem adjetivo (confirmado tanto pela gramática tradicional quanto pela forma como o Stanza analisa a palavra).",
+   "subclasses": [],
+   "origem": {
+    "stanza": [
+     "NUM"
+    ],
+    "kiwi": [
+     "NR",
+     "MM (numeral)"
+    ]
+   }
+  },
+  "preposicao": {
+   "definicao": "Liga duas palavras estabelecendo uma relação entre elas.",
+   "subclasses": [],
+   "origem": {
+    "stanza": [
+     "ADP"
+    ],
+    "kiwi": []
+   }
+  },
+  "conjuncao": {
+   "definicao": "Conecta palavras, frases ou orações.",
+   "subclasses": [],
+   "origem": {
+    "stanza": [
+     "CCONJ",
+     "SCONJ"
+    ],
+    "kiwi": [
+     "JC",
+     "EC"
+    ]
+   }
+  },
+  "adverbio": {
+   "definicao": "Modifica um verbo, um adjetivo ou outro advérbio.",
+   "subclasses": [],
+   "origem": {
+    "stanza": [
+     "ADV",
+     "EN: PART “not”",
+     "fallback (PART fora do EN/ZH, X, SYM, tag imprevista)"
+    ],
+    "kiwi": [
+     "MAG",
+     "MAJ"
+    ]
+   }
+  },
+  "interjeicao": {
+   "definicao": "Expressa uma emoção ou reação súbita, isolada do resto da frase.",
+   "subclasses": [],
+   "origem": {
+    "stanza": [
+     "INTJ"
+    ],
+    "kiwi": [
+     "IC"
+    ]
+   }
+  },
+  "pontuacao": {
+   "definicao": "Sinais gráficos que organizam a frase.",
+   "subclasses": [],
+   "origem": {
+    "stanza": [
+     "PUNCT"
+    ],
+    "kiwi": [
+     "SF",
+     "SP"
+    ]
+   }
+  },
+  "modal": {
+   "definicao": "Inglês: partícula que acompanha um verbo pra marcar futuro, possibilidade ou obrigação — o inglês não flexiona o verbo pra isso numa palavra só, usa essa peça extra na frente.",
+   "subclasses": [
+    {
+     "nome": "futuro",
+     "exemplo": "will, shall"
+    },
+    {
+     "nome": "possibilidade/condicional",
+     "exemplo": "would, might, could, should, may"
+    },
+    {
+     "nome": "obrigação",
+     "exemplo": "must"
+    }
+   ],
+   "origem": {
+    "stanza": [
+     "EN: AUX (will, shall, would, might, could, should, may, must, can)"
+    ],
+    "kiwi": []
+   }
+  },
+  "auxiliar": {
+   "definicao": "Inglês: palavra sem significado próprio que ajuda a montar a frase.",
+   "subclasses": [
+    {
+     "nome": "pergunta/negação",
+     "exemplo": "do, does, did"
+    },
+    {
+     "nome": "antes de infinitivo",
+     "exemplo": "to"
+    },
+    {
+     "nome": "posse",
+     "exemplo": "'s"
+    }
+   ],
+   "origem": {
+    "stanza": [
+     "EN: AUX (do, does, did)",
+     "EN: PART (to, 's)"
+    ],
+    "kiwi": []
+   }
+  },
+  "particula": {
+   "definicao": "Coreano e chinês: marca a função de uma palavra na frase. Conceito sem equivalente direto nos idiomas latinos. No chinês é a classe mais frequente da língua (o 的 sozinho é o caractere mais comum) — por isso o chinês reaproveita esta categoria em vez de precisar de uma cor própria.",
+   "subclasses": [
+    {
+     "nome": "sujeito",
+     "exemplo": "가/이"
+    },
+    {
+     "nome": "tópico",
+     "exemplo": "는/은"
+    },
+    {
+     "nome": "objeto",
+     "exemplo": "를/을"
+    },
+    {
+     "nome": "possessiva",
+     "exemplo": "의"
+    },
+    {
+     "nome": "locativa",
+     "exemplo": "에서"
+    },
+    {
+     "nome": "direcional",
+     "exemplo": "으로"
+    }
+   ],
+   "origem": {
+    "stanza": [
+     "ZH: PART (的, 了, 吗, 着, 过...)"
+    ],
+    "kiwi": [
+     "JKS",
+     "JKO",
+     "JKG",
+     "JKC",
+     "JKV",
+     "JKQ",
+     "JKB",
+     "JX"
+    ]
+   }
+  },
+  "terminacao_honorifica": {
+   "definicao": "Coreano: parte da palavra que marca o nível de formalidade/respeito de quem fala — a mesma frase muda de terminação dependendo de quem está ouvindo.",
+   "subclasses": [],
+   "origem": {
+    "stanza": [],
+    "kiwi": [
+     "EP (시/으시)",
+     "EF (습니다, ㅂ니다...)"
+    ]
+   }
+  },
+  "terminacao_nominal": {
+   "definicao": "Coreano: transforma um verbo em substantivo — equivalente a \"-ção\"/\"-mento\" em português, só que produtivo e usado o tempo todo na língua.",
+   "subclasses": [],
+   "origem": {
+    "stanza": [],
+    "kiwi": [
+     "ETN"
+    ]
+   }
+  },
+  "terminacao_adjetival": {
+   "definicao": "Coreano: transforma um verbo em modificador de substantivo — equivalente a fazer uma oração inteira funcionar como adjetivo.",
+   "subclasses": [],
+   "origem": {
+    "stanza": [],
+    "kiwi": [
+     "ETM"
+    ]
+   }
+  },
+  "terminacao_final": {
+   "definicao": "Coreano: fecha a frase.",
+   "subclasses": [
+    {
+     "nome": "neutra",
+     "exemplo": "다"
+    },
+    {
+     "nome": "imperativo",
+     "exemplo": "어라"
+    }
+   ],
+   "origem": {
+    "stanza": [],
+    "kiwi": [
+     "EF (neutra: 다 / imperativa: 어라...)"
+    ]
+   }
+  },
+  "sufixo": {
+   "definicao": "Coreano: sufixos diversos que modificam a palavra sem se encaixar nas categorias acima.",
+   "subclasses": [],
+   "origem": {
+    "stanza": [],
+    "kiwi": [
+     "XSM"
+    ]
+   }
+  }
+ },
+ "secoes": [
+  {
+   "titulo": "Substantivo, Nome Próprio, Verbo, Pronome",
+   "classes": [
+    "substantivo",
+    "nome_proprio",
+    "verbo",
+    "pronome"
+   ]
+  },
+  {
+   "titulo": "Artigo, Adjetivo, Numeral",
+   "classes": [
+    "artigo",
+    "adjetivo",
+    "numeral"
+   ]
+  },
+  {
+   "titulo": "Preposição, Conjunção, Advérbio, Interjeição, Pontuação",
+   "classes": [
+    "preposicao",
+    "conjuncao",
+    "adverbio",
+    "interjeicao",
+    "pontuacao"
+   ]
+  },
+  {
+   "titulo": "Extensão — Inglês",
+   "classes": [
+    "modal",
+    "auxiliar"
+   ]
+  },
+  {
+   "titulo": "Extensão — Coreano",
+   "classes": [
+    "particula",
+    "terminacao_honorifica",
+    "terminacao_nominal",
+    "terminacao_adjetival",
+    "terminacao_final",
+    "sufixo"
+   ]
+  }
+ ],
+ "exemplos": {
+  "substantivo": {
+   "pt": "caminho",
+   "en": "path",
+   "es": "camino",
+   "fr": "chemin",
+   "ko": "길",
+   "zh": "路"
+  },
+  "nome_proprio": {
+   "pt": "Davi",
+   "en": "David",
+   "es": "David",
+   "fr": "David",
+   "ko": "다윗",
+   "zh": "大卫"
+  },
+  "verbo": {
+   "pt": "andar",
+   "en": "walk",
+   "es": "andar",
+   "fr": "marcher",
+   "ko": "걷다",
+   "zh": "走"
+  },
+  "pronome": {
+   "pt": "ela",
+   "en": "she",
+   "es": "ella",
+   "fr": "elle",
+   "ko": "그녀",
+   "zh": "她"
+  },
+  "artigo": {
+   "pt": "o",
+   "en": "the",
+   "es": "el",
+   "fr": "le",
+   "ko": "—",
+   "zh": "这"
+  },
+  "adjetivo": {
+   "pt": "forte",
+   "en": "strong",
+   "es": "fuerte",
+   "fr": "fort",
+   "ko": "강한",
+   "zh": "强"
+  },
+  "numeral": {
+   "pt": "sete",
+   "en": "seven",
+   "es": "siete",
+   "fr": "sept",
+   "ko": "일곱",
+   "zh": "七"
+  },
+  "preposicao": {
+   "pt": "sobre",
+   "en": "on",
+   "es": "sobre",
+   "fr": "sur",
+   "ko": "—",
+   "zh": "在"
+  },
+  "conjuncao": {
+   "pt": "mas",
+   "en": "but",
+   "es": "pero",
+   "fr": "mais",
+   "ko": "그러나",
+   "zh": "但是"
+  },
+  "adverbio": {
+   "pt": "hoje",
+   "en": "today",
+   "es": "hoy",
+   "fr": "aujourd'hui",
+   "ko": "오늘",
+   "zh": "今天"
+  },
+  "interjeicao": {
+   "pt": "ah!",
+   "en": "oh!",
+   "es": "¡ay!",
+   "fr": "ah!",
+   "ko": "아",
+   "zh": "啊"
+  },
+  "pontuacao": {
+   "pt": ".",
+   "en": ".",
+   "es": ".",
+   "fr": ".",
+   "ko": ".",
+   "zh": "。"
+  },
+  "modal": {
+   "pt": "—",
+   "en": "will / can / must",
+   "es": "—",
+   "fr": "—",
+   "ko": "—",
+   "zh": "—"
+  },
+  "auxiliar": {
+   "pt": "—",
+   "en": "do",
+   "es": "—",
+   "fr": "—",
+   "ko": "—",
+   "zh": "—"
+  },
+  "particula": {
+   "pt": "—",
+   "en": "—",
+   "es": "—",
+   "fr": "—",
+   "ko": "가/는/를",
+   "zh": "的/了/吗"
+  },
+  "terminacao_honorifica": {
+   "pt": "—",
+   "en": "—",
+   "es": "—",
+   "fr": "—",
+   "ko": "습니다",
+   "zh": "—"
+  },
+  "terminacao_nominal": {
+   "pt": "—",
+   "en": "—",
+   "es": "—",
+   "fr": "—",
+   "ko": "기/ㅁ",
+   "zh": "—"
+  },
+  "terminacao_adjetival": {
+   "pt": "—",
+   "en": "—",
+   "es": "—",
+   "fr": "—",
+   "ko": "ㄴ/ㄹ/는",
+   "zh": "—"
+  },
+  "terminacao_final": {
+   "pt": "—",
+   "en": "—",
+   "es": "—",
+   "fr": "—",
+   "ko": "다 / 어라",
+   "zh": "—"
+  },
+  "sufixo": {
+   "pt": "—",
+   "en": "—",
+   "es": "—",
+   "fr": "—",
+   "ko": "히",
+   "zh": "—"
+  }
+ },
+ "montessori": [
+  {
+   "categoria": "Substantivo (Noun)",
+   "cor_nome": "Preto",
+   "hex": "#000000",
+   "forma": "triângulo grande",
+   "nossa_classe": "substantivo",
+   "hex_atual": "#000000",
+   "emoji_atual": "🖤"
+  },
+  {
+   "categoria": "Verbo (Verb)",
+   "cor_nome": "Vermelho",
+   "hex": "#FF0000",
+   "forma": "círculo",
+   "nossa_classe": "verbo",
+   "hex_atual": "#FF0000",
+   "emoji_atual": "🔴"
+  },
+  {
+   "categoria": "Pronome (Pronoun)",
+   "cor_nome": "Roxo",
+   "hex": "#800080",
+   "forma": "triângulo grande",
+   "nossa_classe": "pronome",
+   "hex_atual": "#800080",
+   "emoji_atual": "🟣"
+  },
+  {
+   "categoria": "Advérbio (Adverb)",
+   "cor_nome": "Laranja",
+   "hex": "#FFA500",
+   "forma": "círculo pequeno",
+   "nossa_classe": "adverbio",
+   "hex_atual": "#FFA500",
+   "emoji_atual": "🟠"
+  },
+  {
+   "categoria": "Conjunção (Conjunction)",
+   "cor_nome": "Rosa",
+   "hex": "#FFC0CB",
+   "forma": "faixa/fita",
+   "nossa_classe": "conjuncao",
+   "hex_atual": "#FF69B4",
+   "emoji_atual": "🩷"
+  },
+  {
+   "categoria": "Interjeição (Interjection)",
+   "cor_nome": "Dourado",
+   "hex": "#FFD700",
+   "forma": "ponto de exclamação",
+   "nossa_classe": "interjeicao",
+   "hex_atual": "#FFD700",
+   "emoji_atual": "🏆"
+  },
+  {
+   "categoria": "Artigo (Article)",
+   "cor_nome": "Azul claro",
+   "hex": "#ADD8E6",
+   "forma": "triângulo pequeno",
+   "nossa_classe": "artigo",
+   "hex_atual": "#87CEEB",
+   "emoji_atual": "🩵"
+  },
+  {
+   "categoria": "Adjetivo (Adjective)",
+   "cor_nome": "Azul escuro",
+   "hex": "#00008B",
+   "forma": "triângulo médio",
+   "nossa_classe": "adjetivo",
+   "hex_atual": "#0000FF",
+   "emoji_atual": "🔵"
+  },
+  {
+   "categoria": "Preposição (Preposition)",
+   "cor_nome": "Verde",
+   "hex": "#008000",
+   "forma": "meia-lua/ponte",
+   "nossa_classe": "preposicao",
+   "hex_atual": "#2E7D32",
+   "emoji_atual": "🧶"
+  }
+ ],
+ "emoji": {
+  "substantivo": "🖤",
+  "verbo": "🔴",
+  "pronome": "🟣",
+  "adverbio": "🟠",
+  "conjuncao": "🩷",
+  "interjeicao": "🏆",
+  "artigo": "🩵",
+  "adjetivo": "🔵",
+  "preposicao": "🧶",
+  "nome_proprio": "🟡",
+  "pontuacao": "🩶",
+  "numeral": "🏻",
+  "auxiliar": "🤍",
+  "modal": "🏿",
+  "particula": "🪻",
+  "terminacao_honorifica": "🪖",
+  "terminacao_nominal": "📗",
+  "terminacao_adjetival": "🏾",
+  "terminacao_final": "🍷",
+  "sufixo": "🏼"
+ },
+ "paleta": {
+  "#FF0000": {
+   "emoji": "🔴",
+   "nome": "vermelho"
+  },
+  "#FFA500": {
+   "emoji": "🟠",
+   "nome": "laranja"
+  },
+  "#FFFF00": {
+   "emoji": "🟡",
+   "nome": "amarelo"
+  },
+  "#0000FF": {
+   "emoji": "🔵",
+   "nome": "azul"
+  },
+  "#800080": {
+   "emoji": "🟣",
+   "nome": "roxo"
+  },
+  "#000000": {
+   "emoji": "🖤",
+   "nome": "preto"
+  },
+  "#FFFFFF": {
+   "emoji": "🤍",
+   "nome": "branco"
+  },
+  "#FFDFC4": {
+   "emoji": "🏻",
+   "nome": "pele muito clara"
+  },
+  "#F1C27D": {
+   "emoji": "🏼",
+   "nome": "pele clara"
+  },
+  "#E0AC69": {
+   "emoji": "🏽",
+   "nome": "pele média"
+  },
+  "#C68642": {
+   "emoji": "🏾",
+   "nome": "pele morena"
+  },
+  "#8D5524": {
+   "emoji": "🏿",
+   "nome": "pele escura"
+  },
+  "#FF69B4": {
+   "emoji": "🩷",
+   "nome": "rosa"
+  },
+  "#87CEEB": {
+   "emoji": "🩵",
+   "nome": "azul claro"
+  },
+  "#808080": {
+   "emoji": "🩶",
+   "nome": "cinza"
+  },
+  "#2E7D32": {
+   "emoji": "🧶",
+   "nome": "verde escuro"
+  },
+  "#66BB6A": {
+   "emoji": "📗",
+   "nome": "verde claro"
+  },
+  "#C8A2C8": {
+   "emoji": "🪻",
+   "nome": "lilás"
+  },
+  "#556B2F": {
+   "emoji": "🪖",
+   "nome": "verde oliva"
+  },
+  "#722F37": {
+   "emoji": "🍷",
+   "nome": "vinho"
+  },
+  "#FFD700": {
+   "emoji": "🏆",
+   "nome": "dourado"
+  }
+ },
+ "cor_reserva": "#E0AC69",
+ "cores_idiomas": [
+  {
+   "lang": "pt",
+   "hex": "#FFFF00",
+   "emoji": "🟡",
+   "nome": "Português",
+   "nome_cor": "amarelo",
+   "y": 100
+  },
+  {
+   "lang": "en",
+   "hex": "#66BB6A",
+   "emoji": "📗",
+   "nome": "Inglês",
+   "nome_cor": "verde claro",
+   "y": 180
+  },
+  {
+   "lang": "es",
+   "hex": "#FFA500",
+   "emoji": "🟠",
+   "nome": "Espanhol",
+   "nome_cor": "laranja",
+   "y": 260
+  },
+  {
+   "lang": "fr",
+   "hex": "#87CEEB",
+   "emoji": "🩵",
+   "nome": "Francês",
+   "nome_cor": "azul claro",
+   "y": 340
+  },
+  {
+   "lang": "ko",
+   "hex": "#FF69B4",
+   "emoji": "🩷",
+   "nome": "Coreano",
+   "nome_cor": "rosa",
+   "y": 420
+  },
+  {
+   "lang": "zh",
+   "hex": "#800080",
+   "emoji": "🟣",
+   "nome": "Chinês",
+   "nome_cor": "roxo",
+   "y": 500
+  }
+ ],
+ "nota_variante": "Versão de <b>6 idiomas</b>, com chinês (zh-Hans). Mesmas 20 classes e mesmas 21 cores da versão de 5 — o chinês <b>não precisou de categoria nova</b>: reaproveita as 14 genéricas + <code>particula</code>. As 6 exclusivas do coreano não se aplicam porque coreano é aglutinante (sufixos transformam a palavra) e chinês é isolante (palavras são blocos independentes)."
+};
 const BANDEIRAS = { pt: "PT", en: "EN", es: "ES", fr: "FR", ko: "KO", zh: "ZH" };
 const TODOS_IDIOMAS = ["pt", "en", "es", "fr", "ko", "zh"];
 
