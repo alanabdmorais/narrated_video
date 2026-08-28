@@ -560,6 +560,72 @@ maiúscula**: `40_matt_02` e `40_Matt_02` são a mesma pasta pra qualquer efeito
 prático (Drive e macOS nem distinguem). Comparar sensível deixaria passar
 exatamente a colisão que a função existe pra pegar.
 
+## 8h. Compilação — `notebooks/compilacao-montar.ipynb`
+
+Versículos sortidos da Bíblia inteira, atravessando livros. Você escreve o
+tema e a seleção; o notebook faz o resto.
+
+```python
+TEMA = "Salmos Esperança"
+SELECAO = [
+    ("Ps",  23, "1-6"),
+    ("Ps",  42, "5,11"),
+    ("Isa", 40, "28-31"),
+    ("Rom",  8, "38-39"),
+]
+```
+
+**A ordem da seleção é a ordem do vídeo** — pode pular entre livros, repetir
+capítulo e sair de ordem.
+
+| Passo | O quê |
+|---|---|
+| 1 | extrai o texto dos versículos do `web-biblia.json` |
+| 2 | diz **quais capítulos ainda precisam de tempo** |
+| 3 | transcreve e alinha **só os que faltam**, gravando no cache |
+| 4 | corta, concatena, gera `.wav` + `.srt` + manifesto |
+
+O passo 3 é o caro, e é o que o cache existe pra pagar uma vez por capítulo.
+
+### Validação vem antes do trabalho
+
+`parsear_selecao()` confere livro e capítulo contra a tabela canônica, e
+`compilar_selecao()` carrega o cache de **todos** os capítulos antes de cortar
+o primeiro segmento. Livro inexistente, versículo fora do capítulo ou tempo
+faltando quebram na leitura da config — não vinte minutos depois, no meio do
+corte, com arquivos temporários soltos.
+
+### Por que o corte decodifica em vez de copiar
+
+A fonte é **mp3**, e corte por cópia gruda na fronteira do frame (~26 ms): a
+emenda entre versículos sai torta. Além disso, o concat por cópia exige mesmo
+codec, taxa e canais em todos os segmentos — e a seleção atravessa arquivos
+diferentes. `_cortar_segmento()` normaliza (44,1 kHz, mono, PCM), que é o que
+faz a junção funcionar entre capítulos.
+
+O `-ss`/`-t` vem **depois** do `-i`: seek exato, à custa de ler até o ponto.
+Capítulo tem poucos minutos, então o custo é baixo e a precisão é o que mantém
+o versículo inteiro dentro do corte.
+
+### O manifesto
+
+Pra cada trecho do compilado: de qual capítulo e versículo veio, em que
+milissegundo do original começava, e onde caiu no compilado. É por ele que a
+montagem de vídeo acha a mídia certa de cada pedaço.
+
+### Testes
+
+Ensaio completo com áudio e `web-biblia.json` sintéticos, atravessando dois
+livros com seleção não sequencial: nome, parse, relatório do cache,
+alinhamento (simulando saída do Whisper com pontuação e caixa diferentes do
+texto de referência — 4/4 versículos alinhados), corte, concat, duração exata,
+ordem preservada e SRT com o texto certo. E a segunda compilação da mesma
+seleção não recalcula nada.
+
+Também testado: falha limpa quando falta tempo no cache (apontando qual
+capítulo), e os três erros de config (capítulo fora do livro, sigla
+inexistente, intervalo invertido).
+
 ## 9. Lacunas conhecidas / pontos de atenção
 
 - Os notebooks `video-base-video-padrao.ipynb` e `video-base-video-versiculo.ipynb`
