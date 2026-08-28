@@ -322,6 +322,57 @@ sem isso cairia no fallback `adverbio`.
 |---|---|---|---|
 | `zh` | `#800080` 🟣 roxo | 500 (6ª faixa) | Noto Sans CJK **SC** |
 
+## 8c. Bíblia em áudio (WEB / David Williams)
+
+A narração é a **World English Bible** lida por David Williams (domínio
+público, [AudioTreasure](https://audiotreasure.com/webindex.htm)) — **não é
+King James**, apesar do nome parecido. O texto pareado é o
+[`eng-web-c`](https://ebible.org/eng-web-c/) (WEB Classic); a própria página da
+narração distribui o `WEBTEXT.pdf` como "read along".
+
+Isso importa: o `alinhar_versiculos()` (`srt_utils.py`) casa o texto de
+referência contra a transcrição do Whisper pra derivar o tempo de cada
+versículo. Texto de outra tradução degrada o alinhamento em silêncio.
+
+### `modulos/biblia_livros.py` — tabela canônica dos 66 livros
+
+Fonte única do nome de capítulo. `livro.nome_projeto(cap)` devolve o padrão do
+projeto (`40_Matt_02`, sigla OSIS — a mesma que já vinha sendo usada à mão) e
+`livro.stem_audio(cap)` devolve o nome na fonte.
+
+**Os nomes do AudioTreasure são irregulares**, por isso cada livro carrega seu
+próprio `modelo_audio` em vez de o código deduzir um padrão que não existe:
+
+| Livro | Na fonte | Irregularidade |
+|---|---|---|
+| Gênesis | `01_Genesis_01` | (o formato da maioria) |
+| Mateus | `40_Matthew01` | sem underscore antes do número |
+| Lamentações | `25_Lamentations03` | sem underscore |
+| Salmos | `19_Psalm_001` | número com 3 dígitos |
+| Cânticos | `22_Song_of_Soloman_01` | "Soloman" escrito assim na fonte |
+
+O padding do capítulo segue a largura do próprio livro (mínimo 2): Mateus fica
+`40_Matt_02` como sempre foi, e Salmos fica `19_Ps_001`..`19_Ps_150`, que
+ordena certo numa listagem de pasta.
+
+### `notebooks/biblia-audio-baixar.ipynb`
+
+Baixa os zips do AudioTreasure (NT ~300 MB + AT ~900 MB), descompacta e salva
+em `assets/biblia_audio/` um mp3 por capítulo, já renomeado. Roda uma vez;
+capítulo que já está no Drive é pulado, então é seguro rodar de novo depois de
+uma queda de sessão. O download sai da internet do Colab, não da máquina local.
+
+Fica em `assets/` por ser material compartilhado entre todos os vídeos — mesma
+lógica de `assets/trilha` e `assets/marca`.
+
+A conferência final cruza duas listas: **faltando** (capítulo do cânone que o
+zip não trouxe) e **sobrando** (mp3 que nenhum capítulo reclamou). Livro que
+aparece nas duas = `modelo_audio` errado na tabela, não arquivo ausente.
+
+> ⚠️ **Zacarias 14 não existe no índice da fonte** — o site lista só 13
+> capítulos, e o livro tem 14. A conferência reporta como faltando. Se você
+> precisar desse capítulo, vai ter que arrumar o áudio por fora.
+
 ## 9. Lacunas conhecidas / pontos de atenção
 
 - Os notebooks `video-base-video-padrao.ipynb` e `video-base-video-versiculo.ipynb`
