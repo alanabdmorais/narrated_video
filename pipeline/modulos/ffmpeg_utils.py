@@ -761,6 +761,7 @@ def gerar_ass_simples(
     legendas: list[Legenda],
     config: PipelineConfig,
     caminho_saida: Optional[Path | str] = None,
+    lang: str = "",
 ) -> Path:
     """
     Gera um .ass de legenda única — 1 faixa de texto simples, sem cor por
@@ -771,6 +772,13 @@ def gerar_ass_simples(
                         vinda de ler_srt() sobre o arquivo de config.nome_legenda_mestre.
         config:        PipelineConfig com resolução e estilo da legenda única.
         caminho_saida: caminho do .ass (default: legenda_unica_{NOME}.ass)
+        lang:          idioma do texto -- só muda alguma coisa nos CJK (ver
+                        config.fonte_cjk). O estilo padrão daqui é Arial, que
+                        não tem Hangul nem Han: sem a tag de fonte, um vídeo
+                        com IDIOMA_MESTRE coreano ou chinês sai com a legenda
+                        inteira em quadradinhos (□), sem erro nenhum.
+                        Vazio ou idioma latino = nada muda, a saída fica byte
+                        a byte igual à de antes deste parâmetro existir.
 
     Returns:
         Path do arquivo .ass gerado.
@@ -790,6 +798,11 @@ def gerar_ass_simples(
         )
     ]
 
+    # Mesma técnica de _adicionar_linha_simples(): a tag só entra quando o
+    # idioma pede fonte CJK, então idioma latino não ganha nenhum byte novo.
+    _fonte = config.fonte_cjk(lang)
+    fonte_tag = f"{{\\fn{_fonte}}}" if _fonte else ""
+
     for leg in legendas:
         texto_safe = _escapar_ass_texto(leg.texto)
         if not texto_safe:
@@ -797,11 +810,12 @@ def gerar_ass_simples(
         linhas.append(_LINHA_DIALOGO.format(
             inicio=_ms_para_ass(leg.inicio_ms),
             fim=_ms_para_ass(leg.fim_ms),
-            texto=texto_safe,
+            texto=f"{fonte_tag}{texto_safe}",
         ))
 
     caminho_saida.write_text("".join(linhas), encoding="utf-8-sig")
-    logger.info("gerar_ass_simples: %s (%d legendas)", caminho_saida.name, len(legendas))
+    logger.info("gerar_ass_simples: %s (%d legendas, lang=%s)",
+                caminho_saida.name, len(legendas), lang or "latim")
     return caminho_saida
 
 

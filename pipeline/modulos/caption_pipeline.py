@@ -225,6 +225,9 @@ class CaptionPipeline:
         ass_paths: list[Path] = [gerar_ass_simples(
             legendas, self._cfg,
             caminho_saida=Path(f"legenda_unica_{self._cfg.NOME_ORACAO}.ass"),
+            # Sem isso, IDIOMA_MESTRE coreano ou chinês sai em quadradinhos:
+            # o estilo padrão deste .ass é Arial, que não tem Hangul nem Han.
+            lang=self._cfg.IDIOMA_MESTRE,
         )]
 
         if incluir_versiculo:

@@ -452,6 +452,31 @@ glifo faltando, porque é o que vira quadradinho na tela.
 > chinês/coreano sai em quadradinho. O notebook instala `fonts-noto-cjk` no
 > Setup, e o portão pega o caso se faltar.
 
+### O portão já achou um bug de verdade
+
+Na primeira varredura ele encontrou algo que estava no código desde antes:
+`gerar_ass_simples()` (a legenda única, usada pelo `caption-single-burn`)
+**nunca aplicava a tag de fonte CJK**. Ela não recebia o idioma, e o estilo
+padrão desse `.ass` é Arial — sem Hangul e sem Han. Um vídeo com
+`IDIOMA_MESTRE` coreano ou chinês sairia com a legenda inteira em
+quadradinhos, sem erro nenhum no console.
+
+Eram dois problemas independentes, os dois corrigidos:
+
+| | Era | Ficou |
+|---|---|---|
+| `gerar_ass_simples()` | sem parâmetro `lang`, sem `\fn` | `lang=""` opcional; emite `\fn` só nos CJK |
+| `caption-single-burn` | `apt-get install ffmpeg` | `... ffmpeg fonts-noto-cjk` |
+
+O `_adicionar_linha_simples()`, no mesmo arquivo, já fazia certo — o
+`gerar_ass_simples()` é que tinha uma cópia simplificada sem a tag.
+
+Verificado que idioma latino sai **byte a byte idêntico** ao de antes do
+parâmetro existir (sha256 igual sem `lang`, e com `pt`, `en` e `fr`), e que
+`ko`/`zh` passam a receber `\fnNoto Sans CJK KR`/`SC`. Com a fonte instalada,
+o próprio portão vira o juiz: o `.ass` de antes reprova apontando os
+codepoints, o de depois aprova.
+
 ### Testes
 
 - Paleta: rodado contra o `legendas_40_Matt_02_v2.ass` real, anterior à
