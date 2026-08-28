@@ -487,6 +487,49 @@ codepoints, o de depois aprova.
 - Vídeo: mp4 sintéticos com áudio normal, estourado (+0,0 dB), sem faixa de
   áudio e com duração divergente — os cinco casos se comportam certo.
 
+## 8f. Cache de tempos por capítulo — `modulos/tempos_cache.py`
+
+O áudio de um capítulo nunca muda, então o tempo dos versículos dele também
+não. Transcrever com Whisper e alinhar custa minutos; reaproveitar custa
+milissegundos. **Uma compilação que usa Mateus 2 paga uma vez** — a próxima
+que repetir o capítulo não paga nada.
+
+Um arquivo por capítulo em `assets/biblia_tempos/`, espelhando o
+`assets/biblia_audio/`. Não é um JSON só porque o cache **cresce aos poucos**:
+arquivo por capítulo grava só o que mudou, dá pra abrir e conferir um capítulo
+isolado, e duas execuções em paralelo não brigam pelo mesmo arquivo.
+
+### A invalidação é o ponto todo
+
+Tempo de versículo é dado **derivado** de duas entradas: o áudio e o texto de
+referência. Se qualquer uma mudar, o tempo guardado está errado — e errado em
+silêncio, porque um número continua parecendo um número válido.
+
+Por isso o cache guarda a impressão digital das entradas e **erra pro lado do
+miss**: entrada diferente = não achou, recalcula. Nunca devolve tempo velho
+achando que serve.
+
+| Mudou | Resultado |
+|---|---|
+| O arquivo de áudio | miss — *"o áudio do capítulo é outro arquivo"* |
+| O texto de referência | miss — *"o texto de referência mudou"* |
+| O modelo do Whisper | miss — *"transcrito com 'base', agora pediram 'small'"* |
+| Só a quebra de linha do texto | **hit** — o hash normaliza espaço em branco, e o `alinhar_versiculos()` colapsa quebra de linha de qualquer jeito |
+
+O miss vem com motivo em texto, pra ser diagnosticável em vez de misterioso.
+
+### `intervalo(versiculo)`
+
+Devolve `(início_ms, fim_ms)`, onde o fim é o **início do próximo versículo** —
+é assim que o corte fica sem buraco nem sobreposição entre versículos
+consecutivos. O último termina no fim do áudio.
+
+### `faltando(pasta, capitulos)`
+
+Diz de uma vez quais capítulos de uma seleção ainda precisam de transcrição —
+em vez de você descobrir um por um no meio do processo. É o que responde
+"quais áudios vou precisar" no fluxo da compilação.
+
 ## 9. Lacunas conhecidas / pontos de atenção
 
 - Os notebooks `video-base-video-padrao.ipynb` e `video-base-video-versiculo.ipynb`
