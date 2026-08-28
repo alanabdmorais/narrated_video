@@ -425,6 +425,43 @@ baixo, poesia, título no meio do capítulo) e com round-trip pelo
 > extenso, e a função só registra a primeira ocorrência de cada número, então o
 > risco é baixo. Fica registrado porque não é óbvio olhando o código.
 
+## 8e. Portão de qualidade — `notebooks/portao-qualidade.ipynb`
+
+Confere o vídeo **antes de publicar**. Existe por causa de uma família de bugs
+que o pipeline tem e que **não levanta exceção nenhuma** — aparece só no vídeo
+pronto. Dois já aconteceram de verdade neste projeto: idioma novo caindo no
+cinza de fallback, e legenda virando quadradinho por fonte sem os glifos.
+
+| Camada | Confere | Custo |
+|---|---|---|
+| `verificar_ass()` — antes de queimar | cor fora da paleta, fonte sem glifo, área segura, tempo invertido, sobreposição na mesma faixa, bloco vazio | milissegundos |
+| `verificar_video()` — antes de publicar | áudio estourado/baixo, faixa de áudio ausente, duração | ~1 min (`volumedetect` lê o arquivo todo) |
+
+### A severidade vem do resultado, não da substituição
+
+O projeto declara `Arial` no estilo padrão, e **Linux/Colab não tem Arial**: o
+fontconfig troca por Liberation Sans, metricamente compatível, que cobre latim
+inteiro. Isso é **aviso**, não erro.
+
+Se fosse erro, o portão reprovaria todo vídeo do projeto e você aprenderia a
+ignorá-lo — o que é pior do que não ter portão. O que é **erro sempre** é
+glifo faltando, porque é o que vira quadradinho na tela.
+
+> ⚠️ Declarar `Noto Sans CJK SC` no `.ass` **não basta**: se a fonte não
+> estiver instalada na máquina que queima, o fontconfig cai em outra e o
+> chinês/coreano sai em quadradinho. O notebook instala `fonts-noto-cjk` no
+> Setup, e o portão pega o caso se faltar.
+
+### Testes
+
+- Paleta: rodado contra o `legendas_40_Matt_02_v2.ass` real, anterior à
+  repadronização — detectou **37 cores fora das 21**, como esperado.
+- Fonte: latim com Arial passa (1 aviso); chinês e coreano com fonte sem
+  cobertura reprovam apontando os codepoints exatos.
+- Tempo invertido, área segura, bloco vazio: cada um em `.ass` sintético.
+- Vídeo: mp4 sintéticos com áudio normal, estourado (+0,0 dB), sem faixa de
+  áudio e com duração divergente — os cinco casos se comportam certo.
+
 ## 9. Lacunas conhecidas / pontos de atenção
 
 - Os notebooks `video-base-video-padrao.ipynb` e `video-base-video-versiculo.ipynb`
