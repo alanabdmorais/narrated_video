@@ -703,7 +703,78 @@ Também testado: falha limpa quando falta tempo no cache (apontando qual
 capítulo), e os três erros de config (capítulo fora do livro, sigla
 inexistente, intervalo invertido).
 
-## 9. Lacunas conhecidas / pontos de atenção
+## 9. Decisões adiadas
+
+Coisas que a gente **decidiu não fazer agora**, com o gatilho anotado. Não são
+pendências soltas: são escolhas, e o que muda é o momento.
+
+### 9.1 Consolidar os seis `video-base-*` num só, com perfil
+
+**Situação.** O nome `video-base-imagem-versiculo-trilhas-efeitos` codifica o
+conjunto de funcionalidades no nome do arquivo. Isso não escala por aritmética:
+cada feature nova dobra as combinações possíveis. Hoje são 6 notebooks pra 4
+features; a próxima feature pede mais 6.
+
+E os seis são cumulativos — o `-trilhas-efeitos` **já é superconjunto dos
+outros cinco**, inclusive cobrindo imagem e vídeo sozinho, via `TIPO_FONTE`.
+
+**O projeto já resolveu isso do lado certo.** As *saídas* nomeiam nível sem
+explosão nenhuma:
+
+```
+_video_base.mp4 → _final.mp4 → _final_idiomas.mp4 → _final_multicolor.mp4
+```
+
+Níveis cumulativos e nomeados, não lista de features ligadas. Foram os
+*notebooks* que não seguiram a disciplina que as *saídas* já seguem.
+
+**Decisão quando chegar a hora.** Um `video-base.ipynb`, com o nível em
+configuração:
+
+```python
+PERFIL = "completo"    # padrao | versiculo | trilhas | completo
+TIPO_FONTE = "imagem"  # imagem | video
+```
+
+O perfil nomeado é o que impede a troca de ruim por pior: dez flags soltas
+obrigariam a ler a configuração inteira pra saber o que vai sair. Com perfil,
+você continua pensando em "quero o completo" — que é como já pensa hoje ao
+escolher o arquivo.
+
+**O ganho maior não é o nome curto, é a deriva.** Hoje uma correção no
+`-trilhas-efeitos` não chega nos outros cinco. É o mesmo problema que fez o
+chinês virar flag em vez de módulo duplicado, e as duas centrais saírem de um
+gerador só.
+
+**Por que não agora.** É refatoração de verdade, em seis notebooks que
+funcionam, e há trabalho não rodado na fila — os notebooks de áudio, texto,
+compilação e portão nunca viram Colab. Consolidar código testado com código não
+testado é como se perde os dois.
+
+**Gatilho.** Quando você for mexer nos `video-base` por outro motivo, ou quando
+a sétima variante pedir pra nascer. Aí a consolidação se paga; antes disso é
+arrumação.
+
+**Custo aceito.** Você perde os seis links salvos no Colab e ganha um. Pra quem
+navega por arquivo, é mudança de hábito.
+
+### 9.2 `NOME_ORACAO` não guarda mais uma oração
+
+O campo diz "oração", mas hoje guarda `40_Matt_02` (um capítulo) e em breve
+`comp_salmos_esperanca` (uma compilação). É fóssil do escopo original. Quem
+chegar novo lê e entende errado.
+
+**Por que não agora.** Aparece na célula de configuração de quase todos os
+notebooks — é refatoração, não renomeação. **Gatilho:** junto de alguma mudança
+que já toque essas células.
+
+### 9.3 Apagar o `compilar-versiculos-teste`
+
+Não renomear: **apagar**. Ter dois notebooks de compilação confunde porque um
+está obsoleto, não porque os nomes divergem. **Gatilho:** quando o
+`compilacao-montar` rodar em produção.
+
+## 9b. Lacunas conhecidas / pontos de atenção
 
 - Os notebooks `video-base-video-padrao.ipynb` e `video-base-video-versiculo.ipynb`
   agora expõem `ID_PLANILHA_VIDEOS`/`NOME_COLUNA_STATUS_PLANILHA` na célula de
