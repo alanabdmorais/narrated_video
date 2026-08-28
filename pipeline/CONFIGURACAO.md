@@ -402,7 +402,12 @@ CSS" e passou a ser "dá pra sinalizar na descrição do YouTube?".
 
 `cores.legenda_youtube()` monta o bloco pronto pra colar na descrição
 (uma linha por classe: emoji + nome). Aceita uma lista pra filtrar/ordenar,
-ex: `legenda_youtube(["substantivo", "verbo", ...])` num vídeo sem coreano.
+ex: `legenda_youtube(["substantivo", "verbo", ...])` num vídeo sem coreano —
+e `cores.classes_para_idiomas(["pt", "en", "es", "fr"])` já devolve essa lista
+pronta, a partir dos idiomas do vídeo. O 2º parâmetro (`idiomas`) ajusta os
+rótulos: `particula` é a única classe de mais de um idioma, então sai como
+"Partícula (coreano)" num vídeo sem chinês e "Partícula (coreano/chinês)" num
+com. Na prática você não chama nada disso à mão — é a colinha (abaixo).
 
 | Classe | Emoji | Cor | Hex | Origem |
 |---|---|---|---|---|
@@ -500,3 +505,26 @@ python3 assets/gerar-central-cores.py
 `cores.py`, rode-o** — senão as centrais ficam mostrando a paleta antiga.
 Editar as duas à mão é o que se quer evitar: uma correção entraria numa e não
 na outra.
+
+### A colinha da descrição do YouTube
+
+`assets/colinha-emojis-youtube.html` — abre no navegador, clica em **Copiar** no
+bloco do tipo de vídeo e cola na descrição. Seis blocos prontos:
+
+| Bloco | Linhas |
+|---|---|
+| Multi-idioma cor única — 6 idiomas (com chinês) | 6 idiomas |
+| Multi-idioma cor única — 5 idiomas | 5 idiomas |
+| Multicolor — 6 idiomas (com chinês) | 20 classes |
+| Multicolor — 5 idiomas | 20 classes |
+| Multicolor — sem coreano (pt/en/es/fr) | 14 classes |
+| Multicolor — só latinos (pt/es/fr) | 12 classes |
+
+**Escolha o bloco pelos idiomas que o vídeo realmente tem.** Um vídeo sem
+coreano não deve listar as terminações coreanas, e um só com idiomas latinos
+não tem `modal`/`auxiliar` (inglês) — a colinha já corta essas linhas.
+
+Ela sai do **mesmo** `gerar-central-cores.py`, do mesmo `cores.py`, junto com as
+duas centrais. É esse o ponto de gerar em vez de escrever à mão: mudou uma cor
+ou um emoji, roda o script e a colinha muda junto — não tem como a descrição do
+YouTube ficar anunciando uma cor que o vídeo não usa mais.

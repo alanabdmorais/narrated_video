@@ -195,6 +195,37 @@ def cor_ass(classe: str) -> str:
     return f"&H00{b}{g}{r}"
 
 
+# ── Em quais idiomas cada classe pode aparecer ────────────────────────────────
+# Bate com a coluna "origem" documentada na central de cores: as 12 primeiras
+# saem de tags que existem em qualquer idioma; modal/auxiliar só do inglês;
+# particula do coreano E do chinês; as terminações e o sufixo, só do coreano.
+# Serve pra colinha do YouTube não listar terminação coreana num vídeo que não
+# tem coreano.
+CLASSES_GENERICAS: tuple[str, ...] = (
+    "substantivo", "nome_proprio", "verbo", "pronome", "artigo", "adjetivo",
+    "numeral", "preposicao", "conjuncao", "adverbio", "interjeicao", "pontuacao",
+)
+CLASSES_POR_IDIOMA: dict[str, tuple[str, ...]] = {
+    "en": ("modal", "auxiliar"),
+    "ko": ("particula", "terminacao_honorifica", "terminacao_nominal",
+           "terminacao_adjetival", "terminacao_final", "sufixo"),
+    "zh": ("particula",),
+}
+
+
+def classes_para_idiomas(idiomas: list[str]) -> list[str]:
+    """Quais das 20 classes podem aparecer num vídeo com esses idiomas.
+
+    Mantém a ordem de CORES_HTML. Ex: um vídeo pt/en/es/fr não tem nenhuma
+    das 6 extensões do coreano, então a legenda da descrição fica com 14
+    linhas em vez de 20.
+    """
+    permitidas = set(CLASSES_GENERICAS)
+    for lang in idiomas:
+        permitidas.update(CLASSES_POR_IDIOMA.get(lang, ()))
+    return [c for c in CORES_HTML if c in permitidas]
+
+
 def emoji_por_cor(hex_cor: str) -> str:
     """Emoji da paleta pra esse hex, ou "" se a cor não faz parte dela.
 
@@ -234,16 +265,36 @@ def legenda_youtube_idiomas(cores_idiomas: dict[str, str],
     return "\n".join(linhas)
 
 
-def legenda_youtube(classes: list[str] | None = None) -> str:
+def nome_classe_legenda(classe: str, idiomas: list[str] | None = None) -> str:
+    """Nome da classe pra legenda, ajustado aos idiomas do vídeo.
+
+    Só a `particula` muda: ela é a única classe de mais de um idioma
+    (coreano e chinês), e anunciar "coreano/chinês" num vídeo que não tem
+    chinês -- ou o contrário -- confunde quem lê a descrição. Sem `idiomas`,
+    devolve o nome completo de NOMES_CLASSE.
+    """
+    nome = NOMES_CLASSE.get(classe, classe)
+    if classe == "particula" and idiomas is not None:
+        donos = [l for l in CLASSES_POR_IDIOMA if l in idiomas
+                 and "particula" in CLASSES_POR_IDIOMA[l]]
+        if donos:
+            nome = "Partícula ({})".format(
+                "/".join(NOMES_IDIOMA_LEGENDA[l].lower() for l in donos))
+    return nome
+
+
+def legenda_youtube(classes: list[str] | None = None,
+                    idiomas: list[str] | None = None) -> str:
     """Monta o bloco de legenda pra colar na descrição do YouTube:
     uma linha por classe, com o emoji da cor.
 
     `classes` limita/ordena a lista (ex: só as que aparecem num vídeo sem
-    coreano); o padrão traz as 20 na ordem de CORES_HTML.
+    coreano); o padrão traz as 20 na ordem de CORES_HTML. `idiomas` ajusta os
+    rótulos ao vídeo (ver nome_classe_legenda).
     """
     linhas = []
     for classe in (classes if classes is not None else CORES_HTML):
         if classe not in CORES_HTML:
             continue
-        linhas.append(f"{EMOJI_CLASSE[classe]} {NOMES_CLASSE.get(classe, classe)}")
+        linhas.append(f"{EMOJI_CLASSE[classe]} {nome_classe_legenda(classe, idiomas)}")
     return "\n".join(linhas)

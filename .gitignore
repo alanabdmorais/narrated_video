@@ -17,3 +17,7 @@ cookies.txt
 *credential*
 *token*
 *api_key*
+
+# Cache do Python (gerado ao rodar os módulos/geradores localmente).
+__pycache__/
+*.pyc
