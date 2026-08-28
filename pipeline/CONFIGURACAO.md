@@ -373,6 +373,58 @@ aparece nas duas = `modelo_audio` errado na tabela, não arquivo ausente.
 > capítulos, e o livro tem 14. A conferência reporta como faltando. Se você
 > precisar desse capítulo, vai ter que arrumar o áudio por fora.
 
+## 8d. Texto da Bíblia (WEB) — `dados_lexico/web-biblia.json`
+
+### `notebooks/biblia-texto-baixar.ipynb`
+
+Baixa o USFM da WEB do ebible.org, converte pra um JSON único em
+`dados_lexico/web-biblia.json` e **confere contra o `40_Matt_02` que já
+existe** antes de salvar. Depois disso, o `roteiro_versiculos.txt` de qualquer
+capítulo sai de uma chamada de função — acabou a consulta capítulo a capítulo
+no site.
+
+**Por que USFM e não o PDF.** O `WEBTEXT.pdf` da página da narração é de duas
+colunas: extrator de texto lê atravessando e embaralha as palavras (testado —
+Gênesis 1:1 sai com as duas colunas intercaladas). O USFM marca parágrafo
+(`\p`) e poesia (`\q1`) explicitamente, que é exatamente a estrutura que o
+`roteiro_versiculos.txt` já tem. O PDF serve pra ler, não pra virar dado.
+
+**Onde mora.** `dados_lexico/`, junto de `eventos-biblicos.json` e
+`titulos-biblicos.json` — dado de referência **imutável**, versionado, lido por
+módulo. Não vai pra planilha: planilha é pra estado que muda e que você edita à
+mão, e texto bíblico não é nem uma coisa nem outra. Numa aba editável, um
+`ordenar coluna` sem querer corromperia o alinhamento em silêncio.
+
+### O limiar da conferência é calibrado, não chutado
+
+**Duas traduções em inglês diferentes batem ~0,83 de similaridade** — medido,
+WEB contra KJV no mesmo trecho de Mateus 2. Elas compartilham muita palavra, e
+por isso um limiar frouxo (tipo 0,80) deixaria passar a tradução errada. O
+notebook usa **0,97**.
+
+Importa porque o `alinhar_versiculos()` casa este texto contra a transcrição do
+Whisper pra derivar o tempo de cada versículo: texto de outra edição degrada o
+alinhamento **sem erro nenhum** — aparece só no vídeo montado.
+
+### `modulos/biblia_texto.py`
+
+| Função | O que faz |
+|---|---|
+| `parsear_usfm(conteudo)` | `(livro, {capítulo: [Versiculo]})`. Tira nota de rodapé, referência cruzada, título e cabeçalho; preserva palavras de Jesus (`\wj`) e `\add`; junta versículo que continua na linha seguinte. |
+| `gerar_roteiro(versiculos)` | Monta o texto no formato do `roteiro_versiculos.txt`, com número como token isolado e quebra na poesia. |
+| `comparar(a, b)` | Compara palavra a palavra ignorando pontuação, acento, aspas curvas e número de versículo. Devolve similaridade e a lista de divergências com contexto. |
+
+Testado com USFM sintético cobrindo as armadilhas estruturais (nota de rodapé,
+`\w` com Strong, dois `\v` na mesma linha, versículo continuando na linha de
+baixo, poesia, título no meio do capítulo) e com round-trip pelo
+`extrair_marcadores_versiculo()` de `srt_utils.py`, que é quem consome.
+
+> ⚠️ **Limite conhecido, herdado do formato:** `extrair_marcadores_versiculo()`
+> lê qualquer token de 1–3 dígitos como número de versículo. Um numeral solto
+> dentro do texto poderia confundir — na prática a WEB escreve números por
+> extenso, e a função só registra a primeira ocorrência de cada número, então o
+> risco é baixo. Fica registrado porque não é óbvio olhando o código.
+
 ## 9. Lacunas conhecidas / pontos de atenção
 
 - Os notebooks `video-base-video-padrao.ipynb` e `video-base-video-versiculo.ipynb`

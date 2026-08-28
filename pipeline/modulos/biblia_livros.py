@@ -139,6 +139,19 @@ LIVROS: tuple[Livro, ...] = (
     Livro(66, "Rev",    "Revelation",    22, _padrao(66, "Revelation")),
 )
 
+# ── Códigos USFM (3 letras), na ordem canônica ───────────────────────────────
+# É como o ebible.org nomeia os arquivos e como o marcador \id vem dentro
+# deles. Tupla paralela a LIVROS: SIGLAS_USFM[i] é o código de LIVROS[i].
+SIGLAS_USFM: tuple[str, ...] = (
+    "GEN", "EXO", "LEV", "NUM", "DEU", "JOS", "JDG", "RUT", "1SA", "2SA",
+    "1KI", "2KI", "1CH", "2CH", "EZR", "NEH", "EST", "JOB", "PSA", "PRO",
+    "ECC", "SNG", "ISA", "JER", "LAM", "EZK", "DAN", "HOS", "JOL", "AMO",
+    "OBA", "JON", "MIC", "NAM", "HAB", "ZEP", "HAG", "ZEC", "MAL",
+    "MAT", "MRK", "LUK", "JHN", "ACT", "ROM", "1CO", "2CO", "GAL", "EPH",
+    "PHP", "COL", "1TH", "2TH", "1TI", "2TI", "TIT", "PHM", "HEB", "JAS",
+    "1PE", "2PE", "1JN", "2JN", "3JN", "JUD", "REV",
+)
+
 # O Novo Testamento começa em Mateus -- usado pra escolher qual zip baixar.
 PRIMEIRO_LIVRO_NT: int = 40
 
@@ -180,3 +193,23 @@ def todos_capitulos(livros: tuple[Livro, ...] | None = None):
     for livro in (livros if livros is not None else LIVROS):
         for cap in range(1, livro.capitulos + 1):
             yield livro, cap
+
+
+# ── USFM <-> livro ───────────────────────────────────────────────────────────
+assert len(SIGLAS_USFM) == 66, f"esperava 66 codigos USFM, tem {len(SIGLAS_USFM)}"
+assert len(set(SIGLAS_USFM)) == 66, "codigo USFM duplicado"
+
+_POR_USFM = {u: l for u, l in zip(SIGLAS_USFM, LIVROS)}
+
+
+def usfm(livro: Livro) -> str:
+    """Código USFM de 3 letras do livro: Mateus -> "MAT"."""
+    return SIGLAS_USFM[livro.numero - 1]
+
+
+def por_usfm(codigo: str) -> Livro:
+    """Busca pelo código USFM, sem diferenciar maiúscula: por_usfm("mat")."""
+    chave = codigo.strip().upper()
+    if chave not in _POR_USFM:
+        raise KeyError(f"código USFM desconhecido: {codigo!r}")
+    return _POR_USFM[chave]
