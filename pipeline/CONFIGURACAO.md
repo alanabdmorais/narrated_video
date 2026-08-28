@@ -723,7 +723,7 @@ com. Na prática você não chama nada disso à mão — é a colinha (abaixo).
 | interjeicao | 🏆 | dourado | `#FFD700` | Montessori |
 | artigo | 🩵 | azul claro | `#87CEEB` | Montessori — **passou a bater** (era `#0000FF`) |
 | adjetivo | 🔵 | azul | `#0000FF` | Montessori (azul escuro) |
-| preposicao | 🧶 | verde escuro | `#2E7D32` | Montessori (verde) |
+| preposicao | 💚 | verde claro | `#66BB6A` | Montessori (verde) |
 | nome_proprio | 🟡 | amarelo | `#FFFF00` | mantido |
 | pontuacao | 🩶 | cinza | `#808080` | mantido |
 | auxiliar | 🤍 | branco | `#FFFFFF` | mantido |
@@ -731,11 +731,40 @@ com. Na prática você não chama nada disso à mão — é a colinha (abaixo).
 | modal | 🏿 | pele escura | `#8D5524` | novo (mantém a família marrom) |
 | particula | 🪻 | lilás | `#C8A2C8` | novo |
 | terminacao_honorifica | 🪖 | verde oliva | `#556B2F` | mantém a identidade oliva |
-| terminacao_nominal | 📗 | verde claro | `#66BB6A` | novo |
+| terminacao_nominal | 🪸 | salmão | `#FA8072` | novo — ver 10b |
 | terminacao_adjetival | 🏾 | pele morena | `#C68642` | novo |
 | terminacao_final | 🍷 | vinho | `#722F37` | era crimson — mesma família |
 | sufixo | 🏼 | pele clara | `#F1C27D` | novo |
 | *(reserva)* | 🏽 | pele média | `#E0AC69` | sem classe — ver abaixo |
+
+### 10b. Emoji de objeto é aposta — três trocas que a realidade forçou
+
+O emoji existe pra o espectador ligar a linha da descrição com a cor na tela.
+Emoji de **objeto** não serve pra isso de forma confiável: quem desenha é cada
+fabricante, e a cor muda.
+
+| Era | Virou | Por quê |
+|---|---|---|
+| 🧶 novelo = verde escuro | — | O novelo é desenhado **vermelho ou rosa** em quase toda plataforma. Nunca foi verde. |
+| 📗 livro = verde claro | 💚 coração verde | Coração é cor sólida e única, a família mais confiável depois das formas geométricas. |
+| verde escuro `#2E7D32` | 🪸 salmão `#FA8072` | Três verdes (escuro/claro/oliva) não se distinguem na descrição. Um deles tinha que sair. |
+
+**Quem ficou com o quê, e por quê:** `preposicao` é uma das nove categorias
+Montessori, e a cor dela lá é **verde** — então ela ficou com o verde claro. O
+salmão foi pra `terminacao_nominal`, que não é Montessori. Sobraram dois
+verdes, agora bem afastados.
+
+Descartados no caminho, com os motivos: **🇲🇴** (o Windows não desenha bandeira
+— mostra as letras `MO`; a bandeira tem três cores; e é bandeira de território
+num canal que mira o Bilibili), **🍣** (multicolorido: arroz branco + alga) e
+**🍑** (conotação sexual consolidada na internet).
+
+**Ainda são apostas na paleta:** 🪖 capacete, 🪻 flor, 🍷 taça, 🏆 troféu e o
+próprio 🪸 coral. Todos são objeto. Se algum aparecer com a cor errada no seu
+aparelho, é o mesmo bug do novelo.
+
+> A cor do texto da preposição virou preto sozinha (era branco sobre verde
+> escuro): `CORES_TEXTO` é derivado da luminância, não escrito à mão.
 
 **Os 5 tons de pele são muito parecidos entre si**, então foram distribuídos
 pra ficar o mais longe possível uns dos outros nas classes que podem aparecer
@@ -769,7 +798,7 @@ gramatical — mas sai das mesmas 21 cores com emoji. Fica em
 | Ordem na tela | Idioma | Emoji | Cor | Hex |
 |---|---|---|---|---|
 | y=100 | Português | 🟡 | amarelo | `#FFFF00` |
-| y=180 | Inglês | 📗 | verde claro | `#66BB6A` |
+| y=180 | Inglês | 💚 | verde claro | `#66BB6A` |
 | y=260 | Espanhol | 🟠 | laranja | `#FFA500` |
 | y=340 | Francês | 🩵 | azul claro | `#87CEEB` |
 | y=420 | Coreano | 🩷 | rosa | `#FF69B4` |

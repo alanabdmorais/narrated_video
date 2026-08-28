@@ -34,8 +34,8 @@ PALETA_EMOJI: dict[str, tuple[str, str]] = {
     "#FF69B4": ("🩷", "rosa"),
     "#87CEEB": ("🩵", "azul claro"),
     "#808080": ("🩶", "cinza"),
-    "#2E7D32": ("🧶", "verde escuro"),
-    "#66BB6A": ("📗", "verde claro"),
+    "#FA8072": ("🪸", "salmão"),
+    "#66BB6A": ("💚", "verde claro"),
     "#C8A2C8": ("🪻", "lilás"),
     "#556B2F": ("🪖", "verde oliva"),
     "#722F37": ("🍷", "vinho"),
@@ -59,7 +59,7 @@ CORES_HTML: dict[str, str] = {
     "interjeicao":  "#FFD700",   # 🏆 dourado
     "artigo":       "#87CEEB",   # 🩵 azul claro
     "adjetivo":     "#0000FF",   # 🔵 azul (o "azul escuro" do Montessori)
-    "preposicao":   "#2E7D32",   # 🧶 verde escuro
+    "preposicao":   "#66BB6A",   # 💚 verde claro (Montessori: preposição é verde)
     # ── Fora do Montessori — genéricas ────────────────────────────────────
     "nome_proprio": "#FFFF00",   # 🟡 amarelo
     "pontuacao":    "#808080",   # 🩶 cinza
@@ -74,7 +74,7 @@ CORES_HTML: dict[str, str] = {
     # ── Extensão do coreano ───────────────────────────────────────────────
     "particula":              "#C8A2C8",   # 🪻 lilás
     "terminacao_honorifica":  "#556B2F",   # 🪖 verde oliva
-    "terminacao_nominal":     "#66BB6A",   # 📗 verde claro
+    "terminacao_nominal":    "#FA8072",   # 🪸 salmão
     "terminacao_adjetival":   "#C68642",   # 🏾 pele morena
     "terminacao_final":       "#722F37",   # 🍷 vinho
     "sufixo":                 "#F1C27D",   # 🏼 pele clara
@@ -347,6 +347,24 @@ def nome_classe_legenda(classe: str, idiomas: list[str] | None = None) -> str:
 # exemplos já têm barra por dentro ("will / can / must", "가/는/를"), e aí a
 # linha ficaria ambígua -- não dá pra saber onde termina um idioma e começa o
 # outro. O "·" não aparece em exemplo nenhum.
+# Nome da cor em inglês, pra legenda básica. O emoji sozinho não basta:
+# plataforma que não desenha aquele emoji deixa o leitor sem nada, e emoji
+# de objeto (livro, taça, capacete) não diz a cor de cara nem quando renderiza.
+NOMES_COR_EN: dict[str, str] = {
+    "#FF0000": "red", "#FFA500": "orange", "#FFFF00": "yellow",
+    "#0000FF": "blue", "#800080": "purple", "#000000": "black",
+    "#FFFFFF": "white", "#FFDFC4": "lightest skin", "#F1C27D": "light skin",
+    "#E0AC69": "medium skin", "#C68642": "brown skin", "#8D5524": "dark skin",
+    "#FF69B4": "pink", "#87CEEB": "light blue", "#808080": "grey",
+    "#FA8072": "salmon", "#66BB6A": "light green", "#C8A2C8": "lilac",
+    "#556B2F": "olive green", "#722F37": "wine", "#FFD700": "gold",
+}
+
+assert set(NOMES_COR_EN) == set(PALETA_EMOJI), "NOMES_COR_EN divergiu da paleta"
+
+NOME_COR_EN_CLASSE: dict[str, str] = {c: NOMES_COR_EN[v] for c, v in CORES_HTML.items()}
+
+
 SEPARADOR_IDIOMA = " · "
 
 ORDEM_IDIOMAS_PADRAO = ("pt", "en", "es", "fr", "ko", "zh")
@@ -390,7 +408,7 @@ def legenda_youtube_basica(classes: list[str] | None = None,
         if classe not in CORES_HTML:
             continue
         nome = NOMES_CLASSE_IDIOMA[classe].get(idioma, classe)
-        linhas.append(f"{EMOJI_CLASSE[classe]} {nome}")
+        linhas.append(f"{EMOJI_CLASSE[classe]} {NOME_COR_EN_CLASSE[classe]} — {nome}")
     return "\n".join(linhas)
 
 

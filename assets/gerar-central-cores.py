@@ -92,6 +92,15 @@ def construir_dados(base: dict, v: dict) -> dict:
     d["paleta"] = {h: {"emoji": e, "nome": n} for h, (e, n) in cores.PALETA_EMOJI.items()}
     d["cor_reserva"] = cores.COR_RESERVA
 
+    # ── montessori: a coluna "o que usamos hoje" vem do cores.py ──────────
+    # `hex`/`cor_nome`/`forma` são história do método Montessori e ficam como
+    # estão. Já `hex_atual`/`emoji_atual` descrevem a NOSSA cor -- eram
+    # mantidos à mão aqui dentro e derivavam calados a cada troca de emoji.
+    for linha in d["montessori"]:
+        classe = linha["nossa_classe"]
+        linha["hex_atual"] = cores.CORES_HTML[classe]
+        linha["emoji_atual"] = cores.EMOJI_CLASSE[classe]
+
     # ── exemplos por idioma: fonte é o cores.py ───────────────────────────
     # Antes viviam soltos dentro deste HTML, sem quem os validasse, e a
     # colinha do YouTube não tinha como alcançá-los. Agora saem da mesma
