@@ -37,7 +37,7 @@ PALETA_EMOJI: dict[str, tuple[str, str]] = {
     "#FA8072": ("🪸", "salmão"),
     "#66BB6A": ("💚", "verde claro"),
     "#C8A2C8": ("🪻", "lilás"),
-    "#556B2F": ("🪖", "verde oliva"),
+    "#556B2F": ("🪖", "verde escuro"),
     "#722F37": ("🍷", "vinho"),
     "#FFD700": ("🏆", "dourado"),
 }
@@ -73,7 +73,7 @@ CORES_HTML: dict[str, str] = {
                                  #    que pode dividir linha, em inglês)
     # ── Extensão do coreano ───────────────────────────────────────────────
     "particula":              "#C8A2C8",   # 🪻 lilás
-    "terminacao_honorifica":  "#556B2F",   # 🪖 verde oliva
+    "terminacao_honorifica":  "#556B2F",   # 🪖 verde escuro
     "terminacao_nominal":    "#FA8072",   # 🪸 salmão
     "terminacao_adjetival":   "#C68642",   # 🏾 pele morena
     "terminacao_final":       "#722F37",   # 🍷 vinho
@@ -239,7 +239,7 @@ def cor_texto(classe: str) -> str:
 
 
 def nome_cor(classe: str) -> str:
-    """Nome legível da cor dessa classe (ex: "verde oliva", "lilás")."""
+    """Nome legível da cor dessa classe (ex: "verde escuro", "lilás")."""
     return NOMES_COR.get(_resolver_classe(classe), "")
 
 
@@ -357,7 +357,7 @@ NOMES_COR_EN: dict[str, str] = {
     "#E0AC69": "medium skin", "#C68642": "brown skin", "#8D5524": "dark skin",
     "#FF69B4": "pink", "#87CEEB": "light blue", "#808080": "grey",
     "#FA8072": "salmon", "#66BB6A": "light green", "#C8A2C8": "lilac",
-    "#556B2F": "olive green", "#722F37": "wine", "#FFD700": "gold",
+    "#556B2F": "dark green", "#722F37": "wine", "#FFD700": "gold",
 }
 
 assert set(NOMES_COR_EN) == set(PALETA_EMOJI), "NOMES_COR_EN divergiu da paleta"

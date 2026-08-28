@@ -730,7 +730,7 @@ com. Na prática você não chama nada disso à mão — é a colinha (abaixo).
 | numeral | 🏻 | pele muito clara | `#FFDFC4` | novo |
 | modal | 🏿 | pele escura | `#8D5524` | novo (mantém a família marrom) |
 | particula | 🪻 | lilás | `#C8A2C8` | novo |
-| terminacao_honorifica | 🪖 | verde oliva | `#556B2F` | mantém a identidade oliva |
+| terminacao_honorifica | 🪖 | verde escuro | `#556B2F` | renomeada — ver 10b |
 | terminacao_nominal | 🪸 | salmão | `#FA8072` | novo — ver 10b |
 | terminacao_adjetival | 🏾 | pele morena | `#C68642` | novo |
 | terminacao_final | 🍷 | vinho | `#722F37` | era crimson — mesma família |
@@ -747,7 +747,7 @@ fabricante, e a cor muda.
 |---|---|---|
 | 🧶 novelo = verde escuro | — | O novelo é desenhado **vermelho ou rosa** em quase toda plataforma. Nunca foi verde. |
 | 📗 livro = verde claro | 💚 coração verde | Coração é cor sólida e única, a família mais confiável depois das formas geométricas. |
-| verde escuro `#2E7D32` | 🪸 salmão `#FA8072` | Três verdes (escuro/claro/oliva) não se distinguem na descrição. Um deles tinha que sair. |
+| verde escuro `#2E7D32` | 🪸 salmão `#FA8072` | Três verdes juntos não se distinguem na descrição. Um deles tinha que sair. |
 
 **Quem ficou com o quê, e por quê:** `preposicao` é uma das nove categorias
 Montessori, e a cor dela lá é **verde** — então ela ficou com o verde claro. O
@@ -758,6 +758,17 @@ Descartados no caminho, com os motivos: **🇲🇴** (o Windows não desenha ban
 — mostra as letras `MO`; a bandeira tem três cores; e é bandeira de território
 num canal que mira o Bilibili), **🍣** (multicolorido: arroz branco + alga) e
 **🍑** (conotação sexual consolidada na internet).
+
+**Sobraram dois verdes, e o `#556B2F` foi renomeado de "verde oliva" pra
+"verde escuro"** (`dark green` em inglês). O nome estava livre — o antigo
+verde escuro `#2E7D32` saiu da paleta — e "escuro/claro" descreve o par muito
+melhor pro espectador do que "oliva/claro", que não diz qual é mais escuro.
+A cor e o emoji não mudaram, só o nome.
+
+**A rede de segurança é o nome da cor na legenda básica.** Foi decisão
+consciente aceitar o risco dos emoji de objeto e dos emoji novos: mesmo que
+🪖 ou 🪸 apareçam com a cor errada — ou como quadradinho num aparelho antigo —
+a linha `🪖 dark green — honorific ending` continua legível e resolve.
 
 **Ainda são apostas na paleta:** 🪖 capacete, 🪻 flor, 🍷 taça, 🏆 troféu e o
 próprio 🪸 coral. Todos são objeto. Se algum aparecer com a cor errada no seu
