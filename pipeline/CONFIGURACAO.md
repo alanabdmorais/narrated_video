@@ -320,7 +320,7 @@ sem isso cairia no fallback `adverbio`.
 
 | | Cor | Posição Y | Fonte |
 |---|---|---|---|
-| `zh` | `#B388FF` roxo claro | 500 (6ª faixa) | Noto Sans CJK **SC** |
+| `zh` | `#800080` 🟣 roxo | 500 (6ª faixa) | Noto Sans CJK **SC** |
 
 ## 9. Lacunas conhecidas / pontos de atenção
 
