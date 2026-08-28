@@ -114,6 +114,66 @@ Google pra embutir Drive em `<audio>`). `organizar-efeitos-audio.ipynb` usa
 | Freesound_Audio_Stock (intermediária) | `1uJj5-Qxs6okWQBi82Xu5Ybjdy8z9kcyFHvmzVukRaBs` |
 | Pixabay_YT_Audio_Stock (intermediária) | `15knVuLxpZaSXb3ariKPojnNL14eS7AuOuLvKXPh8uEU` |
 
+## 5b. Convenção de nomes — `modulos/nomenclatura.py`
+
+Nome de arquivo é **contrato**: um notebook procura `40_Matt_02_roteiro.txt`, e
+se alguém salvar `40_matt_02_roteiro.txt` o pipeline não acha e ninguém entende
+por quê. A regra mora em código, executável, e não só aqui — `.md` não é lido
+na hora do aperto.
+
+```bash
+python3 pipeline/modulos/nomenclatura.py     # varre e reporta
+```
+
+### As sete famílias
+
+| Família | Exemplo | Regra |
+|---|---|---|
+| notebook | `biblia-audio-baixar.ipynb` | kebab-case |
+| módulo | `tempos_cache.py` | snake_case (PEP 8) |
+| arquivo do vídeo | `40_Matt_02_roteiro.txt` | `{projeto}_{papel}[_{idioma}]` |
+| capítulo | `40_Matt_02` | `{NN}_{SiglaOSIS}_{CC}` |
+| compilação | `comp_salmos_esperanca` | `comp_{tema}`, tudo minúsculo |
+| aba de planilha | `biblioteca_match` | snake_case |
+| pasta do Drive | `assets/biblia_audio` | snake_case |
+
+**Quem constrói cada nome tem dono, e não é este módulo** — ele guarda a regra
+e a conferência, não a fábrica:
+
+| Nome | Dono |
+|---|---|
+| arquivo do vídeo | `config.py`, as propriedades `nome_*` |
+| capítulo | `biblia_livros.Livro.nome_projeto()` |
+| compilação | `compilacao_pipeline.nome_compilacao()` |
+
+### O idioma é sempre sufixo
+
+`40_Matt_02_whisper_en.srt`, nunca `40_Matt_02_en_whisper.srt`. Assim
+`nome.rsplit("_", 1)` devolve o idioma sem adivinhação — e adivinhação erra
+calada. É o que `idioma_do_arquivo()` faz.
+
+### As exceções são registradas, não consertadas
+
+`EXCECOES` lista os 16 nomes fora do padrão que **ficam como estão**, cada um
+com o motivo:
+
+- **`image-stock`** (aba, com hífen) — aba viva da planilha de imagens, com
+  dados dentro. Renomear quebraria a planilha e todos os notebooks que a leem,
+  pra ganhar só consistência cosmética.
+- **A cadeia `caption-*`, `match-scene-verse`, `pixabay-*-descriptions`** (14
+  notebooks em inglês) — nomeados antes de o projeto assentar em português.
+  Renomear quebra o link salvo de cada um no Colab: custo real, ganho nenhum.
+- **`compilar-versiculos-teste`** — anterior ao `compilacao-montar`; sai quando
+  a compilação rodar em produção.
+
+Sem esse registro, o verificador acusaria os mesmos 16 nomes pra sempre — e
+verificador que sempre reclama é verificador que ninguém lê. É a mesma lição da
+checagem de fonte no portão de qualidade: **a gravidade tem que vir do
+resultado, não do formato**.
+
+> Exceção registrada é decisão. Exceção esquecida é bagunça. Nome novo fora do
+> padrão sem entrada em `EXCECOES` aparece no relatório.
+
 ## 6. Nomes de arquivo — todos derivados de `NOME_ORACAO`
 
 Tudo isso vem de propriedades/métodos de `PipelineConfig` em `modulos/config.py`
