@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Card de legenda — cores da narração poliglota</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#e8e4dc;-webkit-font-smoothing:antialiased;
+  font-family:Arial,'Liberation Sans','Helvetica Neue',Helvetica,
+  'Noto Sans CJK KR','Noto Sans CJK SC',sans-serif}
+
+/* A tela tem o tamanho exato do frame do vídeo. O print sai 1:1, sem
+   reescala -- reescalar texto de 1080p é o que deixa legenda borrada. */
+.tela{width:1920px;height:1080px;background:#faf8f4;color:#1c1a17;
+  display:flex;flex-direction:column;padding:42px 74px 30px;overflow:hidden}
+
+.cabeca{display:flex;align-items:baseline;gap:22px;padding-bottom:16px}
+.cabeca h1{font-size:33px;font-weight:700;letter-spacing:-.01em;flex:1;
+  white-space:nowrap}
+.selo{font-size:20px;color:#7d746a;font-weight:500;white-space:nowrap}
+.pagina{font-size:22px;font-weight:700;color:#faf8f4;background:#1c1a17;
+  border-radius:999px;padding:5px 16px;white-space:nowrap}
+
+/* Uma grade só pra tabela inteira, cabeçalho junto. Duas consequências que
+   valem a estrutura:
+     - `max-content` faz a coluna latina medir o nome mais longo DAQUELA tela,
+       então a tela das terminações coreanas alarga sozinha;
+     - `grid-auto-rows:1fr` divide a altura que sobra entre as linhas em
+       partes iguais, sem ninguém contar quantas são -- 10, 11 ou 12, a
+       tabela nunca transborda o frame, não importa quanto texto quebre.
+   Sem column-gap: o respiro vem do padding das células, e assim a faixa
+   escura do cabeçalho sai contínua em vez de listrada. */
+.tabela{flex:1;display:grid;column-gap:0;
+  grid-template-columns:150px max-content 1fr;
+  grid-template-rows:auto;grid-auto-rows:1fr}
+
+.ch{background:#1c1a17;color:#faf8f4;font-size:19px;font-weight:700;
+  letter-spacing:.07em;text-transform:uppercase;padding:13px 28px 13px 0;
+  align-self:stretch;display:flex;align-items:center}
+.ch:first-child{padding-left:24px;border-radius:11px 0 0 11px}
+.ch:last-child{border-radius:0 11px 11px 0;padding-right:24px}
+
+.c{display:flex;align-items:center;border-bottom:1px solid #dedad1;
+  padding:var(--padv) 28px var(--padv) 0;overflow:hidden}
+.c:first-child{padding-left:24px}
+/* última linha sem risco embaixo: risco encostado no rodapé vira ruído */
+.tabela > .c:nth-last-child(-n+3){border-bottom:none}
+
+/* Borda fina: sem ela o branco e o cinza-claro somem no fundo claro. */
+.sw{width:112px;height:var(--swh);border-radius:8px;border:1px solid #00000038;
+  box-shadow:inset 0 -1px 0 #00000012}
+
+.latino{font-size:var(--lat);line-height:1.26;color:#242019}
+.cjk{font-size:var(--cjk);line-height:1.28;color:#4d463d}
+
+/* As duas metades do rodapé afastadas: com " · " entre elas, o separador se
+   confundia com o " · " que separa os idiomas dentro da própria frase. */
+.rodape{padding-top:16px;font-size:19px;color:#8a8177;text-align:center;
+  display:flex;justify-content:center;gap:54px}
+
+.folha{display:flex;flex-direction:column;align-items:center;gap:26px;padding:26px}</style>
+</head>
+<body>
+<div class="folha">
+  <div class="tela" id="tela1" style="--lat:26.0px;--cjk:27.0px;--swh:44px;--padv:6px">
+    <div class="cabeca">
+      <h1>Legenda de cores · Colour key · Clave de colores · Clé des couleurs · 색상 범례</h1>
+      <span class="selo">mais frequentes · most frequent</span>
+      <span class="pagina">1 / 2</span>
+    </div>
+    <div class="tabela">
+      <div class="ch">cor</div>
+      <div class="ch">português · english · español · français</div>
+      <div class="ch">한국어</div>
+      <div class="c"><div class="sw" style="background:#FF0000"></div></div>
+      <div class="c latino">verbo · verb · verbo · verbe</div>
+      <div class="c cjk">동사</div>
+      <div class="c"><div class="sw" style="background:#000000"></div></div>
+      <div class="c latino">substantivo · noun · sustantivo · nom</div>
+      <div class="c cjk">명사</div>
+      <div class="c"><div class="sw" style="background:#808080"></div></div>
+      <div class="c latino">pontuação · punctuation · puntuación · ponctuation</div>
+      <div class="c cjk">문장부호</div>
+      <div class="c"><div class="sw" style="background:#66BB6A"></div></div>
+      <div class="c latino">preposição · preposition · preposición · préposition</div>
+      <div class="c cjk">전치사</div>
+      <div class="c"><div class="sw" style="background:#800080"></div></div>
+      <div class="c latino">pronome · pronoun · pronombre · pronom</div>
+      <div class="c cjk">대명사</div>
+      <div class="c"><div class="sw" style="background:#87CEEB"></div></div>
+      <div class="c latino">artigo · article · artículo · article</div>
+      <div class="c cjk">관사</div>
+      <div class="c"><div class="sw" style="background:#FF69B4"></div></div>
+      <div class="c latino">conjunção · conjunction · conjunción · conjonction</div>
+      <div class="c cjk">접속사</div>
+      <div class="c"><div class="sw" style="background:#FFFF00"></div></div>
+      <div class="c latino">nome próprio · proper noun · nombre propio · nom propre</div>
+      <div class="c cjk">고유명사</div>
+      <div class="c"><div class="sw" style="background:#FFA500"></div></div>
+      <div class="c latino">advérbio · adverb · adverbio · adverbe</div>
+      <div class="c cjk">부사</div>
+      <div class="c"><div class="sw" style="background:#0000FF"></div></div>
+      <div class="c latino">adjetivo · adjective · adjetivo · adjectif</div>
+      <div class="c cjk">형용사</div>
+    </div>
+    <div class="rodape"><span>Estas 10 cobrem 99% das palavras.</span><span>These 10 cover 99% of all words.</span></div>
+  </div>
+  <div class="tela" id="tela2" style="--lat:26.0px;--cjk:27.0px;--swh:44px;--padv:6px">
+    <div class="cabeca">
+      <h1>Legenda de cores · Colour key · Clave de colores · Clé des couleurs · 색상 범례</h1>
+      <span class="selo">menos frequentes · less frequent</span>
+      <span class="pagina">2 / 2</span>
+    </div>
+    <div class="tabela">
+      <div class="ch">cor</div>
+      <div class="ch">português · english · español · français</div>
+      <div class="ch">한국어</div>
+      <div class="c"><div class="sw" style="background:#FFDFC4"></div></div>
+      <div class="c latino">numeral · numeral · numeral · numéral</div>
+      <div class="c cjk">수사</div>
+      <div class="c"><div class="sw" style="background:#C8A2C8"></div></div>
+      <div class="c latino">partícula · particle · partícula · particule</div>
+      <div class="c cjk">조사</div>
+      <div class="c"><div class="sw" style="background:#FFD700"></div></div>
+      <div class="c latino">interjeição · interjection · interjección · interjection</div>
+      <div class="c cjk">감탄사</div>
+      <div class="c"><div class="sw" style="background:#FFFFFF"></div></div>
+      <div class="c latino">auxiliar · auxiliary · auxiliar · auxiliaire</div>
+      <div class="c cjk">조동사 (do)</div>
+      <div class="c"><div class="sw" style="background:#8D5524"></div></div>
+      <div class="c latino">modal · modal · modal · modal</div>
+      <div class="c cjk">조동사 (will)</div>
+      <div class="c"><div class="sw" style="background:#556B2F"></div></div>
+      <div class="c latino">terminação honorífica · honorific ending · terminación honorífica · terminaison honorifique</div>
+      <div class="c cjk">존댓말 어미</div>
+      <div class="c"><div class="sw" style="background:#FA8072"></div></div>
+      <div class="c latino">terminação nominal · nominal ending · terminación nominal · terminaison nominale</div>
+      <div class="c cjk">명사형 어미</div>
+      <div class="c"><div class="sw" style="background:#C68642"></div></div>
+      <div class="c latino">terminação adjetival · adjectival ending · terminación adjetival · terminaison adjectivale</div>
+      <div class="c cjk">관형사형 어미</div>
+      <div class="c"><div class="sw" style="background:#722F37"></div></div>
+      <div class="c latino">terminação final · final ending · terminación final · terminaison finale</div>
+      <div class="c cjk">종결어미</div>
+      <div class="c"><div class="sw" style="background:#F1C27D"></div></div>
+      <div class="c latino">sufixo · suffix · sufijo · suffixe</div>
+      <div class="c cjk">접미사</div>
+    </div>
+    <div class="rodape"><span>O restante, e o que só existe em EN e KO.</span><span>The rest, plus what only EN and KO have.</span></div>
+  </div>
+</div>
+</body>
+</html>

@@ -154,8 +154,8 @@ NOMES_CLASSE_IDIOMA: dict[str, dict[str, str]] = {
     "nome_proprio": {"pt": "nome próprio", "en": "proper noun", "es": "nombre propio", "fr": "nom propre", "ko": "고유명사", "zh": "专有名词"},
     "pontuacao": {"pt": "pontuação", "en": "punctuation", "es": "puntuación", "fr": "ponctuation", "ko": "문장부호", "zh": "标点"},
     "numeral": {"pt": "numeral", "en": "numeral", "es": "numeral", "fr": "numéral", "ko": "수사", "zh": "数词"},
-    "auxiliar": {"pt": "auxiliar", "en": "auxiliary", "es": "auxiliar", "fr": "auxiliaire", "ko": "조동사", "zh": "助动词"},
-    "modal": {"pt": "modal", "en": "modal", "es": "modal", "fr": "modal", "ko": "조동사", "zh": "情态动词"},
+    "auxiliar": {"pt": "auxiliar", "en": "auxiliary", "es": "auxiliar", "fr": "auxiliaire", "ko": "조동사 (do)", "zh": "助动词"},
+    "modal": {"pt": "modal", "en": "modal", "es": "modal", "fr": "modal", "ko": "조동사 (will)", "zh": "情态动词"},
     "particula": {"pt": "partícula", "en": "particle", "es": "partícula", "fr": "particule", "ko": "조사", "zh": "助词"},
     "terminacao_honorifica": {"pt": "terminação honorífica", "en": "honorific ending", "es": "terminación honorífica", "fr": "terminaison honorifique", "ko": "존댓말 어미", "zh": "敬语词尾"},
     "terminacao_nominal": {"pt": "terminação nominal", "en": "nominal ending", "es": "terminación nominal", "fr": "terminaison nominale", "ko": "명사형 어미", "zh": "名词化词尾"},
@@ -283,7 +283,7 @@ def classes_para_idiomas(idiomas: list[str]) -> list[str]:
     permitidas = set(CLASSES_GENERICAS)
     for lang in idiomas:
         permitidas.update(CLASSES_POR_IDIOMA.get(lang, ()))
-    return [c for c in CORES_HTML if c in permitidas]
+    return [c for c in ORDEM_FREQUENCIA if c in permitidas]
 
 
 def emoji_por_cor(hex_cor: str) -> str:
@@ -302,6 +302,18 @@ NOMES_IDIOMA_LEGENDA: dict[str, str] = {
     "pt": "Português", "en": "Inglês", "es": "Espanhol",
     "fr": "Francês", "ko": "Coreano", "zh": "Chinês",
 }
+
+#: O nome de cada idioma NA PRÓPRIA LÍNGUA. Usado onde quem lê pode não falar
+#: português -- o card que abre o vídeo, por exemplo. Escrever "Coreano" pra
+#: um espectador coreano é pedir que ele leia português pra descobrir que
+#: aquela coluna é a dele; "한국어" ele reconhece de relance.
+NOMES_IDIOMA_NATIVO: dict[str, str] = {
+    "pt": "português", "en": "english", "es": "español",
+    "fr": "français", "ko": "한국어", "zh": "中文",
+}
+
+assert set(NOMES_IDIOMA_NATIVO) == set(NOMES_IDIOMA_LEGENDA), \
+    "NOMES_IDIOMA_NATIVO divergiu dos idiomas conhecidos"
 
 
 def legenda_youtube_idiomas(cores_idiomas: dict[str, str],
@@ -365,6 +377,47 @@ assert set(NOMES_COR_EN) == set(PALETA_EMOJI), "NOMES_COR_EN divergiu da paleta"
 NOME_COR_EN_CLASSE: dict[str, str] = {c: NOMES_COR_EN[v] for c, v in CORES_HTML.items()}
 
 
+# ── Ordem de apresentação: por frequência real ──────────────────────────────
+# Medida, não chutada: contagem das 3.127 palavras já classificadas do Mateus 2
+# nos 5 idiomas (videos/40_Matt_02/..._classificacao_morfologica_5idiomas.csv),
+# com AUX somado a `verbo` e CCONJ+SCONJ a `conjuncao`, como o projeto mapeia.
+#
+#   verbo 18,3% · substantivo 14,4% · pontuacao 11,6% · preposicao 11,4%
+#   pronome 10,5% · artigo 10,4% · conjuncao 9,3% · nome_proprio 5,8%
+#   adverbio 5,2% · adjetivo 2,5%   -> estas dez dão 99,4%
+#
+# As dez últimas quase não aparecem em texto latino: são as exclusivas do
+# inglês, coreano e chinês. Empate e ausência caem na ordem de CORES_HTML.
+#
+# É CONSTANTE, não recalculada por vídeo: se a ordem mudasse a cada capítulo, o
+# espectador teria que reaprender a legenda toda vez. Uma ordem, aprendida uma
+# vez, valendo na descrição, no card e na central.
+ORDEM_FREQUENCIA: tuple[str, ...] = (
+    "verbo", "substantivo", "pontuacao", "preposicao",
+    "pronome", "artigo", "conjuncao", "nome_proprio",
+    "adverbio", "adjetivo", "numeral", "particula",
+    "interjeicao", "auxiliar", "modal", "terminacao_honorifica",
+    "terminacao_nominal", "terminacao_adjetival", "terminacao_final", "sufixo",
+)
+
+assert set(ORDEM_FREQUENCIA) == set(CORES_HTML), "ORDEM_FREQUENCIA divergiu das classes"
+assert len(ORDEM_FREQUENCIA) == len(CORES_HTML), "ORDEM_FREQUENCIA tem repetido"
+
+
+# ── Sobre abreviar os nomes longos ───────────────────────────────────────────
+# Tentado e descartado com medição. As quatro terminações coreanas são as
+# linhas mais longas do card, mas abreviar a palavra repetida
+# ("terminação/terminación/terminaison" -> "term.") faz português, espanhol e
+# francês virarem a MESMA string:
+#
+#     term. honor. · honorific end. · term. honor. · term. honor.
+#
+# Economiza 32 caracteres apagando a distinção entre três idiomas -- que é
+# exatamente o que o card existe pra mostrar. As quatro classes perdiam
+# distinção; nenhuma escapava. O comprimento se resolve no layout (coluna
+# latina mais larga e quebra de linha), não no texto.
+
+
 SEPARADOR_IDIOMA = " · "
 
 ORDEM_IDIOMAS_PADRAO = ("pt", "en", "es", "fr", "ko", "zh")
@@ -404,7 +457,7 @@ def legenda_youtube_basica(classes: list[str] | None = None,
     automático do YouTube costuma cobrir melhor como origem.
     """
     linhas = []
-    for classe in (classes if classes is not None else CORES_HTML):
+    for classe in (classes if classes is not None else ORDEM_FREQUENCIA):
         if classe not in CORES_HTML:
             continue
         nome = NOMES_CLASSE_IDIOMA[classe].get(idioma, classe)
@@ -430,7 +483,7 @@ def legenda_youtube_poliglota(classes: list[str] | None = None,
     ordem = _idiomas_validos(idiomas)
     linhas = [cabecalho_poliglota(ordem)] if com_cabecalho else []
 
-    for classe in (classes if classes is not None else CORES_HTML):
+    for classe in (classes if classes is not None else ORDEM_FREQUENCIA):
         if classe not in CORES_HTML:
             continue
         nomes = NOMES_CLASSE_IDIOMA[classe]
@@ -458,7 +511,7 @@ def legenda_youtube(classes: list[str] | None = None,
     rótulos ao vídeo (ver nome_classe_legenda).
     """
     linhas = []
-    for classe in (classes if classes is not None else CORES_HTML):
+    for classe in (classes if classes is not None else ORDEM_FREQUENCIA):
         if classe not in CORES_HTML:
             continue
         linhas.append(f"{EMOJI_CLASSE[classe]} {nome_classe_legenda(classe, idiomas)}")

@@ -158,7 +158,7 @@
 
   <section class="bloco" style="margin-top:32px">
     <h2 class="bloco-titulo">Resumo rápido</h2>
-    <p class="bloco-sub">Visão geral das 20 classes — clique em "nova cor" pra propor rapidamente, sem abrir o card detalhado.</p>
+    <p class="bloco-sub">Visão geral das 20 classes, <b>da mais frequente pra mais rara</b> — a mesma ordem da legenda na descrição do YouTube e do card final, pra ser uma ordem só, aprendida uma vez. Clique em "nova cor" pra propor rapidamente, sem abrir o card detalhado.</p>
     <div class="lista-compacta" id="lista-compacta"></div>
   </section>
 
@@ -1127,7 +1127,29 @@ const DADOS = {
    "y": 420
   }
  ],
- "nota_variante": "Versão de <b>5 idiomas</b> (pt/en/es/fr/ko). Para a de 6, com chinês, veja <code>central-decisao-cores-zh.html</code> — mesmas 20 classes e mesmas 21 cores, já que o chinês não precisou de nenhuma categoria nova."
+ "nota_variante": "Versão de <b>5 idiomas</b> (pt/en/es/fr/ko). Para a de 6, com chinês, veja <code>central-decisao-cores-zh.html</code> — mesmas 20 classes e mesmas 21 cores, já que o chinês não precisou de nenhuma categoria nova.",
+ "ordem_frequencia": [
+  "verbo",
+  "substantivo",
+  "pontuacao",
+  "preposicao",
+  "pronome",
+  "artigo",
+  "conjuncao",
+  "nome_proprio",
+  "adverbio",
+  "adjetivo",
+  "numeral",
+  "particula",
+  "interjeicao",
+  "auxiliar",
+  "modal",
+  "terminacao_honorifica",
+  "terminacao_nominal",
+  "terminacao_adjetival",
+  "terminacao_final",
+  "sufixo"
+ ]
 };
 const BANDEIRAS = { pt: "PT", en: "EN", es: "ES", fr: "FR", ko: "KO" };
 const TODOS_IDIOMAS = ["pt", "en", "es", "fr", "ko"];
@@ -1388,7 +1410,8 @@ const escolhasCompactas = {}; // classe -> {nome, hex, corTexto}
 
 function montarListaCompacta() {
   const lista = document.getElementById('lista-compacta');
-  lista.innerHTML = Object.keys(DADOS.cores).map(classe => {
+  const ordem = DADOS.ordem_frequencia || Object.keys(DADOS.cores);
+  lista.innerHTML = ordem.map(classe => {
     const nomeAtual = DADOS.nomes_cor_oficial[classe];
     const hexAtual = DADOS.cores[classe];
     const escolha = escolhasCompactas[classe];

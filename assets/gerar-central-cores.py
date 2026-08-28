@@ -92,6 +92,11 @@ def construir_dados(base: dict, v: dict) -> dict:
     d["paleta"] = {h: {"emoji": e, "nome": n} for h, (e, n) in cores.PALETA_EMOJI.items()}
     d["cor_reserva"] = cores.COR_RESERVA
 
+    # A ordem em que a lista compacta mostra as classes. Vem do cores.py pra
+    # ser a MESMA da descrição do YouTube e do card final -- ordem diferente em
+    # cada lugar obriga o espectador (e você) a reaprender a legenda.
+    d["ordem_frequencia"] = list(cores.ORDEM_FREQUENCIA)
+
     # ── montessori: a coluna "o que usamos hoje" vem do cores.py ──────────
     # `hex`/`cor_nome`/`forma` são história do método Montessori e ficam como
     # estão. Já `hex_atual`/`emoji_atual` descrevem a NOSSA cor -- eram

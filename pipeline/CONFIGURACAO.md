@@ -1067,14 +1067,22 @@ o navegador conserta do jeito dele, que não é o nosso.
 `assets/colinha-emojis-youtube.html` — abre no navegador, clica em **Copiar** no
 bloco do tipo de vídeo e cola na descrição. Seis blocos prontos:
 
-| Bloco | Linhas |
-|---|---|
-| Multi-idioma cor única — 6 idiomas (com chinês) | 6 idiomas |
-| Multi-idioma cor única — 5 idiomas | 5 idiomas |
-| Multicolor — 6 idiomas (com chinês) | 20 classes |
-| Multicolor — 5 idiomas | 20 classes |
-| Multicolor — sem coreano (pt/en/es/fr) | 14 classes |
-| Multicolor — só latinos (pt/es/fr) | 12 classes |
+Doze blocos prontos — dois de vídeo multi-idioma e, para cada conjunto de
+idiomas do vídeo multicolor, três sabores:
+
+| Bloco | Sabor | Linhas |
+|---|---|---|
+| Multi-idioma cor única — 6 idiomas (com chinês) | — | 6 idiomas |
+| Multi-idioma cor única — 5 idiomas | — | 5 idiomas |
+| Multicolor 6 idiomas | básica (inglês) · poliglota com exemplos · só português | 20 classes |
+| Multicolor 5 idiomas | básica · poliglota · português | 20 classes |
+| Multicolor sem coreano (pt/en/es/fr) | básica · poliglota | 14 classes |
+| Multicolor só latinos (pt/es/fr) | básica · poliglota | 12 classes |
+
+Para um vídeo multicolor, cole **as duas**: a **básica em inglês**, que é o que
+o tradutor automático do YouTube tem chance de converter, e a **poliglota**,
+que é a garantia — não depende de tradutor nenhum e ainda traz uma palavra de
+exemplo por idioma, que ensina a cor melhor que o nome da classe sozinho.
 
 **Escolha o bloco pelos idiomas que o vídeo realmente tem.** Um vídeo sem
 coreano não deve listar as terminações coreanas, e um só com idiomas latinos
@@ -1084,3 +1092,146 @@ Ela sai do **mesmo** `gerar-central-cores.py`, do mesmo `cores.py`, junto com as
 duas centrais. É esse o ponto de gerar em vez de escrever à mão: mudou uma cor
 ou um emoji, roda o script e a colinha muda junto — não tem como a descrição do
 YouTube ficar anunciando uma cor que o vídeo não usa mais.
+
+### A ordem é uma só: por frequência
+
+`cores.ORDEM_FREQUENCIA` — as 20 classes da mais frequente para a mais rara,
+**medida**, não chutada: contagem das 3.127 palavras já classificadas do
+Mateus 2 nos 5 idiomas, com `AUX` somado a `verbo` e `CCONJ`+`SCONJ` a
+`conjuncao`, como o projeto mapeia.
+
+```
+verbo 18,3% · substantivo 14,4% · pontuacao 11,6% · preposicao 11,4%
+pronome 10,5% · artigo 10,4% · conjuncao 9,3% · nome_proprio 5,8%
+adverbio 5,2% · adjetivo 2,5%                     -> estas dez dão 99,4%
+```
+
+Vale nos **três** lugares em que a legenda aparece: o "Resumo rápido" da
+central, os blocos da colinha (via `classes_para_idiomas()`) e o card do vídeo.
+
+Duas decisões dentro dessa:
+
+- **É constante, não recalculada por vídeo.** Se cada capítulo reordenasse a
+  legenda pela sua própria contagem, o espectador teria que reaprender a
+  ordem a cada vídeo. Uma ordem, aprendida uma vez.
+- **A primeira metade é o corte natural.** Como as dez primeiras cobrem 99,4%
+  das palavras, dividir 10/10 não é só cortar no meio: a tela 1 do card
+  sozinha já basta pra ler o vídeo inteiro.
+
+### Abreviar os nomes longos: tentado, medido, descartado
+
+As quatro terminações coreanas são as linhas mais longas de qualquer legenda —
+`terminação honorífica · honorific ending · terminación honorífica ·
+terminaison honorifique`. Abreviar a palavra que se repete
+(`terminação/terminación/terminaison` → `term.`) economiza 32 caracteres, e
+produz isto:
+
+```
+term. honor. · honorific end. · term. honor. · term. honor.
+```
+
+Português, espanhol e francês viram a **mesma string**. A medição foi feita nas
+quatro classes de terminação e nenhuma escapava (4→2, 4→3, 4→2, 4→3 nomes
+latinos distintos). Economizar largura apagando a distinção entre três idiomas
+é destruir exatamente o que a legenda poliglota existe pra mostrar.
+
+O comprimento se resolve no **layout** — coluna latina mais larga e quebra de
+linha —, não no texto. O mecanismo foi removido e o comentário no `cores.py`
+guarda a medição, pra ninguém tentar de novo.
+
+## 11. O card de legenda que abre e fecha o vídeo
+
+`assets/gerar-card-legenda.py` → dois PNG 1920x1080 por variante de idioma,
+prontos pra entrar na planilha de imagens e o pipeline colocar no começo e/ou
+no fim do vídeo.
+
+```
+python3 assets/gerar-card-legenda.py --png
+```
+
+| Saída | O que é |
+|---|---|
+| `card_legenda_cores_1.png` / `_2.png` | 5 idiomas (pt/en/es/fr/ko) |
+| `card_legenda_cores_zh_1.png` / `_2.png` | 6 idiomas (com chinês) |
+| `card-legenda-cores.html` / `-zh.html` | as duas telas, pra conferir antes |
+| `card-legenda-cores*-artifact.html` | as mesmas, no formato do Artifact |
+
+### Duas telas — é regra, não coincidência
+
+São 20 classes. Numa tela só cada linha fica com 45 px de altura num frame
+1080p — ilegível no celular, que é onde a maior parte do público assiste. Em
+duas, a linha dobra pra 85 px. E o corte 10/10 é o de `ORDEM_FREQUENCIA`: quem
+só vir a tela 1 já cobre 99% das palavras.
+
+**`NUM_TELAS = 2` não é o resultado de 20 dividir bonito por 10.** Três telas
+custariam mais tempo de vídeo do que a informação vale, e quem precisa procurar
+uma cor em três lugares desiste. Se um dia entrar uma classe nova, quem cede é
+a altura da linha, nunca o número de telas:
+
+- `_dividir()` reparte em **exatamente duas** fatias, a maior primeiro (21 sai
+  11+10). A tela mais cheia é a das classes frequentes de propósito — é a que o
+  espectador realmente lê, e é onde os nomes latinos são mais curtos.
+- `_metricas()` encolhe fonte, quadradinho e respiro na proporção
+  `10 / linhas`. Medido no Chromium: **12 linhas ainda cabem** nos 1080 px sem
+  cortar uma célula sequer. Duas telas seguram até 24 classes.
+- A tabela usa `grid-auto-rows:1fr`, não `repeat(10,1fr)` — ninguém conta
+  linha, e a altura sobrante se divide sozinha.
+- As medidas vão como **variável CSS no próprio elemento** da tela, não numa
+  folha por tela: assim as duas telas convivem na página de conferência com
+  tamanhos diferentes sem ninguém escopar seletor.
+
+O rodapé da tela 1 só promete os "99%" enquanto a primeira metade for
+exatamente as dez classes cuja frequência foi medida (`DEZ_MEDIDAS`). Se a
+divisão mudar, ele troca sozinho pra uma frase sem número — a alternativa seria
+anunciar uma cobertura inventada.
+
+### Quadradinho de cor, não emoji
+
+O emoji é uma muleta da **descrição** do YouTube, que é texto puro e não aceita
+cor. O card é imagem: pinta o hexadecimal exato que a legenda usa no vídeo.
+Emoji ali mostraria a cor aproximada que a fonte de quem renderiza escolheu —
+exatamente o problema que o 🧶 causou (ver 10b).
+
+A borda fininha em cada quadradinho existe pro branco e o cinza-claro não
+sumirem no fundo claro.
+
+### Duas variantes, pela mesma razão das duas centrais
+
+Um vídeo de 5 idiomas não pode exibir uma coluna `中文`, nem `颜色图例` no
+título: o espectador procuraria no vídeo uma cor que não está lá. Colunas,
+título e rodapé saem todos dos idiomas da variante.
+
+### A largura da coluna latina não é um número escolhido à mão
+
+É `max-content`: mede o nome mais longo **daquela tela** e o CJK fica com o que
+sobra. Por isso a tela 2, das terminações coreanas, sai naturalmente mais larga
+que a tela 1 — sem ninguém reajustar quando um nome muda.
+
+### O print é renderizado, não tirado à mão
+
+Print manual depende do tamanho da janela e do zoom do navegador. O script
+renderiza no Chromium headless com o tamanho como argumento, então o PNG sai
+sempre exatamente no frame do vídeo.
+
+> ⚠️ **`--window-size` é a janela, não a página.** No headless a página recebe
+> ~87 px a menos, e esse desconto muda com a versão do Chromium: pedir
+> 1920x1080 direto entrega uma imagem de 1080 px com só 993 px de página
+> dentro, e o rodapé some **calado**. Por isso o script renderiza com 320 px de
+> folga e corta os 1920x1080 do canto superior esquerdo.
+
+### Só fonte de sistema
+
+Nada de fonte vinda da internet: o PNG é renderizado aqui e o print de
+conferência é aberto na sua máquina — uma fonte remota chega numa das duas e
+não na outra. `Arial` primeiro (é o que o `.ass` já declara no resto do
+pipeline) e o `Noto CJK` entra sozinho quando o glifo é coreano ou chinês, que
+é como o navegador resolve fallback.
+
+### O que ainda falta
+
+O card está pronto como **imagem**. Falta a ponta do pipeline: a variável que
+liga/desliga o card e diz se ele entra no começo, no fim ou nos dois, e a
+montagem em si nos `video-base-*`. Isso encosta na consolidação dos seis
+`video-base-*` (decisão adiada 9.1) — se a consolidação vier antes, o card
+vira um campo do perfil em vez de seis edições paralelas.
+
