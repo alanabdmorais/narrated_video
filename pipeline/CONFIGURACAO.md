@@ -652,6 +652,41 @@ some trocando pra `small`. Numa execução com `base`, `chief priests` virou
 `cheap priests`, `myrrh` virou `mirror`, `sent out` virou `sinned out` e
 `reigning` virou `raining` — ruído que parece divergência de texto e não é.
 
+### `_manifesto.txt` — contar sem ter contra o que comparar não é conferir
+
+O setup de todo notebook imprimia:
+
+```
+✅ 13 modules copied from /content/drive/.../pipeline/modulos
+```
+
+**Com visto verde.** São 31 módulos; faltavam 18, entre eles os dois mais
+novos. O notebook seguia, e quebrava depois num `import` — longe da causa,
+com uma mensagem que não menciona sincronização.
+
+Um número sozinho não conferiu nada: não havia contra o que comparar.
+
+O `repositorio-sincronizar` passa a gravar `modulos/_manifesto.txt` com a
+lista do que o repositório tem, e a conferir na hora o que chegou ao Drive.
+Os **27 notebooks** que copiam módulos comparam a pasta contra esse manifesto
+e **param** quando falta alguém, dizendo o nome:
+
+```
+🚨 FALTAM 18 de 31 módulos no Drive:
+     drive_utils.py
+     ffmpeg_utils.py
+     ...
+Rode o repositorio-sincronizar.ipynb antes de continuar.
+```
+
+Sem manifesto (Drive nunca sincronizado), avisa e segue — não dá pra exigir
+um arquivo que ainda não existe.
+
+> É a terceira vez nesta documentação que o defeito é o mesmo: **um resumo
+> apagou a informação.** "9 arquivos fora do cânone (normal)", "0
+> sobrescritos", e agora "13 módulos copiados ✅". Contagem sem referência é
+> ruído com aparência de conferência.
+
 ### `modulos/audio_narracao.py` — onde procurar a narração, num lugar só
 
 A busca pelo áudio existia em **um** lugar (`video_pipeline.gerar_audio`) e os
