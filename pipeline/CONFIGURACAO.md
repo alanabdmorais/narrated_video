@@ -345,6 +345,35 @@ apontar pra um arquivo com outro nome já salvo em `pasta_oracao`.
 > agora, não implementado). Ordem confirmada: "edge" vem ANTES de "audio" —
 > já existe um arquivo real nesse padrão no Drive (`40_Matt_02_edge_audio.wav`).
 
+### Falha de clipe/imagem diz o motivo
+
+`_processar_clipe` e `_processar_clipe_imagem` faziam `return None` em **todo**
+caminho de falha, com o motivo num `logger.debug` — que ninguém vê, porque os
+notebooks ligam o log em INFO. O laço só sabia "veio vazio", e o erro final
+dizia `Nenhuma imagem processada com sucesso` e mandava "veja os avisos ❌
+acima" — avisos que **nunca tinham sido emitidos**, já que o `except` só
+dispara em exceção e não havia nenhuma.
+
+Agora os dois levantam `ClipeError` com o motivo real (status HTTP, tamanho
+baixado, erro do FFmpeg, a URL culpada), o laço acumula em `falhas`, e
+`_resumo_das_falhas()` põe tudo dentro da mensagem de erro, agrupando o que se
+repete — 40 imagens no mesmo 404 são uma informação, não quarenta.
+
+O caso mais comum que isso revela: a coluna `Imagem` da planilha com o link da
+**página** do Pixabay em vez do link **direto** do arquivo. Baixa "com
+sucesso", vem HTML de poucas centenas de bytes, e o FFmpeg recusa. Antes: erro
+mudo. Agora:
+
+```
+Nenhuma das 46 imagens da planilha pôde ser usada. Motivos:
+  · baixou só 312 bytes — não parece uma imagem. A coluna 'Imagem' tem que
+    ser o link DIRETO do arquivo, não o da página do Pixabay — https://... (×46)
+```
+
+> A regra: **erro que não cabe numa mensagem vira uma sessão de tentativa e
+> erro.** O motivo já estava na mão do código — só faltava carregá-lo até
+> quem lê.
+
 ### Modo do fundo: detectado, não marcado
 
 Os notebooks `*-burn` não montam vídeo — pegam o `<nome>_video_base*.mp4` que

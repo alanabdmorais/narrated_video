@@ -66,6 +66,36 @@ class PipelineError(Exception):
     pass
 
 
+class ClipeError(PipelineError):
+    """Falha ao preparar UM clipe — existe pra o motivo chegar até o chamador.
+
+    Antes cada caminho de falha fazia `return None` com um `logger.debug` que
+    ninguém vê (o Colab liga o log em INFO). O laço então só sabia "veio
+    vazio", e o erro final dizia "veja os avisos ❌ acima" — avisos que nunca
+    tinham sido emitidos. Falhar sem dizer por quê custa uma sessão inteira
+    de tentativa e erro.
+    """
+
+
+def _resumo_das_falhas(falhas: list[str], limite: int = 6) -> str:
+    """Junta os motivos num texto que cabe numa mensagem de erro.
+
+    Repete só o que é distinto: 40 imagens que morreram no mesmo 404 são uma
+    informação, não quarenta.
+    """
+    if not falhas:
+        return ("Nenhum motivo foi registrado — se isto aparecer, o defeito está "
+                "aqui, não na sua planilha.")
+    vistos: dict[str, int] = {}
+    for f in falhas:
+        vistos[f] = vistos.get(f, 0) + 1
+    linhas = [f"  · {motivo}" + (f"  (×{n})" if n > 1 else "")
+              for motivo, n in list(vistos.items())[:limite]]
+    if len(vistos) > limite:
+        linhas.append(f"  · ... e mais {len(vistos) - limite} motivo(s) distinto(s)")
+    return "\n".join(linhas)
+
+
 def _autor_do_nome(caminho: Path) -> str:
     """Recupera o autor do nome do arquivo, se seguir a convenção clipe_NNN_autor_XXX.mp4."""
     return caminho.stem.split("_autor_")[-1] if "_autor_" in caminho.stem else "Pixabay"
@@ -389,6 +419,7 @@ class VideoPipeline:
             Clipe(url=str(p), autor=_autor_do_nome(p), indice=i + 1, arquivo_pronto=str(p))
             for i, p in enumerate(clipes_ja_cortados)
         ]
+        falhas: list[str] = []
         with ThreadPoolExecutor(max_workers=2) as executor:
             futures = {executor.submit(self._processar_clipe, c, logo_path): c for c in a_processar}
             for future in as_completed(futures):
@@ -399,10 +430,15 @@ class VideoPipeline:
                         processados.append(result)
                         logger.info("   ✅ [%d/%d] %s", len(processados), num_clipes, clipe.autor)
                 except Exception as exc:
-                    logger.warning("   ❌ Clipe %d: %s", clipe.indice, exc)
+                    motivo = str(exc) or type(exc).__name__
+                    falhas.append(motivo)
+                    logger.warning("   ❌ Clipe %d: %s", clipe.indice, motivo)
 
         if not processados:
-            raise PipelineError("Nenhum clipe processado com sucesso")
+            raise PipelineError(
+                f"Nenhum dos {len(a_processar)} clipes da planilha pôde ser usado. "
+                f"Motivos:\n{_resumo_das_falhas(falhas)}"
+            )
 
         # 🔒 Se algum clipe falhou (download/corte) silenciosamente no loop acima,
         # 'processados' pode vir com menos clipes que o necessário — sem essa
@@ -411,7 +447,7 @@ class VideoPipeline:
             faltando = num_clipes - len(processados)
             raise PipelineError(
                 f"Só {len(processados)}/{num_clipes} clipes foram processados com sucesso "
-                f"({faltando} falharam ao baixar/cortar — veja os avisos ❌ acima). "
+                f"({faltando} falharam). Motivos:\n{_resumo_das_falhas(falhas)}\n"
                 f"Rode esta célula de novo: os clipes que já deram certo continuam em "
                 f"clipes_cortados/ e não serão refeitos, só os que faltam."
             )
@@ -525,7 +561,7 @@ class VideoPipeline:
                 clipe.arquivo_pronto = str(saida)
                 logger.debug("Clipe %d: usando local %s", clipe.indice, clipe.arquivo_local)
                 return clipe
-            return None
+            raise ClipeError(f"o clipe local {origem.name} não gerou saída utilizável")
 
         # ── Baixar da URL (Pixabay) ────────────────────────────────────────────
         raw = Path(f"temp_raw/raw_{clipe.indice}.mp4")
@@ -538,21 +574,24 @@ class VideoPipeline:
                     if chunk:
                         fh.write(chunk)
         except Exception as exc:
-            logger.debug("Download falhou clipe %d: %s", clipe.indice, exc)
-            return None
+            raise ClipeError(f"download falhou ({type(exc).__name__}: {exc}) — {clipe.url}") from exc
 
-        if not raw.exists() or raw.stat().st_size < 1000:
-            return None
+        if not raw.exists():
+            raise ClipeError(f"o download não gravou arquivo nenhum — {clipe.url}")
+        if raw.stat().st_size < 1000:
+            raise ClipeError(
+                f"baixou só {raw.stat().st_size} bytes — não parece um vídeo. "
+                f"A coluna tem que ser o link DIRETO do arquivo — {clipe.url}"
+            )
         try:
             cortar_video(raw, saida, clipe.duracao_seg)
         except FFmpegError as exc:
-            logger.debug("Corte falhou clipe %d: %s", clipe.indice, exc)
             raw.unlink(missing_ok=True)
-            return None
+            raise ClipeError(f"o FFmpeg não cortou o vídeo: {exc}") from exc
 
         raw.unlink(missing_ok=True)
         if not saida.exists() or saida.stat().st_size < 1000:
-            return None
+            raise ClipeError("o corte terminou sem erro mas não deixou vídeo utilizável")
 
         # ── Crédito + logo + PADRONIZAÇÃO de resolução/fps aplicados aqui ────
         # (o vídeo base só concatena depois — não credita, corta nem padroniza
@@ -681,6 +720,7 @@ class VideoPipeline:
             logger.warning("   ⚠️  Logo não encontrada — clipes novos ficarão só com o crédito em texto")
 
         processados: list[Clipe] = []
+        falhas: list[str] = []
         with ThreadPoolExecutor(max_workers=2) as executor:
             futures = {executor.submit(self._processar_clipe_imagem, c, logo_path): c for c in a_processar}
             for future in as_completed(futures):
@@ -691,16 +731,21 @@ class VideoPipeline:
                         processados.append(result)
                         logger.info("   ✅ [%d/%d] %s", len(processados), num_clipes, clipe.autor)
                 except Exception as exc:
-                    logger.warning("   ❌ Imagem %d: %s", clipe.indice, exc)
+                    motivo = str(exc) or type(exc).__name__
+                    falhas.append(motivo)
+                    logger.warning("   ❌ Imagem %d: %s", clipe.indice, motivo)
 
         if not processados:
-            raise PipelineError("Nenhuma imagem processada com sucesso")
+            raise PipelineError(
+                f"Nenhuma das {len(a_processar)} imagens da planilha pôde ser usada. "
+                f"Motivos:\n{_resumo_das_falhas(falhas)}"
+            )
 
         if len(processados) < num_clipes:
             faltando = num_clipes - len(processados)
             raise PipelineError(
                 f"Só {len(processados)}/{num_clipes} imagens foram processadas com sucesso "
-                f"({faltando} falharam ao baixar/converter — veja os avisos ❌ acima). "
+                f"({faltando} falharam). Motivos:\n{_resumo_das_falhas(falhas)}\n"
                 f"Rode esta célula de novo: as que já deram certo continuam em "
                 f"clipes_cortados/ e não serão refeitas, só as que faltam."
             )
@@ -732,11 +777,18 @@ class VideoPipeline:
                     if chunk:
                         fh.write(chunk)
         except Exception as exc:
-            logger.debug("Download falhou imagem %d: %s", clipe.indice, exc)
-            return None
+            raise ClipeError(f"download falhou ({type(exc).__name__}: {exc}) — {clipe.url}") from exc
 
-        if not raw_img.exists() or raw_img.stat().st_size < 1000:
-            return None
+        if not raw_img.exists():
+            raise ClipeError(f"o download não gravou arquivo nenhum — {clipe.url}")
+        if raw_img.stat().st_size < 1000:
+            # Página de erro, HTML de captcha ou link de página em vez do JPG:
+            # tudo isso "baixa" com sucesso e vem com uns poucos bytes.
+            raise ClipeError(
+                f"baixou só {raw_img.stat().st_size} bytes — não parece uma imagem. "
+                f"A coluna 'Imagem' tem que ser o link DIRETO do arquivo, não o da "
+                f"página do Pixabay — {clipe.url}"
+            )
 
         try:
             imagem_para_clipe(
@@ -744,13 +796,12 @@ class VideoPipeline:
                 largura=self._cfg.LARGURA_CLIPE, altura=self._cfg.ALTURA_CLIPE, fps=self._cfg.FPS_CLIPE,
             )
         except FFmpegError as exc:
-            logger.debug("Conversão falhou imagem %d: %s", clipe.indice, exc)
             raw_img.unlink(missing_ok=True)
-            return None
+            raise ClipeError(f"o FFmpeg não converteu a imagem: {exc}") from exc
 
         raw_img.unlink(missing_ok=True)
         if not saida.exists() or saida.stat().st_size < 1000:
-            return None
+            raise ClipeError("a conversão terminou sem erro mas não deixou vídeo utilizável")
 
         try:
             creditado = Path(f"clipes_cortados/clipe_{clipe.indice:03d}_creditado.mp4")
