@@ -584,6 +584,18 @@ class PipelineConfig:
         # Pasta real no Drive é "trilha" (não "musica")
         return self.pasta_assets / "trilha"
 
+    @property
+    def pasta_dados_lexico(self) -> Path:
+        """Dados de referência do projeto: eventos/títulos bíblicos e o texto
+        completo da Bíblia (web-biblia.json). Imutáveis, versionados no git,
+        compartilhados por todos os vídeos."""
+        return self.pasta_base_drive / "pipeline" / "dados_lexico"
+
+    @property
+    def caminho_web_biblia(self) -> Path:
+        """O texto completo da WEB, baixado uma vez pelo biblia-texto-baixar."""
+        return self.pasta_dados_lexico / "web-biblia.json"
+
     # ── Pasta do vídeo específico (tudo identificado pelo prefixo) ────────────
     @property
     def pasta_oracao(self) -> Path:

@@ -48,6 +48,60 @@ class PipelineError(Exception):
     """Erro geral do pipeline de legenda única."""
 
 
+def resolver_texto_versiculos(config: PipelineConfig, texto_colado: str = "",
+                              drive: DriveClient | None = None,
+                              salvar_na_pasta: bool = True) -> tuple[str, str]:
+    """O texto por versículo do capítulo -> (texto, de onde veio).
+
+    Três fontes, da mais específica pra mais geral:
+
+      1. `texto_colado`  -- o que você escreveu na Configuração, se escreveu
+      2. `<nome>_roteiro_versiculos.txt` na pasta do vídeo no Drive
+      3. `dados_lexico/web-biblia.json` -- a Bíblia inteira
+
+    A do meio existe porque o roteiro de um vídeo pode ter sido EDITADO (versículo
+    mesclado, palavra que a dublagem falou diferente do escrito) -- e essa edição
+    tem que ganhar da Bíblia crua. A terceira é o que faz o roteiro deixar de ser
+    algo que você fornece e virar algo que o sistema busca: com o web-biblia.json
+    no lugar, qualquer capítulo dos 1.189 sai sem você colar nada.
+
+    Quando cai na fonte 3, grava o resultado como o roteiro do vídeo: da próxima
+    vez sai pela fonte 2, e fica um arquivo pra você corrigir se algo estiver
+    torto. Passe `salvar_na_pasta=False` pra só ler.
+
+    Vive aqui, e não dentro de um notebook, porque os TRÊS notebooks de burn
+    (single, multilang e multilang-zh) precisam exatamente disto -- e a versão
+    copiada em três lugares é a que diverge no primeiro conserto.
+    """
+    if texto_colado.strip():
+        return texto_colado, "Configuração (TEXTO_VERSICULOS)"
+
+    import biblia_texto as bt
+
+    drive = drive or DriveClient.get()
+    roteiro = Path(config.nome_roteiro_versiculos)
+
+    if drive.download_se_ausente(config.pasta_oracao,
+                                 config.nome_roteiro_versiculos, roteiro):
+        return roteiro.read_text(encoding="utf-8"), roteiro.name
+
+    if config.caminho_web_biblia.exists():
+        texto = bt.roteiro_do_capitulo(config.NOME_ORACAO, config.caminho_web_biblia)
+        if salvar_na_pasta:
+            roteiro.write_text(texto, encoding="utf-8")
+            drive.upload(roteiro, config.pasta_oracao, "text/plain")
+            logger.info("   ↳ salvo como %s na pasta do vídeo", roteiro.name)
+        return texto, bt.NOME_BIBLIA_JSON
+
+    raise PipelineError(
+        f"Nenhuma fonte de texto por versículo pra {config.NOME_ORACAO}:\n"
+        f"  1. TEXTO_VERSICULOS está vazio na Configuração\n"
+        f"  2. {config.nome_roteiro_versiculos} não está em {config.pasta_oracao}\n"
+        f"  3. {config.caminho_web_biblia} não existe "
+        f"— rode o biblia-texto-baixar.ipynb uma vez e nunca mais precise "
+        f"fornecer roteiro de capítulo bíblico.")
+
+
 class CaptionPipeline:
     """Gera (via Whisper) e queima a legenda única (1 faixa, texto simples)."""
 

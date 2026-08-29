@@ -131,6 +131,60 @@ def gerar_roteiro(versiculos: list[Versiculo]) -> str:
     return "".join(partes)
 
 
+# ── Ler de volta o web-biblia.json ───────────────────────────────────────────
+#
+# O `biblia-texto-baixar.ipynb` grava a Bíblia inteira num JSON; daqui pra
+# frente qualquer capítulo é uma consulta. É o que faz o roteiro deixar de ser
+# algo que você fornece e virar algo que o sistema busca.
+
+import json as _json
+from pathlib import Path as _Path
+
+NOME_BIBLIA_JSON = "web-biblia.json"
+
+
+def carregar_biblia(caminho: _Path | str) -> dict:
+    """Lê o web-biblia.json. Erro claro quando ele ainda não existe -- é o
+    caso mais comum, e "KeyError: 'livros'" não diria a ninguém que o que
+    falta é rodar um notebook."""
+    caminho = _Path(caminho)
+    if not caminho.exists():
+        raise FileNotFoundError(
+            f"{caminho} não existe. Rode o biblia-texto-baixar.ipynb uma vez — "
+            f"ele baixa a WEB do ebible.org e grava esse arquivo.")
+    dados = _json.loads(caminho.read_text(encoding="utf-8"))
+    if "livros" not in dados:
+        raise ValueError(f"{caminho} não parece um web-biblia.json (sem 'livros')")
+    return dados
+
+
+def versiculos_de(biblia: dict, sigla: str, capitulo: int) -> list[Versiculo]:
+    """Os versículos de um capítulo, de volta ao formato que o resto usa."""
+    livros = biblia["livros"]
+    if sigla not in livros:
+        raise KeyError(f"{sigla!r} não está no web-biblia.json "
+                       f"({len(livros)} livros lidos)")
+    caps = livros[sigla]
+    chave = str(capitulo)
+    if chave not in caps:
+        raise KeyError(f"{sigla} {capitulo} não está no web-biblia.json "
+                       f"(o livro tem {len(caps)} capítulos lá)")
+    return [Versiculo(numero=v["n"], texto=v["t"], quebra=v["q"]) for v in caps[chave]]
+
+
+def roteiro_do_capitulo(nome_projeto: str, caminho_biblia: _Path | str) -> str:
+    """Roteiro por versículo de "40_Matt_02", direto do web-biblia.json.
+
+    Fecha o ciclo: `biblia_livros.de_nome_projeto()` traduz o nome do vídeo em
+    (livro, capítulo), e isto devolve o texto no mesmo formato do
+    `<nome>_roteiro_versiculos.txt` -- byte a byte o mesmo `gerar_roteiro()`
+    que o notebook de download usa, então não há dois formatos concorrentes.
+    """
+    livro, capitulo = bl.de_nome_projeto(nome_projeto)
+    biblia = carregar_biblia(caminho_biblia)
+    return gerar_roteiro(versiculos_de(biblia, livro.sigla, capitulo))
+
+
 # ── Comparação com um roteiro já existente ───────────────────────────────────
 
 def _normalizar(texto: str) -> list[str]:

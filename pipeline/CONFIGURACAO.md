@@ -524,6 +524,33 @@ alinhamento **sem erro nenhum** — aparece só no vídeo montado.
 | `parsear_usfm(conteudo)` | `(livro, {capítulo: [Versiculo]})`. Tira nota de rodapé, referência cruzada, título e cabeçalho; preserva palavras de Jesus (`\wj`) e `\add`; junta versículo que continua na linha seguinte. |
 | `gerar_roteiro(versiculos)` | Monta o texto no formato do `roteiro_versiculos.txt`, com número como token isolado e quebra na poesia. |
 | `comparar(a, b)` | Compara palavra a palavra ignorando pontuação, acento, aspas curvas e número de versículo. Devolve similaridade e a lista de divergências com contexto. |
+| `carregar_biblia(caminho)` | Lê o `web-biblia.json`. Erro nomeando o notebook quando o arquivo ainda não existe — "KeyError: 'livros'" não diria a ninguém que o que falta é rodar um notebook. |
+| `versiculos_de(biblia, sigla, cap)` | Os versículos de um capítulo, de volta ao formato `Versiculo`. |
+| `roteiro_do_capitulo(nome, caminho)` | `"40_Matt_02"` → o roteiro pronto. Fecha o ciclo com `biblia_livros.de_nome_projeto()`, e usa o **mesmo** `gerar_roteiro()` do notebook de download — então não existem dois formatos concorrentes. |
+
+### O roteiro deixou de ser algo que você fornece
+
+`caption_pipeline.resolver_texto_versiculos(config, texto_colado)` — usado pelos
+**três** notebooks de burn (single, multilang, multilang-zh). Três fontes, da
+mais específica pra mais geral:
+
+| # | Fonte | Por que nessa ordem |
+|---|---|---|
+| 1 | `TEXTO_VERSICULOS` na Configuração | o que você escreveu ganha de tudo |
+| 2 | `<nome>_roteiro_versiculos.txt` na pasta do vídeo | pode ter sido **editado** (versículo mesclado, palavra que a dublagem falou diferente do escrito) — e edição tem que ganhar da Bíblia crua |
+| 3 | `dados_lexico/web-biblia.json` | a Bíblia inteira: qualquer um dos 1.189 capítulos, sem você colar nada |
+
+Ao cair na fonte 3, grava o resultado como o roteiro do vídeo: da próxima vez
+sai pela fonte 2, e fica um arquivo pra você corrigir se algo estiver torto.
+
+Vive num módulo, e não dentro de um notebook, porque os três precisam
+exatamente disto — e a versão copiada em três lugares é a que diverge no
+primeiro conserto.
+
+> ⚠️ **Só o texto por versículo vem daqui.** A narração continua saindo do
+> `TEXTO_ORACAO` do notebook de vídeo base (é ele que o Edge TTS lê), e os
+> outros idiomas continuam vindo da dublagem automática do YouTube. Isto
+> resolve o overlay "Matt 2:4", não o roteiro falado.
 
 Testado com USFM sintético cobrindo as armadilhas estruturais (nota de rodapé,
 `\w` com Strong, dois `\v` na mesma linha, versículo continuando na linha de
