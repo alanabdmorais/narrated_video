@@ -421,6 +421,35 @@ Um teste que concorda com qualquer resultado é pior que nenhum. A versão que
 vale reduz cada faixa de borda a um pixel (`crop,scale=1:1`) e lê os três
 bytes crus.
 
+### `modulos/pixabay_urls.py` — a regra de link num lugar só
+
+Existem **três** caminhos que gravam URL de imagem do Pixabay, e os três
+podiam cair na mesma armadilha do link assinado:
+
+| Caminho | Onde grava | Triagem manual? |
+|---|---|---|
+| Apps Script "Pixabay Images" | planilha de busca (outra conta) | sim — você escolhe e cola no stock |
+| `pixabay-image-seed` | **direto na `image-stock`** | não |
+| `pixabay-image-seed-biblia-completa` | **direto na `image-stock`** | não |
+
+Os dois notebooks são o caso mais perigoso: gravam na planilha que o sistema
+lê, sem ninguém no meio pra notar. `_gravar_hits_pixabay()` guardava
+`largeImageURL` — o link que vence.
+
+A regra virou `pixabay_urls.py`, importado pelo `video_pipeline` e pelo
+`pixabay_seed_pipeline`:
+
+| Função | Serve pra |
+|---|---|
+| `url_estavel(hit)` | o que o semeador GRAVA na planilha |
+| `urls_alternativas(thumb)` | a reserva que o vídeo TENTA quando o link falha |
+| `e_link_assinado(url)` | reconhecer o link que vence, pra explicar o 400 |
+
+O Apps Script continua fora do repo, copiado à mão — e é justamente por
+existir esse terceiro lugar que os dois de cá não podem ser um quarto e um
+quinto. **Regra repetida é regra que vai divergir**; foi assim que o filtro de
+orientação ficou só no semeador de vídeos por meses.
+
 ### O link do Pixabay expira — a planilha morre inteira de uma vez
 
 A API do Pixabay entrega dois links por imagem, e só um deles dura:

@@ -57,6 +57,12 @@ from ffmpeg_utils import (
     obter_duracao,
 )
 from models import Clipe
+# A regra de link do Pixabay mora num módulo só -- ela já valia aqui e no
+# semeador, e ia virar um terceiro lugar. Ver pixabay_urls.py.
+from pixabay_urls import (
+    e_link_assinado as _e_link_assinado,
+    urls_alternativas as urls_alternativas_pixabay,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -120,19 +126,6 @@ def _resumo_das_falhas(falhas: list[str], limite: int = 6) -> str:
     return "\n".join(linhas)
 
 
-# Thumbnail do Pixabay: https://cdn.pixabay.com/photo/2016/11/29/05/45/x-1867616_150.jpg
-# O host `cdn.pixabay.com` serve o arquivo direto e NÃO expira — ao contrário
-# do `pixabay.com/get/<assinatura>_1280.jpg` que a API devolve em
-# `largeImageURL`, e que é o que a planilha guardou.
-_RE_THUMB_PIXABAY = re.compile(r"^(https://cdn\.pixabay\.com/photo/\S+?)_\d+(\.\w+)$")
-
-
-# O link assinado do Pixabay: .../get/g<hex longo>_<largura>.<ext>. Casa pela
-# FORMA e não pelo host — o Pixabay já serviu esses links de mais de um
-# domínio, e é a assinatura no caminho que os identifica, não o domínio.
-_RE_LINK_ASSINADO = re.compile(r"/get/g[0-9a-f]{8,}_\d+\.\w+$", re.I)
-
-
 def _e_retrato(linha: dict) -> bool:
     """A foto é mais alta que larga, pelas colunas da planilha?
 
@@ -146,10 +139,6 @@ def _e_retrato(linha: dict) -> bool:
     except (TypeError, ValueError):
         return False
     return largura > 0 and altura > largura
-
-
-def _e_link_assinado(url: str) -> bool:
-    return bool(_RE_LINK_ASSINADO.search((url or "").strip()))
 
 
 def _motivo_download_imagem(clipe, erros: list[str]) -> str:
@@ -176,31 +165,6 @@ def _motivo_download_imagem(clipe, erros: list[str]) -> str:
             "thumbnail também não serviram — refaça o estoque com `estoque-imagem`"
         )
     return ". ".join(partes)
-
-
-def urls_alternativas_pixabay(url_thumbnail: str) -> list[str]:
-    """Do link do thumbnail, deriva links estáveis do MESMO arquivo, maiores.
-
-    A API do Pixabay entrega dois tipos de link por imagem:
-
-      `largeImageURL`  https://pixabay.com/get/<assinatura>_1280.jpg   assinado, EXPIRA
-      `previewURL`     https://cdn.pixabay.com/photo/.../nome_150.jpg  direto, permanente
-
-    O estoque guardou o primeiro na coluna `Imagem` e o segundo em
-    `URL Thumbnail`. Meses depois a assinatura não vale mais e o Pixabay
-    responde 400 — a planilha inteira morre de uma vez, sem nada ter mudado
-    nela. O segundo link continua servindo, e a mesma pasta tem as outras
-    resoluções: basta trocar o `_150` do fim.
-
-    Devolve os candidatos do maior pro menor. Lista vazia se a URL não for
-    um thumbnail do Pixabay — aí não há o que derivar, e chutar seria pior
-    que falhar.
-    """
-    m = _RE_THUMB_PIXABAY.match((url_thumbnail or "").strip())
-    if not m:
-        return []
-    base, ext = m.groups()
-    return [f"{base}_{tamanho}{ext}" for tamanho in (1280, 960, 640, 340, 150)]
 
 
 def _autor_do_nome(caminho: Path) -> str:

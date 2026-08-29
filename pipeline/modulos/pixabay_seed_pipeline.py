@@ -43,6 +43,7 @@ from match_pipeline import (
     registrar_na_biblioteca_match,
 )
 from dicionario_sinonimos import expandir_tags_semelhantes
+from pixabay_urls import url_estavel
 
 COLUNAS_EXTRAS_SEED = ["Vezes_Usada"]
 
@@ -297,7 +298,11 @@ def _gravar_hits_pixabay(hits, worksheet, cabecalho):
         tags_pixabay = hit.get("tags", "") or ""
         valores = {
             "Thumbnail": f"Ver #{i + 1}",
-            "Imagem": hit.get("largeImageURL") or hit.get("webformatURL", ""),
+            # Link ESTÁVEL, não o assinado que a API entrega em
+            # largeImageURL: estes notebooks gravam DIRETO na image-stock,
+            # sem triagem no meio, e a linha vai ficar lá por meses. Ver
+            # pixabay_urls.url_estavel.
+            "Imagem": url_estavel(hit),
             "ID": hit.get("id"),
             "Título": (tags_pixabay.split(",")[0].strip() if tags_pixabay else ""),
             "Autor": hit.get("user", "Pixabay"),
