@@ -589,6 +589,29 @@ estoque. Ela é de quando o áudio precisava vir de algum lugar; com os 1.189
 capítulos no Drive, baixar do YouTube por cima trocaria a gravação da fonte
 por uma faixa recomprimida — e ainda dependeria do vídeo continuar no ar.
 
+### Conferir o Whisper contra o roteiro (sem substituir)
+
+O SRT do `caption-single-generate` traz duas coisas, e só uma pode estar
+errada:
+
+| | Vem de | Confiável? |
+|---|---|---|
+| tempos | Whisper ouvindo o áudio | sim |
+| texto | Whisper adivinhando grafia | erra nome próprio |
+
+O roteiro tem o texto certo e nenhum tempo. Uma célula depois do preview
+alinha os dois (`biblia_texto.comparar`, o mesmo `difflib` do
+`alinhar_versiculos`) e lista **só onde divergem**, com o bloco aproximado.
+
+> ⚠️ **Não substitua tudo pelo roteiro.** O David Williams lê ligeiramente
+> diferente do escrito em alguns trechos — 0,9625 medido no
+> `biblia-audio-conferir`. Substituir cego trocaria um erro visível (o nome
+> errado) por um invisível: legenda dizendo o que o áudio não fala. Onde o
+> Dave leu diferente, **o Whisper está certo** — a legenda tem que dizer o
+> que se ouve.
+
+Por isso a célula não escreve nada: ela mostra, e quem decide é você.
+
 ### `modulos/audio_narracao.py` — onde procurar a narração, num lugar só
 
 A busca pelo áudio existia em **um** lugar (`video_pipeline.gerar_audio`) e os
