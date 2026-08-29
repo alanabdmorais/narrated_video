@@ -56,6 +56,7 @@ from ffmpeg_utils import (
     imagem_para_clipe,
     obter_duracao,
 )
+import audio_narracao
 from models import Clipe
 # A regra de link do Pixabay mora num módulo só -- ela já valia aqui e no
 # semeador, e ia virar um terceiro lugar. Ver pixabay_urls.py.
@@ -211,7 +212,7 @@ class VideoPipeline:
         # sai pronto, só com a voz errada, e nada no log diz que houve troca.
         origem_audio = None
         if not audio_path.exists():
-            origem_audio = self._trazer_audio_do_drive(audio_path)
+            origem_audio = audio_narracao.trazer(self._cfg, audio_path)
 
         if audio_path.exists():
             # 🔒 O áudio existente pode ser de uma execução anterior com um
@@ -246,7 +247,7 @@ class VideoPipeline:
             # não está lá, e as fases seguintes (clipes, mescla) o procuram
             # justamente lá. Vindo da pasta do vídeo, subir seria reescrever
             # por cima do original -- que é o que este método existe pra evitar.
-            if origem_audio == "estoque":
+            if origem_audio == "estoque da Bíblia":
                 self._drive.upload(audio_path, self._cfg.pasta_oracao, "audio/wav")
             return audio_path
 
@@ -291,44 +292,6 @@ class VideoPipeline:
         self._drive.upload(audio_path, self._cfg.pasta_assets_audio, "audio/wav")
         return audio_path
 
-    # Formatos que uma narração pode chegar, e os dois jeitos de nomeá-la:
-    #   40_Matt_02_audio.wav   o nome do projeto (NOME_AUDIO)
-    #   40_Matt_02.mp3         o nome do estoque (biblia-audio-baixar)
-    _EXTENSOES_AUDIO = (".wav", ".mp3", ".m4a", ".ogg", ".flac")
-
-    def _trazer_audio_do_drive(self, destino: Path) -> str | None:
-        """Traz pra VM uma narração que já exista no Drive, se houver.
-
-        Duas origens, da mais específica pra mais geral:
-          1. `"pasta"`   — a pasta do vídeo: gravação própria, ou o capítulo
-             que você subiu à mão. Manda, porque é a escolha explícita.
-          2. `"estoque"` — `assets/biblia_audio/`, o resultado do
-             `biblia-audio-baixar`. É o que faz "fornecer o áudio" sumir do
-             fluxo num vídeo de capítulo bíblico: se o estoque está lá, o
-             pipeline acha sozinho.
-
-        Retorna o rótulo da origem, ou None se não achou nada — e nesse caso
-        o Edge TTS gera, que é o comportamento certo pra uma oração escrita.
-        """
-        origens = (
-            ("pasta",   self._cfg.pasta_oracao,                             "pasta do vídeo"),
-            ("estoque", self._cfg.pasta_base_drive / "assets" / "biblia_audio", "estoque da Bíblia"),
-        )
-        for rotulo, pasta, descricao in origens:
-            for base in (f"{self._cfg.NOME_ORACAO}_audio", self._cfg.NOME_ORACAO):
-                for ext in self._EXTENSOES_AUDIO:
-                    origem = pasta / f"{base}{ext}"
-                    if not origem.exists():
-                        continue
-                    logger.info("── Narração: achei %s no %s — nada será gerado",
-                                origem.name, descricao)
-                    if ext == ".wav":
-                        shutil.copy2(origem, destino)
-                    else:
-                        converter_para_wav(origem, destino)
-                    return rotulo
-        return None
-
     def _ajustar_velocidade_audio(self, audio_path: Path) -> None:
         """Aplica VELOCIDADE_AUDIO ao áudio final, uma única vez por vídeo."""
         velocidade = self._cfg.VELOCIDADE_AUDIO
@@ -370,9 +333,9 @@ class VideoPipeline:
         logger.info("── Clipes: cortando")
 
         audio_path = Path(self._cfg.NOME_AUDIO)
-        self._drive.download_se_ausente(self._cfg.pasta_assets_audio, self._cfg.NOME_AUDIO, audio_path)
+        audio_narracao.trazer(self._cfg, audio_path)
         if not audio_path.exists():
-            raise PipelineError("Áudio não encontrado — rode gerar_audio() primeiro.")
+            raise PipelineError(audio_narracao.erro_nao_achei(self._cfg))
         duracao_total = obter_duracao(audio_path)
 
         num_clipes = math.ceil(duracao_total / self._cfg.DURACAO_CLIPE)
@@ -704,9 +667,9 @@ class VideoPipeline:
         logger.info("── Clipes (modo imagem): gerando")
 
         audio_path = Path(self._cfg.NOME_AUDIO)
-        self._drive.download_se_ausente(self._cfg.pasta_assets_audio, self._cfg.NOME_AUDIO, audio_path)
+        audio_narracao.trazer(self._cfg, audio_path)
         if not audio_path.exists():
-            raise PipelineError("Áudio não encontrado — rode gerar_audio() primeiro.")
+            raise PipelineError(audio_narracao.erro_nao_achei(self._cfg))
         duracao_total = obter_duracao(audio_path)
 
         num_clipes = math.ceil(duracao_total / self._cfg.DURACAO_CLIPE)
@@ -1077,7 +1040,7 @@ class VideoPipeline:
         concatenar_videos(arquivos_prontos, video_sem_audio)
 
         audio_path = Path(self._cfg.NOME_AUDIO)
-        self._drive.download_se_ausente(self._cfg.pasta_assets_audio, self._cfg.NOME_AUDIO, audio_path)
+        audio_narracao.trazer(self._cfg, audio_path)
         video_com_audio = Path("video_com_audio.mp4")
         adicionar_audio(video_sem_audio, audio_path, video_com_audio)
         video_sem_audio.unlink(missing_ok=True)

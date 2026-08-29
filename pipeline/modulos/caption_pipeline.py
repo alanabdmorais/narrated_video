@@ -147,12 +147,13 @@ class CaptionPipeline:
                 )
 
         audio_path = Path(self._cfg.NOME_AUDIO)
-        self._drive.download_se_ausente(self._cfg.pasta_assets_audio, self._cfg.NOME_AUDIO, audio_path)
+        # Procura nos três lugares, não só na pasta do vídeo -- ver
+        # audio_narracao. A versão anterior parava com "rode o video-base
+        # primeiro" num capítulo cujo áudio estava no estoque o tempo todo.
+        import audio_narracao
+        audio_narracao.trazer(self._cfg, audio_path)
         if not audio_path.exists():
-            raise PipelineError(
-                f"Áudio não encontrado: {audio_path}. "
-                f"Rode um dos notebooks video-base-*.ipynb primeiro (célula de Narração)."
-            )
+            raise PipelineError(audio_narracao.erro_nao_achei(self._cfg))
 
         from whisper_utils import carregar_modelo_whisper
         model = carregar_modelo_whisper(modelo)

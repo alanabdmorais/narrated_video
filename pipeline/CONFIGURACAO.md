@@ -589,6 +589,30 @@ estoque. Ela é de quando o áudio precisava vir de algum lugar; com os 1.189
 capítulos no Drive, baixar do YouTube por cima trocaria a gravação da fonte
 por uma faixa recomprimida — e ainda dependeria do vídeo continuar no ar.
 
+### `modulos/audio_narracao.py` — onde procurar a narração, num lugar só
+
+A busca pelo áudio existia em **um** lugar (`video_pipeline.gerar_audio`) e os
+outros **quatro** consumidores olhavam só a pasta do vídeo. Resultado: o
+`caption-single-generate` parou com *"Áudio não encontrado — rode um dos
+notebooks video-base-*.ipynb primeiro"* num capítulo cujo áudio estava no
+Drive o tempo todo, dois diretórios ao lado. E a mensagem mandava repetir um
+passo que já tinha sido feito.
+
+> Regra repetida é regra que vai divergir. **Regra em um lugar e quatro cópias
+> antigas é pior** — a versão certa existe, e mesmo assim não é usada.
+
+Os cinco consumidores agora chamam `audio_narracao.trazer(config, destino)`:
+
+| Ordem | Onde | Nomes |
+|---|---|---|
+| 1 | disco da VM | `<nome>_audio.wav` |
+| 2 | `videos/<nome>/` | `<nome>_audio.*`, `<nome>.*` |
+| 3 | `assets/biblia_audio/` | idem |
+
+Extensões: `.wav .mp3 .m4a .ogg .flac`; o que não for wav é convertido.
+`erro_nao_achei()` lista as pastas de verdade e as três saídas, em vez de
+apontar um notebook só.
+
 ### De onde vem a narração (e por que ela não é sobrescrita)
 
 `gerar_audio()` procura, **nesta ordem**, antes de cogitar gerar:
