@@ -133,6 +133,21 @@ _RE_THUMB_PIXABAY = re.compile(r"^(https://cdn\.pixabay\.com/photo/\S+?)_\d+(\.\
 _RE_LINK_ASSINADO = re.compile(r"/get/g[0-9a-f]{8,}_\d+\.\w+$", re.I)
 
 
+def _e_retrato(linha: dict) -> bool:
+    """A foto é mais alta que larga, pelas colunas da planilha?
+
+    Usa `Largura`/`Altura`, que a semeadura já grava — não precisa baixar a
+    imagem pra saber. Linha sem essas colunas, ou com valor ilegível, passa:
+    descartar pelo que não se sabe erraria pro lado caro.
+    """
+    try:
+        largura = int(float(str(linha.get("Largura") or "").strip()))
+        altura  = int(float(str(linha.get("Altura")  or "").strip()))
+    except (TypeError, ValueError):
+        return False
+    return largura > 0 and altura > largura
+
+
 def _e_link_assinado(url: str) -> bool:
     return bool(_RE_LINK_ASSINADO.search((url or "").strip()))
 
@@ -786,6 +801,21 @@ class VideoPipeline:
             (num_linha, linha) for num_linha, linha in linhas
             if not str(linha.get(self._cfg.NOME_COLUNA_STATUS_PLANILHA) or "").strip()
         ]
+
+        # Fotos em pé (formato celular) fora. A semeadura passou a pedir só
+        # horizontais à API, mas as linhas já gravadas continuam lá -- e uma
+        # foto 1080x1920 num quadro 16:9 perde ~2/3 da altura, sobrando o meio
+        # de uma pessoa sem a cabeça.
+        if self._cfg.DESCARTAR_IMAGEM_RETRATO:
+            antes = len(linhas_disponiveis)
+            linhas_disponiveis = [
+                (n, l) for n, l in linhas_disponiveis if not _e_retrato(l)
+            ]
+            descartadas = antes - len(linhas_disponiveis)
+            if descartadas:
+                logger.info("   🚫 %d linha(s) em formato retrato descartada(s) — sobraram %d",
+                            descartadas, len(linhas_disponiveis))
+
         random.shuffle(linhas_disponiveis)  # sorteio -- não pega mais sempre a mesma ordem de cima pra baixo
 
         for num_linha, linha in linhas_disponiveis:
@@ -807,9 +837,13 @@ class VideoPipeline:
             indice += 1
 
         if len(a_processar) < num_clipes:
+            extra = ""
+            if self._cfg.DESCARTAR_IMAGEM_RETRATO:
+                extra = (" (fotos em retrato foram descartadas — pra aceitá-las mesmo "
+                         "assim, DESCARTAR_IMAGEM_RETRATO=False na Configuração)")
             raise PipelineError(
                 f"Planilha de imagens não tem linhas suficientes ainda não usadas: "
-                f"faltam {num_clipes - len(a_processar)} imagens."
+                f"faltam {num_clipes - len(a_processar)} imagens{extra}."
             )
 
         logo_path = Path("logo_baixada.png")
@@ -908,6 +942,7 @@ class VideoPipeline:
             imagem_para_clipe(
                 raw_img, saida, clipe.duracao_seg,
                 largura=self._cfg.LARGURA_CLIPE, altura=self._cfg.ALTURA_CLIPE, fps=self._cfg.FPS_CLIPE,
+                enquadramento=self._cfg.ENQUADRAMENTO_IMAGEM,
             )
         except FFmpegError as exc:
             raw_img.unlink(missing_ok=True)

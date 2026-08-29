@@ -178,6 +178,7 @@ def imagem_para_clipe(
     largura:        int = 1280,
     altura:         int = 720,
     fps:            int = 25,
+    enquadramento:  str = "preencher",
 ) -> Path:
     """
     Converte uma imagem estática num clipe de vídeo de `duracao_seg`
@@ -185,16 +186,36 @@ def imagem_para_clipe(
     propósito, mantém o fundo o mais neutro possível para não competir
     com a leitura das legendas).
 
+    `enquadramento` decide o que fazer quando a proporção da foto não é a
+    do vídeo:
+
+      `"preencher"`  amplia até cobrir o quadro e corta o que sobra. É o
+                     padrão: o fundo ocupa a tela inteira.
+      `"caber"`      encolhe até a foto inteira caber e completa com preto.
+                     Preserva a foto toda, ao custo das tarjas.
+
+    O padrão era `"caber"`, e era ele que punha tarja preta na lateral de
+    quase toda foto — poucas fotos do Pixabay são exatamente 16:9. Numa
+    foto em pé (formato celular) as tarjas comiam a maior parte da tela.
+    Pra um FUNDO isso é o avesso do que se quer: a foto está ali pra
+    ocupar a tela, não pra ser exibida inteira.
+
     Já sai padronizado (resolução/fps/pixel format) na mesma medida que
-    adicionar_credito_e_logo() espera — passe a saída deste função direto
+    adicionar_credito_e_logo() espera — passe a saída desta função direto
     pra ela, igual se faz com um clipe de vídeo cortado do Pixabay.
     """
     saida = Path(saida)
-    filtro = (
-        f"scale={largura}:{altura}:force_original_aspect_ratio=decrease,"
-        f"pad={largura}:{altura}:(ow-iw)/2:(oh-ih)/2,"
-        f"fps={fps},format=yuv420p"
-    )
+    if enquadramento not in ("preencher", "caber"):
+        raise ValueError(
+            f"enquadramento inválido: {enquadramento!r}. Use 'preencher' ou 'caber'."
+        )
+    if enquadramento == "preencher":
+        ajuste = (f"scale={largura}:{altura}:force_original_aspect_ratio=increase,"
+                  f"crop={largura}:{altura}")
+    else:
+        ajuste = (f"scale={largura}:{altura}:force_original_aspect_ratio=decrease,"
+                  f"pad={largura}:{altura}:(ow-iw)/2:(oh-ih)/2")
+    filtro = f"{ajuste},fps={fps},format=yuv420p"
     _run(
         ["ffmpeg", "-y",
          "-loop", "1", "-i", str(imagem_entrada),

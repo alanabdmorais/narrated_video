@@ -73,6 +73,20 @@ class PipelineConfig:
     # ── IDs do Google Drive ───────────────────────────────────────────────────
     # Planilha Pixabay de VÍDEOS (compartilhada entre orações)
     ID_PLANILHA_DRIVE: str = "1bF7hnGSY7AALm4ZAS5owWNpiSTdgArW4ahAuVZaHPL0"
+    # Como encaixar uma foto cuja proporção não é a do vídeo:
+    #   "preencher"  amplia até cobrir e corta o que sobra  (padrão)
+    #   "caber"      encolhe até caber e completa com preto
+    # Ver ffmpeg_utils.imagem_para_clipe. Fundo existe pra ocupar a tela;
+    # "caber" punha tarja preta na lateral de quase toda foto.
+    ENQUADRAMENTO_IMAGEM: str = "preencher"
+
+    # Descartar da planilha as fotos em pé (formato celular). Mesmo com
+    # "preencher", uma foto 1080x1920 num quadro 16:9 perde ~2/3 da altura --
+    # e o que sobra costuma ser o meio de uma pessoa, sem a cabeça. Usa as
+    # colunas Largura/Altura da planilha; linha sem essas colunas passa, que
+    # é o certo: não dá pra descartar pelo que não se sabe.
+    DESCARTAR_IMAGEM_RETRATO: bool = True
+
     # Planilha Pixabay de IMAGENS (usada só quando MODO_CLIPE="imagem")
     ID_PLANILHA_IMAGENS_DRIVE: str = ""
     # Nome da coluna de status nas duas planilhas (marca quando cada linha foi usada)

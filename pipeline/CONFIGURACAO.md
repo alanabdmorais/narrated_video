@@ -345,6 +345,48 @@ apontar pra um arquivo com outro nome já salvo em `pasta_oracao`.
 > agora, não implementado). Ordem confirmada: "edge" vem ANTES de "audio" —
 > já existe um arquivo real nesse padrão no Drive (`40_Matt_02_edge_audio.wav`).
 
+### Tarja preta na foto: o enquadramento e a orientação
+
+Duas causas independentes, e as duas precisavam de conserto.
+
+**1. O enquadramento acolchoava.** `imagem_para_clipe()` usava
+`force_original_aspect_ratio=decrease` + `pad` — encolhe até a foto INTEIRA
+caber e completa o resto com preto. Poucas fotos do Pixabay são exatamente
+16:9, então quase toda uma ganhava tarja; numa foto em pé, a tarja comia a
+maior parte da tela. Pra um **fundo** isso é o avesso do que se quer: a foto
+está ali pra ocupar a tela, não pra ser exibida inteira.
+
+`ENQUADRAMENTO_IMAGEM` (padrão `"preencher"`) escolhe:
+
+| Valor | Filtro | O que faz |
+|---|---|---|
+| `"preencher"` | `increase` + `crop` | amplia até cobrir e corta o que sobra |
+| `"caber"` | `decrease` + `pad` | encolhe até caber, completa com preto |
+
+**2. A semeadura não filtrava orientação.** O Apps Script que semeia os
+**vídeos** sempre pediu `&orientation=horizontal` à API; o que semeia as
+**imagens** não pedia. Por isso a planilha de fotos veio cheia de retrato.
+`buscar_imagens_pixabay()` agora pede também.
+
+Isso conserta a semeadura nova, não as linhas já gravadas — por isso
+`DESCARTAR_IMAGEM_RETRATO` (padrão ligado) descarta na hora de usar as linhas
+cuja `Altura > Largura`, pelas colunas que a própria planilha já tem, sem
+baixar nada. Linha sem essas colunas passa: descartar pelo que não se sabe
+erraria pro lado caro. Se sobrar pouca linha, o erro diz que o descarte
+aconteceu e como desligá-lo.
+
+> Foto em pé num vídeo deitado não tem saída boa — ou vira tarja dos dois
+> lados, ou o corte come 2/3 da imagem e sobra o meio de uma pessoa sem a
+> cabeça. **Barrar na origem é o único conserto que não perde nada;** os
+> outros dois só escolhem qual perda.
+
+**Sobre medir isto.** A primeira versão do teste lia o brilho das bordas com
+`signalstats`, que não imprime nada sem `metadata=print`: vinha `-1` em tudo,
+e `-1 < 20` passava tanto no teste de "sem tarja" quanto no de "com tarja".
+Um teste que concorda com qualquer resultado é pior que nenhum. A versão que
+vale reduz cada faixa de borda a um pixel (`crop,scale=1:1`) e lê os três
+bytes crus.
+
 ### O link do Pixabay expira — a planilha morre inteira de uma vez
 
 A API do Pixabay entrega dois links por imagem, e só um deles dura:

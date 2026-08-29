@@ -123,6 +123,12 @@ def buscar_imagens_pixabay(termo, chave_api, quantidade=5, lang="pt"):
         + "&q=" + quote(termo.strip())
         + "&per_page=" + str(max(3, min(quantidade, 200)))
         + "&image_type=photo&safesearch=true&lang=" + lang
+        # Só horizontais. O Apps Script que semeia os VÍDEOS já filtrava assim
+        # (`&orientation=horizontal`) e o das imagens não — por isso a planilha
+        # de fotos veio cheia de retrato. Foto em pé num vídeo deitado não tem
+        # saída boa: ou vira tarja preta dos dois lados, ou o corte come 2/3
+        # da imagem. Barrar na origem é o único conserto que não perde nada.
+        + "&orientation=horizontal"
     )
     resposta = requests.get(url, timeout=30)
     if resposta.status_code != 200:
