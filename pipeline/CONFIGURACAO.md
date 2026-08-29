@@ -345,6 +345,47 @@ apontar pra um arquivo com outro nome já salvo em `pasta_oracao`.
 > agora, não implementado). Ordem confirmada: "edge" vem ANTES de "audio" —
 > já existe um arquivo real nesse padrão no Drive (`40_Matt_02_edge_audio.wav`).
 
+### O link do Pixabay expira — a planilha morre inteira de uma vez
+
+A API do Pixabay entrega dois links por imagem, e só um deles dura:
+
+| Campo da API | Forma | Dura? |
+|---|---|---|
+| `largeImageURL` | `https://pixabay.com/get/g<assinatura>_1280.jpg` | **não** — assinado, expira |
+| `previewURL` | `https://cdn.pixabay.com/photo/…/nome_150.jpg` | sim — arquivo direto |
+
+O `estoque-imagem` guardou o primeiro na coluna `Imagem` e o segundo em
+`URL Thumbnail`. Meses depois a assinatura não vale mais e o Pixabay responde
+**400 Bad Request** — a planilha inteira para de funcionar de uma vez, sem
+nada ter mudado nela. Foi o que travou o primeiro teste do Matt 02: 45 de 45.
+
+O segundo link continua servindo, e a mesma pasta do CDN tem as outras
+resoluções. `urls_alternativas_pixabay()` troca o `_150` do fim por `_1280`,
+`_960`, `_640`, `_340`, `_150`, e `_processar_clipe_imagem` tenta a URL da
+planilha primeiro e essas depois, avisando no log quando usa a reserva. A
+planilha semeada há meses volta a funcionar sem re-semear.
+
+Quando nem a reserva serve, a mensagem diz que a assinatura venceu e manda
+refazer o estoque — 400 num link `/get/` é assinatura vencida, não imagem
+removida, e sem essa frase o caminho natural é procurar defeito na rede ou na
+imagem, os dois lugares errados. O reconhecimento é pela **forma** do link
+(`/get/g<hex>_<largura>.<ext>`), não pelo domínio: o Pixabay já serviu esses
+links de mais de um host.
+
+**E o agrupamento das falhas passou a ser por forma, não por texto.** Agrupar
+pelo texto inteiro não agrupava nada — cada imagem traz uma URL diferente, e
+as 45 falhas idênticas saíam como "45 motivos distintos", despejando seis URLs
+gigantes sem dizer o que houve. `_forma_da_falha()` troca a URL por `<url>`
+antes de agrupar, e cada grupo imprime um exemplo:
+
+```
+  · download falhou (HTTPError: 400 Bad Request for url: <url>)  (×45)
+      ex.: https://pixabay.com/get/g87a3c…_1280.jpg
+```
+
+> O mesmo erro de sempre, agora do meu lado: **a forma do problema é a
+> informação; a contagem de variações do texto é ruído.**
+
 ### Falha de clipe/imagem diz o motivo
 
 `_processar_clipe` e `_processar_clipe_imagem` faziam `return None` em **todo**

@@ -77,23 +77,115 @@ class ClipeError(PipelineError):
     """
 
 
+# `\S+` engoliria o ")" ou o "." que fecham a frase, e o exemplo impresso
+# viraria uma URL que não abre. O `[^\s)]` para antes disso.
+_RE_URL = re.compile(r"https?://[^\s)]+")
+
+
+def _forma_da_falha(motivo: str) -> str:
+    """A FORMA do erro, sem a URL — é por ela que se agrupa.
+
+    Agrupar pelo texto inteiro não agrupa nada: cada imagem traz uma URL
+    diferente, então 45 falhas idênticas viram "45 motivos distintos" e a
+    mensagem despeja seis URLs gigantes sem dizer o que houve. O que importa
+    é a forma ("HTTP 400 no link do Pixabay"), não quantas vezes ela apareceu
+    escrita de um jeito ligeiramente diferente.
+    """
+    return _RE_URL.sub("<url>", motivo)
+
+
 def _resumo_das_falhas(falhas: list[str], limite: int = 6) -> str:
     """Junta os motivos num texto que cabe numa mensagem de erro.
 
-    Repete só o que é distinto: 40 imagens que morreram no mesmo 404 são uma
-    informação, não quarenta.
+    Repete só o que é distinto POR FORMA: 45 imagens que morreram no mesmo
+    400 são uma informação, não quarenta e cinco. De cada grupo sai um
+    exemplo de URL, que é o suficiente pra você conferir à mão.
     """
     if not falhas:
         return ("Nenhum motivo foi registrado — se isto aparecer, o defeito está "
                 "aqui, não na sua planilha.")
-    vistos: dict[str, int] = {}
+
+    grupos: dict[str, list[str]] = {}
     for f in falhas:
-        vistos[f] = vistos.get(f, 0) + 1
-    linhas = [f"  · {motivo}" + (f"  (×{n})" if n > 1 else "")
-              for motivo, n in list(vistos.items())[:limite]]
-    if len(vistos) > limite:
-        linhas.append(f"  · ... e mais {len(vistos) - limite} motivo(s) distinto(s)")
+        grupos.setdefault(_forma_da_falha(f), []).append(f)
+
+    linhas = []
+    for forma, exemplos in list(grupos.items())[:limite]:
+        linhas.append(f"  · {forma}" + (f"  (×{len(exemplos)})" if len(exemplos) > 1 else ""))
+        urls = _RE_URL.findall(exemplos[0])
+        if urls:
+            linhas.append(f"      ex.: {urls[0]}")
+    if len(grupos) > limite:
+        linhas.append(f"  · ... e mais {len(grupos) - limite} forma(s) de falha")
     return "\n".join(linhas)
+
+
+# Thumbnail do Pixabay: https://cdn.pixabay.com/photo/2016/11/29/05/45/x-1867616_150.jpg
+# O host `cdn.pixabay.com` serve o arquivo direto e NÃO expira — ao contrário
+# do `pixabay.com/get/<assinatura>_1280.jpg` que a API devolve em
+# `largeImageURL`, e que é o que a planilha guardou.
+_RE_THUMB_PIXABAY = re.compile(r"^(https://cdn\.pixabay\.com/photo/\S+?)_\d+(\.\w+)$")
+
+
+# O link assinado do Pixabay: .../get/g<hex longo>_<largura>.<ext>. Casa pela
+# FORMA e não pelo host — o Pixabay já serviu esses links de mais de um
+# domínio, e é a assinatura no caminho que os identifica, não o domínio.
+_RE_LINK_ASSINADO = re.compile(r"/get/g[0-9a-f]{8,}_\d+\.\w+$", re.I)
+
+
+def _e_link_assinado(url: str) -> bool:
+    return bool(_RE_LINK_ASSINADO.search((url or "").strip()))
+
+
+def _motivo_download_imagem(clipe, erros: list[str]) -> str:
+    """A mensagem de quem tentou tudo e não conseguiu baixar a imagem.
+
+    Diz o que tentou e, no caso comum, o que fazer: link `/get/` do Pixabay
+    com 400 é assinatura vencida, não imagem removida. Sem essa frase, o
+    caminho natural é procurar defeito na rede ou na imagem — nos dois
+    lugares errados.
+    """
+    partes = [f"não consegui baixar a imagem de nenhum link ({len(erros)} tentativa(s))"]
+    partes.append("; ".join(erros[:3]))
+    expirou = _e_link_assinado(clipe.url) and any("400" in e for e in erros)
+    if expirou and not clipe.urls_alternativas:
+        partes.append(
+            "O link /get/ do Pixabay é ASSINADO e expira — a planilha guardou o "
+            "`largeImageURL` de quando foi semeada e ele não vale mais. A coluna "
+            "'URL Thumbnail' desta linha está vazia, então não há link estável pra "
+            "derivar: refaça o estoque com o notebook `estoque-imagem`"
+        )
+    elif expirou:
+        partes.append(
+            "O link /get/ do Pixabay expirou E os links estáveis derivados do "
+            "thumbnail também não serviram — refaça o estoque com `estoque-imagem`"
+        )
+    return ". ".join(partes)
+
+
+def urls_alternativas_pixabay(url_thumbnail: str) -> list[str]:
+    """Do link do thumbnail, deriva links estáveis do MESMO arquivo, maiores.
+
+    A API do Pixabay entrega dois tipos de link por imagem:
+
+      `largeImageURL`  https://pixabay.com/get/<assinatura>_1280.jpg   assinado, EXPIRA
+      `previewURL`     https://cdn.pixabay.com/photo/.../nome_150.jpg  direto, permanente
+
+    O estoque guardou o primeiro na coluna `Imagem` e o segundo em
+    `URL Thumbnail`. Meses depois a assinatura não vale mais e o Pixabay
+    responde 400 — a planilha inteira morre de uma vez, sem nada ter mudado
+    nela. O segundo link continua servindo, e a mesma pasta tem as outras
+    resoluções: basta trocar o `_150` do fim.
+
+    Devolve os candidatos do maior pro menor. Lista vazia se a URL não for
+    um thumbnail do Pixabay — aí não há o que derivar, e chutar seria pior
+    que falhar.
+    """
+    m = _RE_THUMB_PIXABAY.match((url_thumbnail or "").strip())
+    if not m:
+        return []
+    base, ext = m.groups()
+    return [f"{base}_{tamanho}{ext}" for tamanho in (1280, 960, 640, 340, 150)]
 
 
 def _autor_do_nome(caminho: Path) -> str:
@@ -703,7 +795,14 @@ class VideoPipeline:
             if not url_imagem or url_imagem.lower() == "nan":
                 continue
             autor = str(linha.get("Autor") or "Pixabay").strip() or "Pixabay"
-            a_processar.append(Clipe(url=url_imagem, autor=autor, indice=indice, duracao_seg=_duracao_do_clipe(indice)))
+            a_processar.append(Clipe(
+                url=url_imagem, autor=autor, indice=indice,
+                duracao_seg=_duracao_do_clipe(indice),
+                # Reserva estável, derivada do thumbnail — ver
+                # urls_alternativas_pixabay(). Vazia se a planilha não tiver
+                # a coluna: aí só resta o link assinado.
+                urls_alternativas=urls_alternativas_pixabay(str(linha.get("URL Thumbnail") or "")),
+            ))
             linhas_para_marcar.append(num_linha)
             indice += 1
 
@@ -769,26 +868,41 @@ class VideoPipeline:
         saida = Path(f"clipes_cortados/clipe_{clipe.indice:03d}.mp4")
         raw_img = Path(f"temp_raw/raw_img_{clipe.indice}.jpg")
 
-        try:
-            r = requests.get(clipe.url, headers={"User-Agent": "Mozilla/5.0"}, timeout=30, stream=True)
-            r.raise_for_status()
-            with open(raw_img, "wb") as fh:
-                for chunk in r.iter_content(chunk_size=8192):
-                    if chunk:
-                        fh.write(chunk)
-        except Exception as exc:
-            raise ClipeError(f"download falhou ({type(exc).__name__}: {exc}) — {clipe.url}") from exc
+        # A URL da planilha primeiro; depois as derivadas do thumbnail. O link
+        # `pixabay.com/get/...` que a API entregou é assinado e expira, então
+        # numa planilha semeada há meses ele responde 400 — e sem essa reserva
+        # a planilha inteira morre de uma vez, sem nada ter mudado nela.
+        erros: list[str] = []
+        for tentativa, url in enumerate([clipe.url, *clipe.urls_alternativas]):
+            if not url:
+                continue
+            try:
+                r = requests.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=30, stream=True)
+                r.raise_for_status()
+                with open(raw_img, "wb") as fh:
+                    for chunk in r.iter_content(chunk_size=8192):
+                        if chunk:
+                            fh.write(chunk)
+            except Exception as exc:
+                erros.append(f"{type(exc).__name__}: {exc}")
+                continue
 
-        if not raw_img.exists():
-            raise ClipeError(f"o download não gravou arquivo nenhum — {clipe.url}")
-        if raw_img.stat().st_size < 1000:
-            # Página de erro, HTML de captcha ou link de página em vez do JPG:
-            # tudo isso "baixa" com sucesso e vem com uns poucos bytes.
-            raise ClipeError(
-                f"baixou só {raw_img.stat().st_size} bytes — não parece uma imagem. "
-                f"A coluna 'Imagem' tem que ser o link DIRETO do arquivo, não o da "
-                f"página do Pixabay — {clipe.url}"
-            )
+            if not raw_img.exists():
+                erros.append(f"o download não gravou arquivo nenhum — {url}")
+                continue
+            if raw_img.stat().st_size < 1000:
+                # Página de erro, HTML de captcha ou link de página em vez do
+                # JPG: tudo isso "baixa" com sucesso e vem com poucos bytes.
+                erros.append(f"vieram só {raw_img.stat().st_size} bytes de {url}")
+                raw_img.unlink(missing_ok=True)
+                continue
+
+            if tentativa:
+                logger.info("   ↩️  Imagem %d: o link da planilha falhou, usei o estável %s",
+                            clipe.indice, url)
+            break
+        else:
+            raise ClipeError(_motivo_download_imagem(clipe, erros))
 
         try:
             imagem_para_clipe(

@@ -63,6 +63,11 @@ class Clipe:
     arquivo_local: Optional[str] = None
     arquivo_pronto: Optional[str] = None
     duracao_seg: float = 5.0
+    # Links do MESMO arquivo pra tentar quando `url` falha. Existe porque o
+    # link que a API do Pixabay entrega (`largeImageURL`) é assinado e EXPIRA:
+    # a planilha guarda a URL de meses atrás e, na hora de usar, o Pixabay
+    # responde 400. Ver video_pipeline.urls_alternativas_pixabay().
+    urls_alternativas: list[str] = field(default_factory=list)
 
     def __post_init__(self) -> None:
         if not self.autor or str(self.autor).lower() in ("nan", ""):
