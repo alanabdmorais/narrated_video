@@ -420,7 +420,7 @@ class PipelineConfig:
     # Se True (padrão), qualquer função que geraria/sobrescreveria um SRT cujo
     # nome bate com nome_legenda_mestre recusa a operação em vez de sobrescrever
     # silenciosamente — protege correções manuais já feitas na legenda mestre
-    # (ex: rodar a célula de transcrição do single-caption.ipynb de novo, sem
+    # (ex: rodar a célula de transcrição do caption-single-generate.ipynb de novo, sem
     # querer, depois de já ter corrigido o arquivo à mão).
     # Coloque False só quando quiser mesmo re-gerar a mestre do zero.
     PROTEGER_LEGENDA_MESTRE: bool = True

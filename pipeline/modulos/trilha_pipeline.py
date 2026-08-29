@@ -566,7 +566,7 @@ def parsear_nome_arquivo_trilha(nome_arquivo):
     YouTube Audio Library ou Pixabay -- os dois vêm com nome bagunçado
     (clima + "créditos" + nome + autor, tudo junto, separadores
     inconsistentes) -- ver exemplos reais testados no notebook
-    organizar-pixabay-yt-audio-stock.ipynb.
+    organizar-trilha-audio.ipynb.
 
     O CLIMA não vem daqui -- vem do nome da PASTA onde o arquivo está
     (ver carregar_trilha_stock_pasta_drive), que é mais confiável que

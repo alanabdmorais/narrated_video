@@ -33,12 +33,28 @@ registro o `verificar_repo()` acusaria os mesmos 20 nomes pra sempre, e um
 verificador que sempre reclama é um verificador que ninguém lê -- a mesma
 armadilha da checagem de fonte no portão de qualidade.
 
-## Dois defeitos diferentes
+## Três defeitos diferentes
 
 GRAFIA (`conferir`) é como o nome se escreve: kebab, snake, maiúscula.
 FORMA (`conferir_forma_notebook`) é a ordem das partes: a ação vai por último.
-Um nome pode estar em kebab-case impecável e ainda assim com o verbo na
-frente, então as duas checagens são separadas.
+REFERÊNCIA (`referencias_fantasma`) é o resto do repositório apontando pra um
+nome que não existe mais.
+
+As duas primeiras olham o arquivo; a terceira olha quem fala dele. Um nome
+pode estar impecável nas duas primeiras e ainda assim meia dúzia de módulos
+mandarem você rodar o nome antigo.
+
+## Por que a terceira existe
+
+Renomear não quebra arquivo -- quebra REFERÊNCIA, e referência quebrada é
+calada: o notebook continua rodando, só que a mensagem de erro manda você
+rodar um notebook que não existe mais.
+
+Não é hipótese. A onda de rename anterior deste projeto deixou 14 delas, três
+em mensagem de erro que o usuário vê na hora do aperto ("Rode o
+video-base.ipynb primeiro" — não existe). A pasta `notebooks.backup/` guardava
+os arquivos antigos e não protegeu nenhuma dessas, porque não era o arquivo
+que estava em risco.
 
 Renomear tem custo real: aba de planilha viva quebra a planilha, e notebook
 renomeado perde o link que você tem salvo no Colab. Exceção registrada é
@@ -216,6 +232,86 @@ def idioma_do_arquivo(nome: str) -> str | None:
     return ultimo if ultimo in IDIOMAS_CONHECIDOS else None
 
 
+#: Onde procurar por citação a notebook. Notebook cita notebook (o markdown
+#: diz qual vem depois), módulo cita notebook (docstring e mensagem de erro), e
+#: a documentação cita os dois.
+ONDE_CITAM = (
+    "pipeline/modulos/*.py",
+    "pipeline/notebooks/*.ipynb",
+    "pipeline/*.md",
+    "assets/*.py",
+    "README.md",
+)
+
+#: Só pega nome literal. `video-base-*.ipynb` e `caption-*-zh-*.ipynb` são
+#: PADRÃO, não nome -- o `(?<![*\-\w])` descarta tudo que vem depois de curinga
+#: ou hífen, senão `video-base-*-versiculo.ipynb` viraria uma citação ao
+#: inexistente "versiculo.ipynb". Citar pelo padrão é a forma honesta de falar
+#: dos seis notebooks de vídeo base de uma vez, então ela fica de fora da
+#: checagem de propósito.
+_CITACAO = re.compile(r"(?<![*\-\w])([a-z0-9][a-z0-9_-]*)\.ipynb")
+
+
+#: Citação a notebook que NÃO existe e está certa assim: o texto fala da
+#: ausência dele, ou propõe um nome pro futuro. Registrada por (arquivo, nome)
+#: e não só por nome, porque o mesmo nome pode ser proposta num documento e
+#: referência podre num módulo.
+MENCOES_DE_AUSENCIA: frozenset[tuple[str, str]] = frozenset({
+    ("caption-multicolor-burn.ipynb", "caption-multicolor-zh-burn"),
+    # "Não existe um caption-multicolor-zh-burn porque não precisa" -- a frase
+    # explica justamente que ele não existe.
+    ("CONFIGURACAO.md", "video-base"),
+    # Decisão adiada 9.1 propõe consolidar os seis num `video-base.ipynb`. É
+    # nome de proposta, não referência a arquivo.
+    ("nomenclatura.py", "video-base"),
+    ("nomenclatura.py", "versiculo"),
+    # Este arquivo. A docstring cita nomes mortos como EXEMPLO do defeito que o
+    # `referencias_fantasma()` procura, e o comentário do `_CITACAO` cita o
+    # falso positivo que o lookbehind existe pra evitar. Achar os próprios
+    # exemplos foi o primeiro acerto do checador -- mas exemplo não é
+    # referência, então ficam registrados em vez de reescritos.
+})
+
+
+@dataclass
+class Fantasma:
+    arquivo: str      # onde a citação aparece (nome do arquivo)
+    citado: str       # o notebook citado, sem .ipynb
+    linha: int
+
+    def __str__(self) -> str:
+        return f"  [{self.arquivo}:{self.linha}] cita {self.citado + '.ipynb'!r}, que não existe"
+
+
+def referencias_fantasma(raiz: Path | str) -> list[Fantasma]:
+    """Quem no repositório aponta pra um notebook que não existe mais.
+
+    É a checagem que sobra depois de renomear: o arquivo novo está lá, o nome
+    velho sumiu, e ninguém releu os seis módulos que mandavam rodar o velho.
+    """
+    raiz = Path(raiz)
+    existem = {p.stem for p in (raiz / "pipeline" / "notebooks").glob("*.ipynb")}
+
+    achados: list[Fantasma] = []
+    for padrao in ONDE_CITAM:
+        for caminho in sorted(raiz.glob(padrao)):
+            if "notebooks.backup" in caminho.parts or "__pycache__" in caminho.parts:
+                continue
+            try:
+                texto = caminho.read_text(encoding="utf-8")
+            except (OSError, UnicodeDecodeError):
+                continue
+            for n, linha in enumerate(texto.splitlines(), start=1):
+                for m in _CITACAO.finditer(linha):
+                    nome = m.group(1)
+                    if nome in existem:
+                        continue
+                    if (caminho.name, nome) in MENCOES_DE_AUSENCIA:
+                        continue
+                    achados.append(Fantasma(caminho.name, nome, n))
+    return achados
+
+
 def verificar_repo(raiz: Path | str) -> list[Divergencia]:
     """Varre o repositório e devolve os nomes fora da convenção.
 
@@ -247,14 +343,26 @@ def verificar_repo(raiz: Path | str) -> list[Divergencia]:
 
 def relatorio(raiz: Path | str) -> str:
     achados = verificar_repo(raiz)
-    if not achados:
-        n = len(EXCECOES)
-        return (f"✅ Todo nome segue a convenção "
-                f"({n} exceção(ões) registrada(s), nenhuma surpresa).")
-    linhas = [f"⚠️  {len(achados)} nome(s) fora da convenção:"]
-    linhas += [str(d) for d in achados]
-    linhas.append("")
-    linhas.append("Conserte o nome, ou registre em EXCECOES com o motivo.")
+    fantasmas = referencias_fantasma(raiz)
+
+    if not achados and not fantasmas:
+        return (f"✅ Todo nome segue a convenção ({len(EXCECOES)} exceção(ões) "
+                f"registrada(s)) e ninguém cita notebook que não existe.")
+
+    linhas: list[str] = []
+    if achados:
+        linhas.append(f"⚠️  {len(achados)} nome(s) fora da convenção:")
+        linhas += [str(d) for d in achados]
+        linhas.append("")
+        linhas.append("Conserte o nome, ou registre em EXCECOES com o motivo.")
+    if fantasmas:
+        if linhas:
+            linhas.append("")
+        linhas.append(f"⚠️  {len(fantasmas)} referência(s) a notebook inexistente:")
+        linhas += [str(f) for f in fantasmas]
+        linhas.append("")
+        linhas.append("Aponte pro nome atual. Se o texto fala da AUSÊNCIA do "
+                      "notebook de propósito, registre em MENCOES_DE_AUSENCIA.")
     return "\n".join(linhas)
 
 

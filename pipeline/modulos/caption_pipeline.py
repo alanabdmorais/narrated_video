@@ -6,8 +6,8 @@ Módulo próprio, separado de video_pipeline.py (que fica só com o vídeo
 base — ver docstring de video_pipeline.py). Cobre os dois notebooks desta
 etapa:
 
-    single-caption.ipynb        → CaptionPipeline.transcrever_whisper()
-    burn-single-caption.ipynb   → CaptionPipeline.carregar_legenda_unica()
+    caption-single-generate.ipynb        → CaptionPipeline.transcrever_whisper()
+    caption-single-burn.ipynb   → CaptionPipeline.carregar_legenda_unica()
                                    CaptionPipeline.queimar_legenda_unica()
 
 Conceito importante — NÃO confundir com "legenda mestre" (que só vai
@@ -17,14 +17,14 @@ simples: config.nome_legenda_unica só diz "qual arquivo SRT, já salvo na
 pasta deste vídeo, o pipeline usa como legenda única no vídeo final".
 
 Fluxo:
-    1. single-caption.ipynb roda o Whisper sobre o áudio e salva o
+    1. caption-single-generate.ipynb roda o Whisper sobre o áudio e salva o
        resultado como SRT em config.pasta_oracao / config.NOME_SRT_PT_WHISPER
        (esse é o nome padrão que config.nome_legenda_unica aponta, a menos
        que você preencha NOME_LEGENDA_UNICA com outro nome).
     2. (opcional, fora do Colab) você baixa esse SRT, corrige manualmente,
        e reenvia para o Drive — seja substituindo o mesmo arquivo, seja
        salvando com outro nome e apontando NOME_LEGENDA_UNICA para ele.
-    3. burn-single-caption.ipynb lê o que estiver em config.nome_legenda_unica
+    3. caption-single-burn.ipynb lê o que estiver em config.nome_legenda_unica
        nesse momento e queima no vídeo base — sempre baixa a versão mais
        recente do Drive, nunca reaproveita uma cópia local desatualizada de
        uma sessão anterior.
@@ -57,7 +57,7 @@ class CaptionPipeline:
         self._drive = DriveClient.get()
         self._cp    = Checkpoint(nome_oracao=config.NOME_ORACAO)
 
-    # ── Geração (single-caption.ipynb) ────────────────────────────────────────
+    # ── Geração (caption-single-generate.ipynb) ────────────────────────────────────────
 
     def transcrever_whisper(self, modelo: str = "base") -> Path:
         """
@@ -97,7 +97,7 @@ class CaptionPipeline:
         if not audio_path.exists():
             raise PipelineError(
                 f"Áudio não encontrado: {audio_path}. "
-                f"Rode o video-base.ipynb primeiro (célula de Narração)."
+                f"Rode um dos notebooks video-base-*.ipynb primeiro (célula de Narração)."
             )
 
         from whisper_utils import carregar_modelo_whisper
@@ -139,7 +139,7 @@ class CaptionPipeline:
         logger.info("✅ Transcrição: %s (%d legendas)", destino.name, len(legendas))
         return destino
 
-    # ── Queima (burn-single-caption.ipynb) ─────────────────────────────────────
+    # ── Queima (caption-single-burn.ipynb) ─────────────────────────────────────
 
     def carregar_legenda_unica(self) -> list[Legenda]:
         """
@@ -157,7 +157,7 @@ class CaptionPipeline:
         if not destino.exists():
             raise PipelineError(
                 f"Legenda não encontrada no Drive: {self._cfg.pasta_oracao / nome}. "
-                f"Rode o single-caption.ipynb primeiro (ou confira NOME_LEGENDA_UNICA)."
+                f"Rode o caption-single-generate.ipynb primeiro (ou confira NOME_LEGENDA_UNICA)."
             )
 
         legendas = ler_srt(destino)
@@ -219,7 +219,7 @@ class CaptionPipeline:
         if not video_base.exists():
             raise PipelineError(
                 f"Vídeo base não encontrado: {video_base}. "
-                f"Rode o video-base.ipynb primeiro."
+                f"Rode um dos notebooks video-base-*.ipynb primeiro."
             )
 
         ass_paths: list[Path] = [gerar_ass_simples(

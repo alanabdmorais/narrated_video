@@ -6,10 +6,10 @@ Subtitles).
 Módulo próprio, separado de caption_pipeline.py (Single Subtitle) e de
 video_pipeline.py (vídeo base). Cobre 3 notebooks:
 
-    gather-language-sources.ipynb    → baixar_legendas_youtube()
+    caption-multilang-sources-gather.ipynb    → baixar_legendas_youtube()
                                         baixar_audio_e_transcrever()
-    generate-language-subtitles.ipynb → redistribuir_idiomas()
-    burn-language-subtitles.ipynb     → carregar_idiomas_finais()
+    caption-multilang-generate.ipynb → redistribuir_idiomas()
+    caption-multilang-burn.ipynb     → carregar_idiomas_finais()
                                         queimar_idiomas()
 
 Conceito de "legenda mestre" (ver config.nome_legenda_mestre): o SRT que
@@ -70,14 +70,14 @@ class LanguageCaptionsPipeline:
         self._cp    = Checkpoint(nome_oracao=config.NOME_ORACAO)
         self._groq  = groq_client  # só necessário para redistribuir_idiomas()
 
-    # ── Estágio 1: coleta (gather-language-sources.ipynb) ──────────────────────
+    # ── Estágio 1: coleta (caption-multilang-sources-gather.ipynb) ──────────────────────
 
     def baixar_legendas_youtube(self, url: str, idiomas: list[str]) -> dict[str, Path]:
         """Baixa a legenda do YouTube (manual ou automática) para cada idioma
         e salva como {NOME}_yt_{lang}.srt no Drive.
 
         Pula automaticamente o IDIOMA_MESTRE, se estiver na lista — a
-        legenda mestre já é tratada pelo single-caption.ipynb e nunca deve
+        legenda mestre já é tratada pelo caption-single-generate.ipynb e nunca deve
         ser baixada/sobrescrita por esta função.
         """
         garantir_yt_dlp_atualizado()
@@ -88,7 +88,7 @@ class LanguageCaptionsPipeline:
         for lang in idiomas:
             if lang == self._cfg.IDIOMA_MESTRE:
                 logger.info(
-                    "   ⏭️  [%s] É o idioma mestre — pulando (já tratado pelo single-caption.ipynb, "
+                    "   ⏭️  [%s] É o idioma mestre — pulando (já tratado pelo caption-single-generate.ipynb, "
                     "veja config.nome_legenda_mestre).", lang,
                 )
                 continue
@@ -119,7 +119,7 @@ class LanguageCaptionsPipeline:
         cada idioma e salva como {NOME}_audio_{lang}.wav no Drive.
 
         Pula automaticamente o IDIOMA_MESTRE, se estiver na lista — o
-        áudio mestre já vem de video-base.ipynb (config.NOME_AUDIO), não
+        áudio mestre já vem de um dos video-base-*.ipynb (config.NOME_AUDIO), não
         do YouTube, e não deve ser sobrescrito aqui.
         """
         garantir_yt_dlp_atualizado()
@@ -131,7 +131,7 @@ class LanguageCaptionsPipeline:
             if lang == self._cfg.IDIOMA_MESTRE:
                 logger.info(
                     "   ⏭️  [%s] É o idioma mestre — pulando (o áudio mestre já vem de "
-                    "video-base.ipynb, não do YouTube).", lang,
+                    "video-base-*.ipynb, não do YouTube).", lang,
                 )
                 continue
 
@@ -156,7 +156,7 @@ class LanguageCaptionsPipeline:
         e salva como {NOME}_whisper_{lang}.srt no Drive.
 
         Pula automaticamente o IDIOMA_MESTRE, se estiver na lista — a
-        transcrição mestre já é feita pelo single-caption.ipynb (e
+        transcrição mestre já é feita pelo caption-single-generate.ipynb (e
         normalmente já foi corrigida manualmente); nunca deve ser refeita
         nem sobrescrita por esta função.
         """
@@ -167,7 +167,7 @@ class LanguageCaptionsPipeline:
             if lang == self._cfg.IDIOMA_MESTRE:
                 logger.info(
                     "   ⏭️  [%s] É o idioma mestre — pulando (transcrição já feita pelo "
-                    "single-caption.ipynb, veja config.nome_legenda_mestre).", lang,
+                    "caption-single-generate.ipynb, veja config.nome_legenda_mestre).", lang,
                 )
                 continue
             idiomas_a_processar.append(lang)
@@ -228,7 +228,7 @@ class LanguageCaptionsPipeline:
         self.baixar_audio_idiomas(url, idiomas)
         return self.transcrever_audio_idiomas(idiomas, modelo=modelo)
 
-    # ── Estágio 2: redistribuição (generate-language-subtitles.ipynb) ──────────
+    # ── Estágio 2: redistribuição (caption-multilang-generate.ipynb) ──────────
 
     def carregar_legenda_mestre(self) -> list[Legenda]:
         """Carrega a legenda mestre do Drive — sempre a versão mais recente."""
@@ -238,7 +238,7 @@ class LanguageCaptionsPipeline:
         if not destino.exists():
             raise PipelineError(
                 f"Legenda mestre não encontrada no Drive: {self._cfg.pasta_oracao / nome}. "
-                f"Rode o single-caption.ipynb primeiro (ou confira NOME_LEGENDA_MESTRE)."
+                f"Rode o caption-single-generate.ipynb primeiro (ou confira NOME_LEGENDA_MESTRE)."
             )
         legendas = ler_srt(destino)
         if not legendas:
@@ -276,7 +276,7 @@ class LanguageCaptionsPipeline:
             if not bruto_local.exists():
                 logger.warning(
                     "   ⚠️  [%s] Fonte bruta '%s' não encontrada no Drive — pulando "
-                    "(rode gather-language-sources.ipynb primeiro, ou ajuste FONTE_TEXTO_IDIOMA)",
+                    "(rode caption-multilang-sources-gather.ipynb primeiro, ou ajuste FONTE_TEXTO_IDIOMA)",
                     lang, nome_bruto,
                 )
                 continue
@@ -319,7 +319,7 @@ class LanguageCaptionsPipeline:
         self._cp.salvar("srt_traduzidos", {"idiomas": list(resultado.keys())})
         return resultado
 
-    # ── Estágio 3: queima (burn-language-subtitles.ipynb) ───────────────────────
+    # ── Estágio 3: queima (caption-multilang-burn.ipynb) ───────────────────────
 
     def carregar_idiomas_finais(self, idiomas: list[str]) -> dict[str, list[Legenda]]:
         """Carrega, do Drive, o SRT final de cada idioma — sempre a versão
@@ -402,7 +402,7 @@ class LanguageCaptionsPipeline:
         video_base = Path(self._cfg.NOME_VIDEO_BASE)
         self._drive.download_se_ausente(self._cfg.pasta_oracao, self._cfg.NOME_VIDEO_BASE, video_base)
         if not video_base.exists():
-            raise PipelineError(f"Vídeo base não encontrado: {video_base}. Rode o video-base.ipynb primeiro.")
+            raise PipelineError(f"Vídeo base não encontrado: {video_base}. Rode um dos notebooks video-base-*.ipynb primeiro.")
 
         # gerar_ass() usa .palavras para decidir o "modo idioma" (1 cor por
         # idioma) — sem isso, cairia no modo texto simples sem cor.

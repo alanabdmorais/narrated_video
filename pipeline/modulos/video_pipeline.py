@@ -6,7 +6,7 @@ Este módulo NÃO inclui Whisper, legendas, tradução ou classificação
 morfológica — isso é responsabilidade dos notebooks seguintes (Single
 Subtitle, Language Subtitles, etc.), que terão seu próprio módulo.
 
-Sequência do video-base.ipynb:
+Sequência dos notebooks video-base-*.ipynb:
     pipeline.gerar_audio()        → Fase 1: narração (Edge TTS ou carregada)
     pipeline.baixar_clipes()      → Fase 6: corta/credita clipes do Pixabay
     pipeline.criar_video_base()   → Fase 7: concatena + narração + trilha

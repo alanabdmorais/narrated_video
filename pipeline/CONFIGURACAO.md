@@ -197,6 +197,34 @@ resultado, não do formato**.
 > Exceção registrada é decisão. Exceção esquecida é bagunça. Nome novo fora do
 > padrão sem entrada em `EXCECOES` aparece no relatório.
 
+### Renomear quebra referência, não arquivo
+
+`nomenclatura.referencias_fantasma()` varre módulos, notebooks e documentação
+atrás de qualquer nome citado com a extensão de notebook que não exista na
+pasta `pipeline/notebooks/`.
+
+Existe porque a onda de rename anterior deste projeto deixou **14 referências
+podres** — e três delas em mensagem de erro que você vê justamente na hora do
+aperto:
+
+```
+"Vídeo base não encontrado: {…}. Rode o video-base.ipynb primeiro."
+                                        ↑ não existe desde o rename anterior
+```
+
+A pasta `pipeline/notebooks.backup/` guardava os arquivos antigos e não
+protegeu nenhuma dessas: **não era o arquivo que estava em risco.** Renomear
+não quebra arquivo, quebra quem fala dele — e quebra calado, porque o notebook
+continua rodando.
+
+O checador ignora **padrão** de propósito: `video-base-*.ipynb` é a forma
+honesta de falar dos seis notebooks de vídeo base de uma vez, então o
+lookbehind descarta o que vem depois de curinga ou hífen. E texto que fala da
+AUSÊNCIA de um notebook (a decisão adiada 9.1 propondo um `video-base.ipynb`
+futuro, por exemplo) vai pro `MENCOES_DE_AUSENCIA`, registrado por
+**(arquivo, nome)** — o mesmo nome pode ser proposta legítima num documento e
+referência podre num módulo.
+
 ## 6. Nomes de arquivo — todos derivados de `NOME_ORACAO`
 
 Tudo isso vem de propriedades/métodos de `PipelineConfig` em `modulos/config.py`
@@ -779,6 +807,51 @@ que já toque essas células.
 Não renomear: **apagar**. Ter dois notebooks de compilação confunde porque um
 está obsoleto, não porque os nomes divergem. **Gatilho:** quando o
 `compilacao-montar` rodar em produção.
+
+### 9.4 Quando padronizar os 19 nomes: renomear no lugar, não fazer um V2
+
+**Pergunta que apareceu:** vale deixar o pipeline atual como backup e produzir
+uma versão V2 com todos os nomes já padronizados?
+
+**Não** — e a evidência é do próprio projeto, não teórica.
+
+`pipeline/notebooks.backup/` é o resultado de já terem feito exatamente isso
+uma vez. Sobrou:
+
+| | |
+|---|---|
+| 10 arquivos mortos | ninguém roda, e o `verificar_repo()` nem olha pra essa pasta |
+| 14 referências quebradas no código vivo | módulos e notebooks apontando pros nomes que só existem no backup |
+
+A cópia de segurança protegeu os arquivos antigos e não impediu nenhuma das
+14, porque **renomear não quebra arquivo — quebra referência**. Um V2 não
+resolve isso; dobra a superfície onde o nome pode divergir.
+
+Dois custos que também não caem com um V2:
+
+- **Os links do Colab salvos** (~19). Um V2 não salva um link; duplica quantos
+  existem.
+- **Nada no Drive muda** de qualquer jeito: os arquivos do Drive são nomeados
+  a partir de `NOME_ORACAO`, nunca do nome do notebook. Renomear notebook não
+  toca em vídeo, áudio nem legenda — o custo é bem menor do que parece.
+
+**Como fazer, quando for a hora:**
+
+1. `git tag nomes-v1` antes. É o backup de verdade: exato, grátis, e não vira
+   pasta morta. (O `notebooks.backup/` já está no histórico desde o commit
+   `26107aa` — é redundante hoje e pode ser apagado.)
+2. Renomear com `git mv`, **num commit que só renomeia**. Preserva o blame, e
+   é revisável de relance — o que um commit que renomeia *e* muda
+   comportamento nunca é.
+3. Rodar `python3 pipeline/modulos/nomenclatura.py` depois. É o
+   `referencias_fantasma()` que fecha o buraco de 2024: ele lista arquivo e
+   linha de cada citação ao nome velho.
+4. Atualizar o `jornadas.py` junto — o `verificar_repo()` dele acusa
+   `[fantasma]` pra jornada que cita notebook renomeado.
+
+**Separado da 9.1.** Renomear é mecânico e verificável; consolidar os seis
+`video-base-*` é design. Num commit só, uma coisa segura vira uma coisa que
+ninguém consegue revisar.
 
 ## 9b. Lacunas conhecidas / pontos de atenção
 
