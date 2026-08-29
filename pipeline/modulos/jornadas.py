@@ -315,6 +315,29 @@ JORNADAS: tuple[Jornada, ...] = (
 
     # ── APOIO ────────────────────────────────────────────────────────────
     Jornada(
+        id="sincronizar",
+        tipo=APOIO,
+        titulo="Trazer o GitHub pro Drive",
+        quando="Sempre que o repositório mudar — e desconfie se fizer semanas "
+               "que você não roda.",
+        entrega="`pipeline/modulos`, `notebooks` e `dados_lexico` do Drive "
+                "idênticos ao repositório, conferido por sha256.",
+        custo="Segundos. Copia só o que mudou.",
+        passos=(
+            Passo("repositorio-sincronizar", "Drive igual ao repositório",
+                  nota="Mostra o que vai mudar ANTES de mudar, e confere por "
+                       "hash DEPOIS — copiar pra Drive montado falha calado."),
+        ),
+        armadilha="O código vive no GitHub e o Colab lê do Drive; sem esta "
+                  "ponte os dois divergem em silêncio. Em 29/ago o Drive "
+                  "estava 56 commits atrás — faltavam 10 notebooks e 7 "
+                  "módulos. Teste rodado assim executa código velho e falha "
+                  "por motivo que já não existe. A direção é uma só: "
+                  "GitHub → Drive; edição feita direto no Colab e não levada "
+                  "pro git é sobrescrita.",
+    ),
+
+    Jornada(
         id="portao",
         tipo=APOIO,
         titulo="Portão de qualidade",

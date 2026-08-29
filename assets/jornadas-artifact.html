@@ -66,7 +66,7 @@ table.simples th{font-family:'IBM Plex Mono',monospace;font-size:11px;
   <header>
     <p class="eyebrow">narrated_video · mapa de jornadas</p>
     <h1>O que rodar pra conseguir o quê</h1>
-    <p class="lede">São 30 notebooks. A pergunta que se faz na prática nunca é
+    <p class="lede">São 31 notebooks. A pergunta que se faz na prática nunca é
       "o que este notebook faz?" — é a inversa: <b>eu quero um resultado assim,
       o que eu rodo?</b> Este mapa responde essa.</p>
     <p class="lede">Gerado de <code>pipeline/modulos/jornadas.py</code>, que se
@@ -87,6 +87,7 @@ table.simples th{font-family:'IBM Plex Mono',monospace;font-size:11px;
   legenda_unica(&quot;legenda-unica&quot;)
   multi_idioma(&quot;multi-idioma&quot;)
   multicolor(&quot;multicolor&quot;)
+  sincronizar{{&quot;sincronizar&quot;}}
   portao{{&quot;portao&quot;}}
   compilacao(&quot;compilacao&quot;)
   estoque_imagem --&gt; base_versiculo
@@ -107,7 +108,7 @@ table.simples th{font-family:'IBM Plex Mono',monospace;font-size:11px;
     arquivo é pré-requisito, não pro nível de baixo.</div>
 
   <div class="chips" id="chips">
-    <span class="chip ativo" data-f="todos">todas (13)</span>
+    <span class="chip ativo" data-f="todos">todas (14)</span>
     <span class="chip" data-f="preparo">preparo</span>
     <span class="chip" data-f="vídeo">vídeo</span>
     <span class="chip" data-f="apoio">apoio</span>
@@ -285,6 +286,21 @@ table.simples th{font-family:'IBM Plex Mono',monospace;font-size:11px;
 <li><div><div class="passo-nb"><code>caption-multicolor-burn</code></div><div class="passo-produz">→ `&lt;nome&gt;_final_multicolor[_img].mp4`</div><div class="passo-nota">UM notebook serve as duas variantes: ele lê o sufixo `_zh` do nome do `.ass` que você enviar e grava a saída correspondente. Por isso não existe `-zh-burn`.</div></div></li>
           </ol>
 <div class="armadilha">⚠️ Precisa dos `&lt;nome&gt;_&lt;lang&gt;.srt` do nível 2 — a classificação roda em cima do texto já distribuído por idioma.</div>
+        </div>
+      </article>
+      <article class="j" data-tipo="apoio">
+        <div class="j-cab">
+          <div class="j-id">sincronizar</div>
+          <h3>Trazer o GitHub pro Drive</h3>
+        </div>
+        <div class="j-corpo">
+          <div class="linha"><div class="rot">quando</div><div class="val">Sempre que o repositório mudar — e desconfie se fizer semanas que você não roda.</div></div>
+          <div class="linha"><div class="rot">entrega</div><div class="val">`pipeline/modulos`, `notebooks` e `dados_lexico` do Drive idênticos ao repositório, conferido por sha256.</div></div>
+<div class="linha"><div class="rot">custo</div><div class="val">Segundos. Copia só o que mudou.</div></div>
+          <ol class="passos">
+<li><div><div class="passo-nb"><code>repositorio-sincronizar</code></div><div class="passo-produz">→ Drive igual ao repositório</div><div class="passo-nota">Mostra o que vai mudar ANTES de mudar, e confere por hash DEPOIS — copiar pra Drive montado falha calado.</div></div></li>
+          </ol>
+<div class="armadilha">⚠️ O código vive no GitHub e o Colab lê do Drive; sem esta ponte os dois divergem em silêncio. Em 29/ago o Drive estava 56 commits atrás — faltavam 10 notebooks e 7 módulos. Teste rodado assim executa código velho e falha por motivo que já não existe. A direção é uma só: GitHub → Drive; edição feita direto no Colab e não levada pro git é sobrescrita.</div>
         </div>
       </article>
       <article class="j" data-tipo="apoio">

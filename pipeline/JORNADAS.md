@@ -6,7 +6,7 @@
 > notebooks (`python3 pipeline/modulos/jornadas.py`), então notebook novo que
 > ninguém encaixou numa jornada é acusado em vez de sumir do mapa.
 
-São 30 notebooks. A pergunta que se faz na prática nunca é "o que este
+São 31 notebooks. A pergunta que se faz na prática nunca é "o que este
 notebook faz?" — é a inversa: **"eu quero um resultado assim; o que eu rodo?"**
 Este documento responde essa.
 
@@ -52,6 +52,7 @@ flowchart LR
   legenda_unica("legenda-unica")
   multi_idioma("multi-idioma")
   multicolor("multicolor")
+  sincronizar{{"sincronizar"}}
   portao{{"portao"}}
   compilacao("compilacao")
   estoque_imagem --> base_versiculo
@@ -241,6 +242,20 @@ flowchart LR
 > ⚠️ A ordem é a que VOCÊ escreveu na seleção — pode repetir capítulo e sair de ordem de propósito.
 
 ## Apoio
+
+### `sincronizar` — Trazer o GitHub pro Drive
+
+**Tipo** apoio · **Quando** Sempre que o repositório mudar — e desconfie se fizer semanas que você não roda.
+
+**Entrega** `pipeline/modulos`, `notebooks` e `dados_lexico` do Drive idênticos ao repositório, conferido por sha256.
+
+**Custo** Segundos. Copia só o que mudou.
+
+| # | Notebook | Produz |
+|---|---|---|
+| 1 | `repositorio-sincronizar`<br>Mostra o que vai mudar ANTES de mudar, e confere por hash DEPOIS — copiar pra Drive montado falha calado. | Drive igual ao repositório |
+
+> ⚠️ O código vive no GitHub e o Colab lê do Drive; sem esta ponte os dois divergem em silêncio. Em 29/ago o Drive estava 56 commits atrás — faltavam 10 notebooks e 7 módulos. Teste rodado assim executa código velho e falha por motivo que já não existe. A direção é uma só: GitHub → Drive; edição feita direto no Colab e não levada pro git é sobrescrita.
 
 ### `portao` — Portão de qualidade
 
