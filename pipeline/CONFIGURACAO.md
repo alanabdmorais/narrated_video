@@ -539,6 +539,42 @@ dizendo o que procurou.
 > escolheu, não de uma opção que dá pra esquecer de marcar.** Opção esquecida
 > não dá erro — dá o vídeo errado com o nome certo.
 
+### De onde vem o TEXTO (a célula é o último recurso)
+
+Nos notebooks `video-base-*`, `TEXTO_ORACAO` era a **primeira** fonte e o
+roteiro do Drive a segunda. Agora é o contrário:
+
+| # | Fonte | Quando ganha |
+|---|---|---|
+| 1 | `videos/<nome>/<nome>_roteiro.txt` | edição sua **para este vídeo** |
+| 2 | `dados_lexico/web-biblia.json` | nome de capítulo bíblico |
+| 3 | `TEXTO_ORACAO` da Configuração | quando nenhum dos dois responde |
+
+O motivo é o mesmo do áudio: **o texto da célula fica parado de um vídeo pro
+outro.** Um texto colado à mão há meses vencendo a Bíblia conferida (1,0000
+contra três fontes independentes) é erro que não dá aviso nenhum — sai um
+vídeo com o texto de outra pessoa e nada aponta pra isso.
+
+Caindo na fonte 2, o roteiro é gravado na pasta do vídeo: da próxima vez sai
+pela fonte 1, e fica um arquivo pra você corrigir se algo estiver torto.
+
+**A mensagem separa os dois motivos de falha.** Nome que não é capítulo
+(`oracao_bom_dia`) e capítulo ausente do JSON pedem conferências em lugares
+diferentes; a primeira versão culpava o nome pelos dois, o que mandaria você
+olhar onde não está o problema.
+
+### A célula do YouTube deixou de despejar 150 linhas
+
+`yt-dlp -F` num vídeo com dublagem automática lista cada idioma em sete
+formatos — ~150 linhas de uma vez, o suficiente pra travar o navegador (e
+travou). Agora imprime só os idiomas disponíveis, numa linha;
+`LISTAR_TUDO = True` traz a lista inteira quando você precisar do ID exato.
+
+E a célula **se pula sozinha** quando já existe áudio na pasta do vídeo ou no
+estoque. Ela é de quando o áudio precisava vir de algum lugar; com os 1.189
+capítulos no Drive, baixar do YouTube por cima trocaria a gravação da fonte
+por uma faixa recomprimida — e ainda dependeria do vídeo continuar no ar.
+
 ### De onde vem a narração (e por que ela não é sobrescrita)
 
 `gerar_audio()` procura, **nesta ordem**, antes de cogitar gerar:
