@@ -273,7 +273,7 @@ flowchart LR
 |---|---|---|
 | 1 | `biblia-audio-conferir` | `<nome>_whisper_bruto_<modelo>.txt` + o relatório de divergências |
 
-> ⚠️ Não tem limiar, de propósito: fala contra texto escrito nunca dá 1,0 e não há medição pra dizer quanto é bom. O que decide é a FORMA — medido no Mateus 2: 14 erros de nome próprio dão 0,9675 em 14 trechos pequenos, e 40 palavras faltando dão 0,9328 num trecho só. A nota engana; o trecho grande é o achado.
+> ⚠️ Whisper 'corrige' texto bíblico pro fraseado da King James -- trocou 'King Herod' por 'Herod the king' no Mateus 2. Reordenar palavra PARECE divergência real e não é. O que decide é a FORMA: muitas diferenças pequenas é ruído, poucas e grandes é divergência. Calibrado em 0,9625 (Whisper 'small') num capítulo cujo texto é comprovadamente o certo -- o PDF oficial do AudioTreasure bate 1,0000 com o web-biblia.json.
 
 ### `portao` — Portão de qualidade
 

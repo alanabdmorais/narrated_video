@@ -500,6 +500,30 @@ Gênesis 1:1 sai com as duas colunas intercaladas). O USFM marca parágrafo
 (`\p`) e poesia (`\q1`) explicitamente, que é exatamente a estrutura que o
 `roteiro_versiculos.txt` já tem. O PDF serve pra ler, não pra virar dado.
 
+### A prova de três pontas (29/ago)
+
+O texto da narração foi confirmado por três fontes independentes que **batem
+entre si palavra por palavra**:
+
+| Comparação | Similaridade |
+|---|---|
+| `web-biblia.json` (baixado do ebible) × roteiro do projeto | **1,0000** |
+| **PDF oficial do AudioTreasure** × roteiro do projeto | **1,0000** |
+| áudio do David Williams (Whisper `small`) × texto | 0,9625 |
+
+O PDF é o que o próprio site do áudio publica "pra acompanhar a narração" — é
+a fonte mais autoritativa possível pra essa pergunta, e não sobrou dúvida.
+
+Então **0,96 no áudio é o piso do bom**, não um defeito: é o custo de
+transcrever fala. Está em `biblia-audio-conferir.ipynb` como calibração.
+
+> ⚠️ **Whisper "corrige" texto bíblico pro fraseado da King James.** No Mateus
+> 2 ele transcreveu `King Herod` como "Herod the king", `for this is written`
+> como "for thus it is written" e `shall come a governor` como "come forth a
+> governor". Reordenar palavra e inserir palavra **parecem** divergência real —
+> o instinto "ASR não inventaria isso" está errado em texto conhecido. Foi o
+> PDF que desfez a suspeita.
+
 ### Ester e Daniel vêm na forma grega
 
 A WEB do ebible.org publica os dois com os acréscimos deuterocanônicos, sob os
