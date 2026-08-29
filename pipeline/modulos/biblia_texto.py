@@ -131,6 +131,24 @@ def gerar_roteiro(versiculos: list[Versiculo]) -> str:
     return "".join(partes)
 
 
+def gerar_narracao(versiculos: list[Versiculo]) -> str:
+    """O mesmo texto, SEM os números de versículo — pro `<nome>_roteiro.txt`.
+
+    Os dois arquivos existem porque servem a coisas opostas:
+
+        <nome>_roteiro_versiculos.txt   `1 Now when Jesus... 2 Where is he...`
+            o número é dado: é por ele que o match casa cena com versículo e
+            que a legenda sabe qual referência mostrar.
+
+        <nome>_roteiro.txt              `Now when Jesus... Where is he...`
+            o número é lixo: vira TEXTO_ORACAO, e o Edge TTS leria "um.
+            Agora quando Jesus... dois. Onde está aquele..." em voz alta.
+
+    Gravar um no lugar do outro não dá erro — dá uma narração contando números.
+    """
+    return " ".join(v.texto for v in versiculos if v.texto)
+
+
 # ── Ler de volta o web-biblia.json ───────────────────────────────────────────
 #
 # O `biblia-texto-baixar.ipynb` grava a Bíblia inteira num JSON; daqui pra
@@ -183,6 +201,13 @@ def roteiro_do_capitulo(nome_projeto: str, caminho_biblia: _Path | str) -> str:
     livro, capitulo = bl.de_nome_projeto(nome_projeto)
     biblia = carregar_biblia(caminho_biblia)
     return gerar_roteiro(versiculos_de(biblia, livro.sigla, capitulo))
+
+
+def narracao_do_capitulo(nome_projeto: str, caminho_biblia: _Path | str) -> str:
+    """O texto de "40_Matt_02" sem números de versículo — ver gerar_narracao."""
+    livro, capitulo = bl.de_nome_projeto(nome_projeto)
+    biblia = carregar_biblia(caminho_biblia)
+    return gerar_narracao(versiculos_de(biblia, livro.sigla, capitulo))
 
 
 # ── Comparação com um roteiro já existente ───────────────────────────────────

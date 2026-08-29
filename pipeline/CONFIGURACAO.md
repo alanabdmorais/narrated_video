@@ -555,8 +555,22 @@ outro.** Um texto colado à mão há meses vencendo a Bíblia conferida (1,0000
 contra três fontes independentes) é erro que não dá aviso nenhum — sai um
 vídeo com o texto de outra pessoa e nada aponta pra isso.
 
-Caindo na fonte 2, o roteiro é gravado na pasta do vídeo: da próxima vez sai
-pela fonte 1, e fica um arquivo pra você corrigir se algo estiver torto.
+Caindo na fonte 2, **os dois roteiros** são gravados na pasta do vídeo — e os
+formatos são diferentes de propósito:
+
+| Arquivo | Conteúdo | Quem usa |
+|---|---|---|
+| `<nome>_roteiro_versiculos.txt` | `1 Now when Jesus… 2 Where is he…` | match cena↔versículo, referência na legenda |
+| `<nome>_roteiro.txt` | `Now when Jesus… Where is he…` | vira `TEXTO_ORACAO`, é o que o Edge TTS lê |
+
+Da próxima vez sai pela fonte 1, e ficam dois arquivos pra você corrigir se
+algo estiver torto.
+
+> ⚠️ **Gravar um no lugar do outro não dá erro** — dá uma narração contando
+> números em voz alta ("um. Agora quando Jesus… dois."), ou um match que não
+> acha versículo nenhum. Foi o que a primeira versão desta célula fazia:
+> gravava o texto marcado no arquivo da narração. `gerar_narracao()` existe
+> pra que os dois saiam da mesma consulta, cada um no seu formato.
 
 **A mensagem separa os dois motivos de falha.** Nome que não é capítulo
 (`oracao_bom_dia`) e capítulo ausente do JSON pedem conferências em lugares
