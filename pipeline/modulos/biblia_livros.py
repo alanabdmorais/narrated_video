@@ -207,6 +207,36 @@ def usfm(livro: Livro) -> str:
     return SIGLAS_USFM[livro.numero - 1]
 
 
+def de_nome_projeto(nome: str) -> tuple[Livro, int]:
+    """O caminho de volta do `nome_projeto()`: "40_Matt_02" -> (Mateus, 2).
+
+    Existe porque o nome do vídeo JÁ carrega livro e capítulo, e mesmo assim
+    havia notebook pedindo o capítulo de novo na Configuração -- com `1` de
+    padrão, num vídeo chamado `40_Matt_02`. Quem esquecesse de trocar
+    publicava "Matt 1:4" em cima do capítulo 2, sem erro nenhum.
+
+    Levanta ValueError em nome que não siga o padrão: adivinhar capítulo de um
+    nome livre (uma oração, um vídeo de compilação) erraria calado, e calado é
+    exatamente o defeito que esta função existe pra fechar.
+    """
+    partes = nome.strip().split("_")
+    if len(partes) != 3:
+        raise ValueError(
+            f"{nome!r} não segue {{NN}}_{{Sigla}}_{{CC}} — informe o capítulo à mão")
+    numero, sigla, capitulo = partes
+    if not (numero.isdigit() and capitulo.isdigit()):
+        raise ValueError(f"{nome!r} não segue {{NN}}_{{Sigla}}_{{CC}}")
+
+    livro = por_sigla(sigla)
+    if livro.numero != int(numero):
+        raise ValueError(
+            f"{nome!r}: o prefixo {numero} não é o de {livro.nome} "
+            f"(que é {livro.numero:02d})")
+    cap = int(capitulo)
+    livro._validar(cap)
+    return livro, cap
+
+
 def por_usfm(codigo: str) -> Livro:
     """Busca pelo código USFM, sem diferenciar maiúscula: por_usfm("mat")."""
     chave = codigo.strip().upper()

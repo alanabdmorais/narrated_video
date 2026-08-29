@@ -191,7 +191,7 @@ flowchart LR
 
 ### `multi-idioma` — Nível 2 · legendas multi-idioma, uma cor por idioma
 
-**Tipo** vídeo · **Quando** O vídeo poliglota simples: uma linha por idioma, empilhadas, inglês no topo.
+**Tipo** vídeo · **Quando** O vídeo poliglota simples: uma linha por idioma, empilhadas, inglês no topo. Exige um vídeo NO YOUTUBE com dublagem automática — é de lá que sai o texto de cada idioma.
 
 **Entrega** `<nome>_final_idiomas[_img].mp4` + um `<nome>_<lang>.srt` por idioma.
 
@@ -201,9 +201,11 @@ flowchart LR
 
 | # | Notebook | Produz |
 |---|---|---|
-| 1 | `caption-multilang-sources-gather`<br>ou `caption-multilang-zh-sources-gather`<br>Duas fontes de texto por idioma; você escolhe qual confia mais em `FONTE_TEXTO_IDIOMA`. | `<nome>_yt_<lang>.srt`, `<nome>_audio_<lang>.wav`, `<nome>_whisper_<lang>.srt` |
+| 1 | `caption-multilang-sources-gather`<br>ou `caption-multilang-zh-sources-gather`<br>Pede `URL_YOUTUBE` na Configuração. Duas fontes de texto por idioma; você escolhe qual confia mais em `FONTE_TEXTO_IDIOMA`. | `<nome>_yt_<lang>.srt`, `<nome>_audio_<lang>.wav`, `<nome>_whisper_<lang>.srt` |
 | 2 | `caption-multilang-generate`<br>ou `caption-multilang-zh-generate` | `<nome>_<lang>.srt` por idioma |
 | 3 | `caption-multilang-burn`<br>ou `caption-multilang-zh-burn`<br>A variante `-zh-` grava com sufixo `_zh`, então as duas versões convivem na mesma pasta. | `<nome>_final_idiomas[_img].mp4` |
+
+> ⚠️ O texto dos outros idiomas NÃO é traduzido aqui — é colhido da dublagem automática e das legendas de um vídeo que já está no YouTube (`URL_YOUTUBE`). Num capítulo inédito, você precisa publicar primeiro (pode ser não listado) e esperar o YouTube gerar as faixas. Sem essa URL a jornada não começa.
 
 ### `multicolor` — Nível 3 · legenda multicor, uma cor por classe gramatical
 

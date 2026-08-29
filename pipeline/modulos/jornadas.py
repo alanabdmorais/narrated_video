@@ -261,17 +261,24 @@ JORNADAS: tuple[Jornada, ...] = (
         tipo=VIDEO,
         titulo="Nível 2 · legendas multi-idioma, uma cor por idioma",
         quando="O vídeo poliglota simples: uma linha por idioma, empilhadas, "
-               "inglês no topo.",
+               "inglês no topo. Exige um vídeo NO YOUTUBE com dublagem "
+               "automática — é de lá que sai o texto de cada idioma.",
         entrega="`<nome>_final_idiomas[_img].mp4` + um `<nome>_<lang>.srt` por idioma.",
         depende_de=("legenda-unica",),
         custo="O `generate` usa IA (Mistral, com Groq de reserva) pra "
               "redistribuir cada idioma nos blocos do mestre.",
+        armadilha="O texto dos outros idiomas NÃO é traduzido aqui — é colhido "
+                  "da dublagem automática e das legendas de um vídeo que já "
+                  "está no YouTube (`URL_YOUTUBE`). Num capítulo inédito, você "
+                  "precisa publicar primeiro (pode ser não listado) e esperar o "
+                  "YouTube gerar as faixas. Sem essa URL a jornada não começa.",
         passos=(
             Passo("caption-multilang-sources-gather",
                   "`<nome>_yt_<lang>.srt`, `<nome>_audio_<lang>.wav`, `<nome>_whisper_<lang>.srt`",
                   ou=("caption-multilang-zh-sources-gather",),
-                  nota="Duas fontes de texto por idioma; você escolhe qual "
-                       "confia mais em `FONTE_TEXTO_IDIOMA`."),
+                  nota="Pede `URL_YOUTUBE` na Configuração. Duas fontes de texto "
+                       "por idioma; você escolhe qual confia mais em "
+                       "`FONTE_TEXTO_IDIOMA`."),
             Passo("caption-multilang-generate", "`<nome>_<lang>.srt` por idioma",
                   ou=("caption-multilang-zh-generate",)),
             Passo("caption-multilang-burn", "`<nome>_final_idiomas[_img].mp4`",

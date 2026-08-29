@@ -260,15 +260,15 @@ table.simples th{font-family:'IBM Plex Mono',monospace;font-size:11px;
           <h3>Nível 2 · legendas multi-idioma, uma cor por idioma</h3>
         </div>
         <div class="j-corpo">
-          <div class="linha"><div class="rot">quando</div><div class="val">O vídeo poliglota simples: uma linha por idioma, empilhadas, inglês no topo.</div></div>
+          <div class="linha"><div class="rot">quando</div><div class="val">O vídeo poliglota simples: uma linha por idioma, empilhadas, inglês no topo. Exige um vídeo NO YOUTUBE com dublagem automática — é de lá que sai o texto de cada idioma.</div></div>
           <div class="linha"><div class="rot">entrega</div><div class="val">`&lt;nome&gt;_final_idiomas[_img].mp4` + um `&lt;nome&gt;_&lt;lang&gt;.srt` por idioma.</div></div>
 <div class="linha"><div class="rot">depende de</div><div class="val deps"><span class="dep">legenda-unica</span></div></div><div class="linha"><div class="rot">custo</div><div class="val">O `generate` usa IA (Mistral, com Groq de reserva) pra redistribuir cada idioma nos blocos do mestre.</div></div>
           <ol class="passos">
-<li><div><div class="passo-nb"><code>caption-multilang-sources-gather</code><br>ou <code>caption-multilang-zh-sources-gather</code></div><div class="passo-produz">→ `&lt;nome&gt;_yt_&lt;lang&gt;.srt`, `&lt;nome&gt;_audio_&lt;lang&gt;.wav`, `&lt;nome&gt;_whisper_&lt;lang&gt;.srt`</div><div class="passo-nota">Duas fontes de texto por idioma; você escolhe qual confia mais em `FONTE_TEXTO_IDIOMA`.</div></div></li>
+<li><div><div class="passo-nb"><code>caption-multilang-sources-gather</code><br>ou <code>caption-multilang-zh-sources-gather</code></div><div class="passo-produz">→ `&lt;nome&gt;_yt_&lt;lang&gt;.srt`, `&lt;nome&gt;_audio_&lt;lang&gt;.wav`, `&lt;nome&gt;_whisper_&lt;lang&gt;.srt`</div><div class="passo-nota">Pede `URL_YOUTUBE` na Configuração. Duas fontes de texto por idioma; você escolhe qual confia mais em `FONTE_TEXTO_IDIOMA`.</div></div></li>
 <li><div><div class="passo-nb"><code>caption-multilang-generate</code><br>ou <code>caption-multilang-zh-generate</code></div><div class="passo-produz">→ `&lt;nome&gt;_&lt;lang&gt;.srt` por idioma</div></div></li>
 <li><div><div class="passo-nb"><code>caption-multilang-burn</code><br>ou <code>caption-multilang-zh-burn</code></div><div class="passo-produz">→ `&lt;nome&gt;_final_idiomas[_img].mp4`</div><div class="passo-nota">A variante `-zh-` grava com sufixo `_zh`, então as duas versões convivem na mesma pasta.</div></div></li>
           </ol>
-
+<div class="armadilha">⚠️ O texto dos outros idiomas NÃO é traduzido aqui — é colhido da dublagem automática e das legendas de um vídeo que já está no YouTube (`URL_YOUTUBE`). Num capítulo inédito, você precisa publicar primeiro (pode ser não listado) e esperar o YouTube gerar as faixas. Sem essa URL a jornada não começa.</div>
         </div>
       </article>
       <article class="j" data-tipo="vídeo">
