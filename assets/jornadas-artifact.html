@@ -1,0 +1,352 @@
+<title>Jornadas do Pipeline</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#191510;--surface:#24201a;--surface-2:#2e2820;--line:#3a3327;
+  --text:#ede3d1;--muted:#9c917d;--accent:#c99b4a;--ok:#5a8f6f;--warn:#c98a4a}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);line-height:1.55;
+  font-family:'IBM Plex Sans',system-ui,sans-serif}
+.wrap{max-width:1000px;margin:0 auto;padding:0 24px 90px}
+header{padding:46px 0 22px;border-bottom:1px solid var(--line)}
+.eyebrow{font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--accent);margin:0 0 12px}
+h1{font-family:'Fraunces',serif;font-weight:600;font-size:clamp(27px,4.5vw,40px);
+  line-height:1.1;margin:0 0 14px}
+p.lede{max-width:680px;color:var(--muted);font-size:15px;margin:0 0 10px}
+h2{font-family:'Fraunces',serif;font-size:22px;font-weight:600;margin:44px 0 4px;
+  padding-bottom:9px;border-bottom:1px solid var(--line)}
+h3{font-size:15.5px;font-weight:600;margin:0 0 10px}
+code{font-family:'IBM Plex Mono',monospace;background:var(--surface-2);
+  padding:1px 5px;border-radius:4px;font-size:.9em}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:22px 0 6px}
+.chip{font-family:'IBM Plex Mono',monospace;font-size:12px;padding:5px 11px;
+  border:1px solid var(--line);border-radius:999px;color:var(--muted);
+  background:var(--surface);cursor:pointer}
+.chip.ativo{border-color:var(--accent);color:var(--accent)}
+.j{border:1px solid var(--line);border-radius:11px;background:var(--surface);
+  margin-top:14px;overflow:hidden}
+.j.oculta{display:none}
+.j-cab{padding:14px 20px;background:var(--surface-2);border-bottom:1px solid var(--line)}
+.j-id{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--accent)}
+.j-corpo{padding:15px 20px;display:flex;flex-direction:column;gap:11px}
+.linha{display:flex;gap:10px;font-size:13.5px;flex-wrap:wrap}
+.rot{font-family:'IBM Plex Mono',monospace;font-size:11px;text-transform:uppercase;
+  letter-spacing:.06em;color:var(--muted);min-width:88px;flex-shrink:0;padding-top:2px}
+.val{flex:1;min-width:220px;color:var(--text)}
+ol.passos{margin:2px 0 0;padding-left:0;list-style:none;counter-reset:p}
+ol.passos li{counter-increment:p;display:flex;gap:12px;padding:9px 0;
+  border-top:1px solid var(--line)}
+ol.passos li::before{content:counter(p);font-family:'IBM Plex Mono',monospace;
+  font-size:11px;color:var(--accent);border:1px solid var(--line);border-radius:50%;
+  width:22px;height:22px;display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;margin-top:2px}
+.passo-nb{font-family:'IBM Plex Mono',monospace;font-size:12.5px}
+.passo-produz{color:var(--muted);font-size:12.5px;margin-top:3px}
+.passo-nota{color:var(--muted);font-size:12.5px;margin-top:5px;font-style:italic}
+.armadilha{border-left:3px solid var(--warn);background:rgba(201,138,74,.08);
+  padding:10px 14px;border-radius:0 7px 7px 0;font-size:13px;color:var(--text)}
+.deps{display:flex;gap:6px;flex-wrap:wrap}
+.dep{font-family:'IBM Plex Mono',monospace;font-size:11.5px;padding:2px 8px;
+  border:1px solid var(--line);border-radius:5px;color:var(--muted)}
+pre.mermaid{background:var(--surface);border:1px solid var(--line);border-radius:11px;
+  padding:18px;overflow-x:auto;margin:16px 0 0}
+.aviso{border-left:3px solid var(--accent);background:rgba(201,155,74,.08);
+  padding:12px 16px;border-radius:0 7px 7px 0;font-size:13.5px;margin-top:18px}
+footer{margin-top:56px;padding-top:18px;border-top:1px solid var(--line);
+  color:var(--muted);font-size:12px;font-family:'IBM Plex Mono',monospace}
+table.simples{width:100%;border-collapse:collapse;font-size:13px;margin-top:12px}
+table.simples th,table.simples td{text-align:left;padding:8px 12px;
+  border-bottom:1px solid var(--line);vertical-align:top}
+table.simples th{font-family:'IBM Plex Mono',monospace;font-size:11px;
+  text-transform:uppercase;color:var(--muted);letter-spacing:.06em}
+</style>
+
+<div class="wrap">
+  <header>
+    <p class="eyebrow">narrated_video · mapa de jornadas</p>
+    <h1>O que rodar pra conseguir o quê</h1>
+    <p class="lede">São 30 notebooks. A pergunta que se faz na prática nunca é
+      "o que este notebook faz?" — é a inversa: <b>eu quero um resultado assim,
+      o que eu rodo?</b> Este mapa responde essa.</p>
+    <p class="lede">Gerado de <code>pipeline/modulos/jornadas.py</code>, que se
+      confere sozinho contra a pasta de notebooks — notebook novo que ninguém
+      encaixou numa jornada é acusado, não some do mapa.</p>
+  </header>
+
+  <h2>O mapa</h2>
+  <pre class="mermaid">flowchart LR
+  biblia[&quot;biblia&quot;]
+  som[&quot;som&quot;]
+  lexico[&quot;lexico&quot;]
+  estoque_imagem[&quot;estoque-imagem&quot;]
+  estoque_video[&quot;estoque-video&quot;]
+  base_padrao(&quot;base-padrao&quot;)
+  base_versiculo(&quot;base-versiculo&quot;)
+  base_trilhas(&quot;base-trilhas&quot;)
+  legenda_unica(&quot;legenda-unica&quot;)
+  multi_idioma(&quot;multi-idioma&quot;)
+  multicolor(&quot;multicolor&quot;)
+  portao{{&quot;portao&quot;}}
+  compilacao(&quot;compilacao&quot;)
+  estoque_imagem --&gt; base_versiculo
+  legenda_unica --&gt; base_versiculo
+  estoque_imagem --&gt; base_trilhas
+  som --&gt; base_trilhas
+  legenda_unica --&gt; base_trilhas
+  legenda_unica --&gt; multi_idioma
+  multi_idioma --&gt; multicolor
+  biblia --&gt; compilacao</pre>
+
+  <div class="aviso"><b>Os quatro níveis de vídeo não são uma cadeia de
+    arquivos.</b> Os três notebooks de burn leem todos o mesmo
+    <code>NOME_VIDEO_BASE</code> — nenhum queima em cima do mp4 do nível
+    anterior. Dá pra ir direto ao nível 3 sem nunca gerar o vídeo do nível 1, e
+    os quatro mp4 convivem na mesma pasta. O que encadeia de verdade são os
+    <b>SRT</b>, não os mp4 — por isso "depende de" aponta pra jornada cujo
+    arquivo é pré-requisito, não pro nível de baixo.</div>
+
+  <div class="chips" id="chips">
+    <span class="chip ativo" data-f="todos">todas (13)</span>
+    <span class="chip" data-f="preparo">preparo</span>
+    <span class="chip" data-f="vídeo">vídeo</span>
+    <span class="chip" data-f="apoio">apoio</span>
+  </div>
+
+  <div id="lista">
+      <article class="j" data-tipo="preparo">
+        <div class="j-cab">
+          <div class="j-id">biblia</div>
+          <h3>A Bíblia inteira, em áudio e em texto</h3>
+        </div>
+        <div class="j-corpo">
+          <div class="linha"><div class="rot">quando</div><div class="val">Uma vez, antes da primeira compilação.</div></div>
+          <div class="linha"><div class="rot">entrega</div><div class="val">1.189 mp3 por capítulo em `assets/biblia_audio/` e o texto completo em `dados_lexico/web-biblia.json`.</div></div>
+<div class="linha"><div class="rot">custo</div><div class="val">~1,2 GB e algumas horas de download. Roda e esquece.</div></div>
+          <ol class="passos">
+<li><div><div class="passo-nb"><code>biblia-audio-baixar</code></div><div class="passo-produz">→ `assets/biblia_audio/40_Matt_02.mp3` × 1.189</div><div class="passo-nota">Renomeia do padrão irregular da fonte pro do projeto.</div></div></li>
+<li><div><div class="passo-nb"><code>biblia-texto-baixar</code></div><div class="passo-produz">→ `dados_lexico/web-biblia.json`</div><div class="passo-nota">Confere contra o `40_Matt_02` que já existe antes de dar por bom.</div></div></li>
+          </ol>
+<div class="armadilha">⚠️ Depois disso, o passo &#x27;fornecer o áudio&#x27; some do fluxo de compilação. Antes disso, toda compilação trava esperando você.</div>
+        </div>
+      </article>
+      <article class="j" data-tipo="preparo">
+        <div class="j-cab">
+          <div class="j-id">som</div>
+          <h3>Estoque de som — trilha e efeito</h3>
+        </div>
+        <div class="j-corpo">
+          <div class="linha"><div class="rot">quando</div><div class="val">Uma vez pra criar as planilhas; de novo sempre que você adicionar arquivos novos às pastas do Drive.</div></div>
+          <div class="linha"><div class="rot">entrega</div><div class="val">Aba `trilha_stock` da `Biblioteca_Match_Audio` — trilha e efeito no mesmo estoque, separados pela coluna `categoria`.</div></div>
+<div class="linha"><div class="rot">custo</div><div class="val">Grátis, sem IA. Não duplica se rodar de novo.</div></div>
+          <ol class="passos">
+<li><div><div class="passo-nb"><code>organizar-trilha-audio</code></div><div class="passo-produz">→ 3 planilhas de trilha + aba `trilha_stock`</div><div class="passo-nota">Na PRIMEIRA vez ele CRIA as planilhas e imprime os IDs — copie pra configuração, senão cria planilha nova toda vez.</div></div></li>
+<li><div><div class="passo-nb"><code>organizar-efeitos-audio</code></div><div class="passo-produz">→ linhas de efeito na mesma `trilha_stock`</div><div class="passo-nota">Filtra por tag concreta (porta, trovão, cavalo), não por clima.</div></div></li>
+          </ol>
+
+        </div>
+      </article>
+      <article class="j" data-tipo="preparo">
+        <div class="j-cab">
+          <div class="j-id">lexico</div>
+          <h3>Tags de evento e título na planilha</h3>
+        </div>
+        <div class="j-corpo">
+          <div class="linha"><div class="rot">quando</div><div class="val">Uma vez, e de novo quando o léxico ganhar sinônimos.</div></div>
+          <div class="linha"><div class="rot">entrega</div><div class="val">Abas `evento_tags` e `titulo_tags` na Biblioteca de Match, com o intervalo de cada um visível.</div></div>
+<div class="linha"><div class="rot">custo</div><div class="val">Grátis — sem IA, sem Pixabay. Roda a Bíblia inteira de uma vez.</div></div>
+          <ol class="passos">
+<li><div><div class="passo-nb"><code>sincronizar-evento-titulo-tags</code></div><div class="passo-produz">→ abas `evento_tags` e `titulo_tags`</div></div></li>
+          </ol>
+
+        </div>
+      </article>
+      <article class="j" data-tipo="preparo">
+        <div class="j-cab">
+          <div class="j-id">estoque-imagem</div>
+          <h3>Estoque de imagem, semeado pelo léxico bíblico</h3>
+        </div>
+        <div class="j-corpo">
+          <div class="linha"><div class="rot">quando</div><div class="val">Quando a biblioteca não cobre os versículos que você quer usar.</div></div>
+          <div class="linha"><div class="rot">entrega</div><div class="val">Linhas novas na `pixabay-image-stock` e entradas permanentes na `biblioteca_match`, reaproveitáveis por qualquer vídeo futuro.</div></div>
+
+          <ol class="passos">
+<li><div><div class="passo-nb"><code>pixabay-image-seed</code><br>ou <code>pixabay-image-seed-biblia-completa</code></div><div class="passo-produz">→ linhas novas em `image-stock`</div><div class="passo-nota">Por livro/capítulo, ou os 66 livros de uma vez (esse tem checkpoint: se o Colab cair, continua de onde parou).</div></div></li>
+<li><div><div class="passo-nb"><code>pixabay-image-descriptions</code></div><div class="passo-produz">→ tags e descrição de cena preenchidas</div><div class="passo-nota">É `Tags_Semelhantes_*` que o painel de revisão usa pra achar candidato — sem esta etapa o match não acha nada.</div></div></li>
+          </ol>
+<div class="armadilha">⚠️ Entre SEMEAR e ALOCAR você tem que abrir a planilha e apagar as imagens que não servem. Alocar sem revisar imortaliza o lixo.</div>
+        </div>
+      </article>
+      <article class="j" data-tipo="preparo">
+        <div class="j-cab">
+          <div class="j-id">estoque-video</div>
+          <h3>Estoque de vídeo descrito por IA</h3>
+        </div>
+        <div class="j-corpo">
+          <div class="linha"><div class="rot">quando</div><div class="val">Quando entrar clipe novo na `pixabay_stock`.</div></div>
+          <div class="linha"><div class="rot">entrega</div><div class="val">`Tags_*` e `Descricao_Cena_*` preenchidas na aba `pixabay_stock`.</div></div>
+<div class="linha"><div class="rot">custo</div><div class="val">IA de visão (Groq + Mistral em rodízio), 1 a 3 frames por clipe.</div></div>
+          <ol class="passos">
+<li><div><div class="passo-nb"><code>pixabay-video-descriptions</code></div><div class="passo-produz">→ 8 campos preenchidos por clipe</div></div></li>
+          </ol>
+
+        </div>
+      </article>
+      <article class="j" data-tipo="vídeo">
+        <div class="j-cab">
+          <div class="j-id">base-padrao</div>
+          <h3>Nível 0 · vídeo base, modo padrão</h3>
+        </div>
+        <div class="j-corpo">
+          <div class="linha"><div class="rot">quando</div><div class="val">Quando a imagem não precisa ter a ver com o versículo — clipes/fotos sorteados, N segundos cada.</div></div>
+          <div class="linha"><div class="rot">entrega</div><div class="val">`&lt;nome&gt;_video_base[_img].mp4` — narração + fundo + trilha, sem legenda.</div></div>
+<div class="linha"><div class="rot">custo</div><div class="val">Cada etapa pula sozinha o que já está feito (checkpoint).</div></div>
+          <ol class="passos">
+<li><div><div class="passo-nb"><code>video-base-imagem-padrao</code><br>ou <code>video-base-video-padrao</code></div><div class="passo-produz">→ `&lt;nome&gt;_video_base_img.mp4`</div><div class="passo-nota">Imagem parada ou clipe de vídeo — mesma jornada, fundo diferente.</div></div></li>
+          </ol>
+
+        </div>
+      </article>
+      <article class="j" data-tipo="vídeo">
+        <div class="j-cab">
+          <div class="j-id">base-versiculo</div>
+          <h3>Nível 0 · vídeo base, imagem casada com o versículo</h3>
+        </div>
+        <div class="j-corpo">
+          <div class="linha"><div class="rot">quando</div><div class="val">Quando cada versículo deve aparecer com a imagem que fala dele.</div></div>
+          <div class="linha"><div class="rot">entrega</div><div class="val">`&lt;nome&gt;_video_base[_img].mp4` — a imagem troca quando o versículo troca.</div></div>
+<div class="linha"><div class="rot">depende de</div><div class="val deps"><span class="dep">estoque-imagem</span><span class="dep">legenda-unica</span></div></div>
+          <ol class="passos">
+<li><div><div class="passo-nb"><code>match-scene-verse</code></div><div class="passo-produz">→ `match_&lt;nome&gt;_cap&lt;N&gt;.json` + `lacunas_match_*.txt`</div><div class="passo-nota">Não escreve nada sozinho — é uma lista pra você revisar. Versículo sem candidato sai marcado &#x27;sem opção&#x27;.</div></div></li>
+<li><div><div class="passo-nb"><code>video-base-imagem-versiculo</code><br>ou <code>video-base-video-versiculo</code></div><div class="passo-produz">→ `&lt;nome&gt;_video_base_img.mp4`</div></div></li>
+          </ol>
+<div class="armadilha">⚠️ Este notebook PARA no meio: rode só a NARRAÇÃO (etapa 6), saia pra rodar o `caption-single-generate` e o `match-scene-verse`, e só então volte pra etapa de cortar os clipes. Ele exige 100% de cobertura do match — para com um relatório dos versículos faltando, não gera vídeo pela metade.</div>
+        </div>
+      </article>
+      <article class="j" data-tipo="vídeo">
+        <div class="j-cab">
+          <div class="j-id">base-trilhas</div>
+          <h3>Nível 0 · vídeo base + trilha por clima, e efeito pontual</h3>
+        </div>
+        <div class="j-corpo">
+          <div class="linha"><div class="rot">quando</div><div class="val">Quando a trilha deve mudar junto com o evento da narrativa, e (na variante com efeitos) quando um versículo pede um som pontual — porta, trovão, cavalo.</div></div>
+          <div class="linha"><div class="rot">entrega</div><div class="val">`&lt;nome&gt;_video_base[_img].mp4` — mesmo nome canônico dos outros, com trilha por trecho de evento (+ efeitos, na variante).</div></div>
+<div class="linha"><div class="rot">depende de</div><div class="val deps"><span class="dep">estoque-imagem</span><span class="dep">som</span><span class="dep">legenda-unica</span></div></div>
+          <ol class="passos">
+<li><div><div class="passo-nb"><code>video-base-imagem-versiculo-trilhas</code><br>ou <code>video-base-imagem-versiculo-trilhas-efeitos</code></div><div class="passo-produz">→ `&lt;nome&gt;_video_base_img.mp4` + trilha</div><div class="passo-nota">Autocontidos: fazem o match cena↔versículo por dentro, não precisa rodar o `match-scene-verse` antes.</div></div></li>
+          </ol>
+<div class="armadilha">⚠️ Mesma interrupção do `base-versiculo`: narração primeiro, `caption-single-generate` fora, volta pro resto. E o pool de candidatas (`TRILHAS_CANDIDATAS`, `EFEITOS_CANDIDATOS`) você escolhe à mão na Configuração — pool vazio dá vídeo sem trilha, sem erro nenhum.</div>
+        </div>
+      </article>
+      <article class="j" data-tipo="vídeo">
+        <div class="j-cab">
+          <div class="j-id">legenda-unica</div>
+          <h3>Nível 1 · legenda única</h3>
+        </div>
+        <div class="j-corpo">
+          <div class="linha"><div class="rot">quando</div><div class="val">O vídeo mais simples que dá pra publicar — e o SRT que ele gera é pré-requisito de quase todo o resto.</div></div>
+          <div class="linha"><div class="rot">entrega</div><div class="val">`&lt;nome&gt;_final[_img].mp4` + o SRT mestre `&lt;nome&gt;_whisper_&lt;mestre&gt;.srt`.</div></div>
+
+          <ol class="passos">
+<li><div><div class="passo-nb"><code>caption-single-generate</code></div><div class="passo-produz">→ `&lt;nome&gt;_whisper_&lt;mestre&gt;.srt`</div><div class="passo-nota">Vale baixar, corrigir e resubir com o mesmo nome — Whisper sempre pede uma passada.</div></div></li>
+<li><div><div class="passo-nb"><code>caption-single-burn</code></div><div class="passo-produz">→ `&lt;nome&gt;_final[_img].mp4`</div></div></li>
+          </ol>
+<div class="armadilha">⚠️ Os dois passos precisam de coisas diferentes: o `generate` precisa só da narração (etapa 6 de qualquer notebook de vídeo base), o `burn` precisa do vídeo base pronto. E é o `generate` que é pré-requisito dos níveis 2 e 3 — o `burn` não é pré-requisito de nada.</div>
+        </div>
+      </article>
+      <article class="j" data-tipo="vídeo">
+        <div class="j-cab">
+          <div class="j-id">multi-idioma</div>
+          <h3>Nível 2 · legendas multi-idioma, uma cor por idioma</h3>
+        </div>
+        <div class="j-corpo">
+          <div class="linha"><div class="rot">quando</div><div class="val">O vídeo poliglota simples: uma linha por idioma, empilhadas, inglês no topo.</div></div>
+          <div class="linha"><div class="rot">entrega</div><div class="val">`&lt;nome&gt;_final_idiomas[_img].mp4` + um `&lt;nome&gt;_&lt;lang&gt;.srt` por idioma.</div></div>
+<div class="linha"><div class="rot">depende de</div><div class="val deps"><span class="dep">legenda-unica</span></div></div><div class="linha"><div class="rot">custo</div><div class="val">O `generate` usa IA (Mistral, com Groq de reserva) pra redistribuir cada idioma nos blocos do mestre.</div></div>
+          <ol class="passos">
+<li><div><div class="passo-nb"><code>caption-multilang-sources-gather</code><br>ou <code>caption-multilang-zh-sources-gather</code></div><div class="passo-produz">→ `&lt;nome&gt;_yt_&lt;lang&gt;.srt`, `&lt;nome&gt;_audio_&lt;lang&gt;.wav`, `&lt;nome&gt;_whisper_&lt;lang&gt;.srt`</div><div class="passo-nota">Duas fontes de texto por idioma; você escolhe qual confia mais em `FONTE_TEXTO_IDIOMA`.</div></div></li>
+<li><div><div class="passo-nb"><code>caption-multilang-generate</code><br>ou <code>caption-multilang-zh-generate</code></div><div class="passo-produz">→ `&lt;nome&gt;_&lt;lang&gt;.srt` por idioma</div></div></li>
+<li><div><div class="passo-nb"><code>caption-multilang-burn</code><br>ou <code>caption-multilang-zh-burn</code></div><div class="passo-produz">→ `&lt;nome&gt;_final_idiomas[_img].mp4`</div><div class="passo-nota">A variante `-zh-` grava com sufixo `_zh`, então as duas versões convivem na mesma pasta.</div></div></li>
+          </ol>
+
+        </div>
+      </article>
+      <article class="j" data-tipo="vídeo">
+        <div class="j-cab">
+          <div class="j-id">multicolor</div>
+          <h3>Nível 3 · legenda multicor, uma cor por classe gramatical</h3>
+        </div>
+        <div class="j-corpo">
+          <div class="linha"><div class="rot">quando</div><div class="val">O carro-chefe do canal: cada palavra pintada pela função que exerce na frase.</div></div>
+          <div class="linha"><div class="rot">entrega</div><div class="val">`&lt;nome&gt;_final_multicolor[_img].mp4`, mais o `.ass` e a classificação por idioma em JSON.</div></div>
+<div class="linha"><div class="rot">depende de</div><div class="val deps"><span class="dep">multi-idioma</span></div></div><div class="linha"><div class="rot">custo</div><div class="val">Stanza (latinos) + Kiwi (coreano). O JSON de classificação fica salvo: rodar de novo reaproveita em vez de reclassificar.</div></div>
+          <ol class="passos">
+<li><div><div class="passo-nb"><code>caption-multicolor-generate</code><br>ou <code>caption-multicolor-zh-generate</code></div><div class="passo-produz">→ `legendas_&lt;nome&gt;.ass` + `&lt;nome&gt;_classificacao_multicolor_&lt;lang&gt;.json`</div><div class="passo-nota">A variante `-zh-` sai como `legendas_&lt;nome&gt;_zh.ass`.</div></div></li>
+<li><div><div class="passo-nb"><code>caption-multicolor-burn</code></div><div class="passo-produz">→ `&lt;nome&gt;_final_multicolor[_img].mp4`</div><div class="passo-nota">UM notebook serve as duas variantes: ele lê o sufixo `_zh` do nome do `.ass` que você enviar e grava a saída correspondente. Por isso não existe `-zh-burn`.</div></div></li>
+          </ol>
+<div class="armadilha">⚠️ Precisa dos `&lt;nome&gt;_&lt;lang&gt;.srt` do nível 2 — a classificação roda em cima do texto já distribuído por idioma.</div>
+        </div>
+      </article>
+      <article class="j" data-tipo="apoio">
+        <div class="j-cab">
+          <div class="j-id">portao</div>
+          <h3>Portão de qualidade</h3>
+        </div>
+        <div class="j-corpo">
+          <div class="linha"><div class="rot">quando</div><div class="val">Antes de queimar (`.ass`) e antes de publicar (`.mp4`).</div></div>
+          <div class="linha"><div class="rot">entrega</div><div class="val">Um veredito — não gera arquivo nenhum.</div></div>
+<div class="linha"><div class="rot">custo</div><div class="val">A camada do `.ass` é de milissegundos; a do `.mp4`, ~1 min.</div></div>
+          <ol class="passos">
+<li><div><div class="passo-nb"><code>portao-qualidade</code></div><div class="passo-produz">→ relatório aprovado/reprovado</div></div></li>
+          </ol>
+<div class="armadilha">⚠️ Existe pra uma família de bugs que NÃO levanta exceção: cor fora da paleta, glifo faltando, áudio estourado. Rode a camada do `.ass` sempre — ela é de graça.</div>
+        </div>
+      </article>
+      <article class="j" data-tipo="vídeo">
+        <div class="j-cab">
+          <div class="j-id">compilacao</div>
+          <h3>Compilação de versículos sortidos</h3>
+        </div>
+        <div class="j-corpo">
+          <div class="linha"><div class="rot">quando</div><div class="val">Quando o vídeo não é um capítulo, e sim uma seleção temática que pula entre livros.</div></div>
+          <div class="linha"><div class="rot">entrega</div><div class="val">`comp_&lt;tema&gt;.wav` + `.srt` + manifesto `.json`.</div></div>
+<div class="linha"><div class="rot">depende de</div><div class="val deps"><span class="dep">biblia</span></div></div><div class="linha"><div class="rot">custo</div><div class="val">A transcrição é o caro, e o cache de tempos faz você pagar UMA vez por capítulo, pra sempre. A segunda compilação que usar Salmo 23 pula esse passo.</div></div>
+          <ol class="passos">
+<li><div><div class="passo-nb"><code>compilacao-montar</code></div><div class="passo-produz">→ `comp_&lt;tema&gt;.wav` + `.srt` + manifesto</div></div></li>
+          </ol>
+<div class="armadilha">⚠️ A ordem é a que VOCÊ escreveu na seleção — pode repetir capítulo e sair de ordem de propósito.</div>
+        </div>
+      </article>
+  </div>
+
+  <h2>Notebook fora de qualquer jornada</h2>
+  <table class="simples">
+    <tr><th>Notebook</th><th>Por que fica fora</th></tr>
+    <tr><td><code>compilar-versiculos-teste</code></td><td>Teste de um capítulo só, anterior ao compilacao-montar. Fica até a compilação rodar de verdade em produção (ver nomenclatura.EXCECOES).</td></tr>
+  </table>
+
+  <h2>Conferir o mapa</h2>
+  <table class="simples">
+    <tr><th>Achado</th><th>Significa</th></tr>
+    <tr><td><code>[órfão]</code></td><td>notebook novo na pasta que nenhuma jornada cita</td></tr>
+    <tr><td><code>[fantasma]</code></td><td>jornada citando notebook renomeado ou apagado</td></tr>
+    <tr><td><code>[dependência]</code></td><td><code>depende_de</code> apontando pra jornada que não existe</td></tr>
+  </table>
+
+  <footer>Gerado por <code>assets/gerar-jornadas.py</code> a partir de
+    <code>pipeline/modulos/jornadas.py</code>. Referência de nomes de arquivo e
+    parâmetros: <code>pipeline/CONFIGURACAO.md</code>.</footer>
+</div>
+
+<script>
+document.getElementById('chips').addEventListener('click', function (e) {
+  var chip = e.target.closest('.chip');
+  if (!chip) return;
+  document.querySelectorAll('.chip').forEach(function (c) { c.classList.remove('ativo'); });
+  chip.classList.add('ativo');
+  var f = chip.dataset.f;
+  document.querySelectorAll('.j').forEach(function (j) {
+    j.classList.toggle('oculta', f !== 'todos' && j.dataset.tipo !== f);
+  });
+});
+</script>

@@ -10,6 +10,12 @@ Não duplica os comentários que já existem em `modulos/config.py` — só orga
 tudo num lugar só e cruza com o que cada notebook realmente expõe na célula de
 Configuração hoje.
 
+> **Este documento é referência, não roteiro.** Ele responde "como se chama
+> isto?" e "o que este parâmetro faz?". Pra responder **"eu quero um resultado
+> assim, o que eu rodo?"**, veja [`JORNADAS.md`](JORNADAS.md) — o mapa das 13
+> jornadas de notebook, gerado de `modulos/jornadas.py` e conferido contra a
+> pasta de notebooks.
+
 ## 1. Identidade do vídeo (por vídeo, muda toda vez)
 
 Definido na célula "⚙️ Configuration" de cada notebook `video-base-*.ipynb`,

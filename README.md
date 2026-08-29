@@ -5,6 +5,20 @@ Drive para este repositório. Aqui ficam **apenas código e dados** — os arqui
 mídia bruta (vídeo, áudio) continuam vivendo só no Google Drive, nunca neste git
 (veja `.gitignore`).
 
+## Por onde começar
+
+| Quero… | Leia |
+|---|---|
+| saber **o que rodar** pra conseguir um resultado | [`pipeline/JORNADAS.md`](pipeline/JORNADAS.md) — as 13 jornadas de notebook e o que cada uma entrega |
+| saber **como se chama** um arquivo, planilha ou parâmetro | [`pipeline/CONFIGURACAO.md`](pipeline/CONFIGURACAO.md) — a referência central |
+
+O primeiro é caminho, o segundo é dicionário. Os dois se conferem sozinhos:
+
+```
+python3 pipeline/modulos/jornadas.py       # o mapa bate com a pasta de notebooks?
+python3 pipeline/modulos/nomenclatura.py   # os nomes seguem a convenção?
+```
+
 ## Estrutura
 
 ```
@@ -13,6 +27,8 @@ narrated_video/
 │   ├── notebooks/          → notebooks Colab "oficiais" (versão atual do pipeline)
 │   ├── notebooks.backup/   → versões anteriores/alternativas dos notebooks
 │   ├── modulos/            → código Python (.py) importado pelos notebooks
+│   ├── JORNADAS.md         → o que rodar pra conseguir o quê (gerado)
+│   └── CONFIGURACAO.md     → referência de nomes, parâmetros e planilhas
 │   └── dados_lexico/       → JSONs de apoio (títulos e eventos bíblicos)
 ├── assets/
 │   ├── *.html, *.md, *.csv → utilitários soltos (limpeza de roteiro, vocabulário
