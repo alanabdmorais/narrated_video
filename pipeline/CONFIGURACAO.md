@@ -589,6 +589,31 @@ estoque. Ela é de quando o áudio precisava vir de algum lugar; com os 1.189
 capítulos no Drive, baixar do YouTube por cima trocaria a gravação da fonte
 por uma faixa recomprimida — e ainda dependeria do vídeo continuar no ar.
 
+### A guarda da legenda mestre distingue o que ela mesma gerou
+
+`PROTEGER_LEGENDA_MESTRE` recusa sobrescrever o SRT mestre pra não apagar uma
+correção manual. Mas ela testava só **"o arquivo existe"** — e isso não é o
+mesmo que **"foi corrigido"**.
+
+Consequência: trocar `MODELO_WHISPER` de `base` pra `small` e rodar de novo
+esbarrava na guarda, que protegia uma transcrição ruim que ninguém tinha
+revisado. E a saída oferecida era desligar a proteção — que depois fica
+desligada, e aí a correção seguinte é que se perde.
+
+Agora o checkpoint guarda o `sha1` do SRT gerado. Na execução seguinte:
+
+| Arquivo no Drive | Decisão |
+|---|---|
+| bate com o `sha1` registrado | é nosso, pode refazer |
+| não bate | alguém editou — protege |
+| sem `sha1` (sessão nova, checkpoint antigo) | protege, na dúvida |
+
+> **Na dúvida, protege.** Perder uma correção é caro; refazer uma transcrição
+> custa um minuto.
+
+E a mensagem diz o modelo da transcrição anterior, que é o que faz você
+entender por que ela apareceu.
+
 ### Conferir o Whisper contra o roteiro (sem substituir)
 
 O SRT do `caption-single-generate` traz duas coisas, e só uma pode estar

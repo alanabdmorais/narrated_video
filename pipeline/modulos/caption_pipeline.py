@@ -102,6 +102,12 @@ def resolver_texto_versiculos(config: PipelineConfig, texto_colado: str = "",
         f"fornecer roteiro de capítulo bíblico.")
 
 
+def _sha1(caminho: Path) -> str:
+    """Impressão digital de um arquivo, pra saber se ele mudou."""
+    import hashlib
+    return hashlib.sha1(Path(caminho).read_bytes()).hexdigest()
+
+
 class CaptionPipeline:
     """Gera (via Whisper) e queima a legenda única (1 faixa, texto simples)."""
 
@@ -112,6 +118,29 @@ class CaptionPipeline:
         self._cp    = Checkpoint(nome_oracao=config.NOME_ORACAO)
 
     # ── Geração (caption-single-generate.ipynb) ────────────────────────────────────────
+
+    def _e_transcricao_intocada(self, caminho: Path) -> bool:
+        """O SRT no Drive é exatamente o que este notebook gerou da última vez?
+
+        A guarda de legenda mestre existe pra não apagar correção manual. Mas
+        "o arquivo existe" não é o mesmo que "foi corrigido": trocar o modelo
+        do Whisper e rodar de novo esbarrava na guarda, protegendo uma
+        transcrição ruim que ninguém tinha revisado — e a saída oferecida era
+        desligar a proteção, que depois fica desligada.
+
+        Com o sha1 do que foi gerado guardado no checkpoint, dá pra separar os
+        dois casos: se bate, é nosso e pode ser refeito; se não bate, alguém
+        mexeu e aí sim a guarda vale.
+
+        Sem checkpoint (sessão nova, ou primeira vez), devolve False -- na
+        dúvida, protege. Perder uma correção é caro; refazer uma transcrição
+        custa um minuto.
+        """
+        meta = self._cp.metadados("transcricao_whisper_gerada") or {}
+        sha_registrado = meta.get("sha1")
+        if not sha_registrado:
+            return False
+        return sha_registrado == _sha1(caminho)
 
     def transcrever_whisper(self, modelo: str = "base") -> Path:
         """
@@ -137,13 +166,18 @@ class CaptionPipeline:
 
         if self._cfg.PROTEGER_LEGENDA_MESTRE and destino.name == self._cfg.nome_legenda_mestre:
             destino_drive = self._cfg.pasta_oracao / destino.name
-            if destino_drive.exists():
+            if destino_drive.exists() and not self._e_transcricao_intocada(destino_drive):
+                anterior = (self._cp.metadados("transcricao_whisper_gerada") or {})
+                modelo_anterior = anterior.get("modelo_whisper")
                 raise PipelineError(
-                    f"'{destino.name}' é a legenda MESTRE atual (config.nome_legenda_mestre) "
-                    f"e já existe no Drive — provavelmente já foi corrigida manualmente. "
-                    f"Recusei sobrescrever para proteger essa correção. Se você realmente "
-                    f"quer re-transcrever do zero, rode de novo com "
-                    f"PipelineConfig(..., PROTEGER_LEGENDA_MESTRE=False)."
+                    f"'{destino.name}' já existe no Drive e NÃO bate com a última "
+                    f"transcrição que este notebook gerou"
+                    + (f" (modelo '{modelo_anterior}')" if modelo_anterior else "")
+                    + ".\n"
+                    f"Ou seja: alguém editou o arquivo — provavelmente você, corrigindo "
+                    f"à mão. Recusei sobrescrever pra não jogar essa correção fora.\n\n"
+                    f"Se quiser mesmo re-transcrever do zero, rode com\n"
+                    f"  PipelineConfig(..., PROTEGER_LEGENDA_MESTRE=False)"
                 )
 
         audio_path = Path(self._cfg.NOME_AUDIO)
@@ -190,6 +224,10 @@ class CaptionPipeline:
             "total_legendas": len(legendas),
             "modelo_whisper": modelo,
             "idioma": self._cfg.IDIOMA_MESTRE,
+            # Guarda a impressão digital do que ACABAMOS de gerar. É por ela que
+            # a próxima execução distingue "SRT que eu mesmo produzi" de "SRT que
+            # você corrigiu à mão" -- ver _e_transcricao_intocada.
+            "sha1": _sha1(destino),
         })
         logger.info("✅ Transcrição: %s (%d legendas)", destino.name, len(legendas))
         return destino
