@@ -1,4 +1,4 @@
-<title>Card de legenda — cores da narração poliglota</title>
+<title>Card de Legenda Poliglota</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:#e8e4dc;-webkit-font-smoothing:antialiased;
@@ -54,9 +54,12 @@ body{background:#e8e4dc;-webkit-font-smoothing:antialiased;
 .rodape{padding-top:16px;font-size:19px;color:#8a8177;text-align:center;
   display:flex;justify-content:center;gap:54px}
 
-.folha{display:flex;flex-direction:column;align-items:center;gap:26px;padding:26px}</style>
+.folha{display:flex;flex-direction:column;align-items:center;gap:26px;padding:26px}
+.moldura{overflow:hidden}
+.moldura > .tela{transform-origin:top left}</style>
 
 <div class="folha">
+  <div class="moldura">
   <div class="tela" id="tela1" style="--lat:26.0px;--cjk:27.0px;--swh:44px;--padv:6px">
     <div class="cabeca">
       <h1>Legenda de cores · Colour key · Clave de colores · Clé des couleurs · 색상 범례</h1>
@@ -100,6 +103,8 @@ body{background:#e8e4dc;-webkit-font-smoothing:antialiased;
     </div>
     <div class="rodape"><span>Estas 10 cobrem 99% das palavras.</span><span>These 10 cover 99% of all words.</span></div>
   </div>
+  </div>
+  <div class="moldura">
   <div class="tela" id="tela2" style="--lat:26.0px;--cjk:27.0px;--swh:44px;--padv:6px">
     <div class="cabeca">
       <h1>Legenda de cores · Colour key · Clave de colores · Clé des couleurs · 색상 범례</h1>
@@ -143,4 +148,20 @@ body{background:#e8e4dc;-webkit-font-smoothing:antialiased;
     </div>
     <div class="rodape"><span>O restante, e o que só existe em EN e KO.</span><span>The rest, plus what only EN and KO have.</span></div>
   </div>
+  </div>
 </div>
+<script>
+(function () {
+  function ajustar() {
+    var f = Math.min(1, (document.documentElement.clientWidth - 52) / 1920);
+    document.querySelectorAll('.moldura').forEach(function (m) {
+      var t = m.querySelector('.tela');
+      t.style.transform = 'scale(' + f + ')';
+      m.style.width = (1920 * f) + 'px';
+      m.style.height = (1080 * f) + 'px';
+    });
+  }
+  addEventListener('resize', ajustar);
+  ajustar();
+})();
+</script>

@@ -300,11 +300,40 @@ def montar(v: dict) -> tuple[str, list[str]]:
         partes.append(corpo)
         isoladas.append(_pagina(css, corpo, so_uma=True))
 
-    css_folha = css + ("\n.folha{display:flex;flex-direction:column;"
-                       "align-items:center;gap:26px;padding:26px}")
-    pagina = _pagina(css_folha,
-                     '<div class="folha">\n' + "\n".join(partes) + "\n</div>")
-    return pagina, isoladas
+    # Página de conferência: cada tela vai dentro de uma moldura que a REDUZ
+    # pra caber na janela. A tela em si continua com 1920x1080 exatos -- é o
+    # tamanho do frame do vídeo, e mexer nele mudaria o que o PNG mostra. Quem
+    # encolhe é a moldura, com transform, que não recalcula layout nenhum.
+    css_folha = css + (
+        "\n.folha{display:flex;flex-direction:column;align-items:center;"
+        "gap:26px;padding:26px}"
+        "\n.moldura{overflow:hidden}"
+        "\n.moldura > .tela{transform-origin:top left}")
+    corpo = ('<div class="folha">\n'
+             + "\n".join(f'  <div class="moldura">\n{t}\n  </div>' for t in partes)
+             + "\n</div>\n" + AJUSTE_JS)
+    return _pagina(css_folha, corpo), isoladas
+
+
+#: Só a página de conferência usa isto. A tela continua 1920x1080; a moldura
+#: em volta encolhe pra caber na janela -- sem isso a página rolaria de lado
+#: em qualquer tela menor que 1920, e o Artifact não deixa o corpo rolar
+#: horizontalmente.
+AJUSTE_JS = """<script>
+(function () {
+  function ajustar() {
+    var f = Math.min(1, (document.documentElement.clientWidth - 52) / %d);
+    document.querySelectorAll('.moldura').forEach(function (m) {
+      var t = m.querySelector('.tela');
+      t.style.transform = 'scale(' + f + ')';
+      m.style.width = (%d * f) + 'px';
+      m.style.height = (%d * f) + 'px';
+    });
+  }
+  addEventListener('resize', ajustar);
+  ajustar();
+})();
+</script>""" % (LARGURA, LARGURA, ALTURA)
 
 
 def _pagina(css: str, corpo: str, so_uma: bool = False) -> str:
@@ -314,7 +343,7 @@ def _pagina(css: str, corpo: str, so_uma: bool = False) -> str:
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Card de legenda — cores da narração poliglota</title>
+<title>Card de Legenda Poliglota</title>
 <style>{css}{margem}</style>
 </head>
 <body>
