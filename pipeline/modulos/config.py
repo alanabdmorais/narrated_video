@@ -698,3 +698,60 @@ class PipelineConfig:
             f"Clipes:        {self.pasta_assets_clipes}",
             f"Padrão clipe:  {self.LARGURA_CLIPE}x{self.ALTURA_CLIPE} @ {self.FPS_CLIPE}fps",
         ])
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Detecção do modo de fundo
+# ─────────────────────────────────────────────────────────────────────────────
+
+def detectar_modo_clipe(
+    pasta_oracao: Path | str,
+    nome_oracao: str,
+    sufixo_imagem: str = "_img",
+) -> str:
+    """Descobre pelo Drive se o vídeo base daquele projeto é de imagem ou de clipe.
+
+    Os notebooks de QUEIMA (`*-burn`) não montam vídeo nenhum: eles pegam o
+    `<nome>_video_base*.mp4` que já existe e escrevem legenda por cima. Só que
+    o nome desse arquivo depende de `MODO_CLIPE`, e nenhum deles pedia esse
+    campo -- então caíam no padrão `"video"` e procuravam
+    `<nome>_video_base.mp4` enquanto o modo imagem tinha gravado
+    `<nome>_video_base_img.mp4`. E o sufixo não some no meio do caminho: o
+    resultado também sairia sem `_img`, colidindo com a versão de clipe.
+
+    A saída vem do arquivo que EXISTE, não de uma opção que dá pra esquecer de
+    marcar -- mesma ideia do sufixo `_zh` que o `caption-multicolor-burn` lê do
+    nome do `.ass`. Com os dois presentes não há palpite razoável: aí sim é
+    você quem escolhe, passando `MODO_CLIPE` à mão.
+
+    Returns:
+        `"imagem"` ou `"video"`, pronto pra `PipelineConfig(MODO_CLIPE=...)`.
+
+    Raises:
+        FileNotFoundError: nenhum vídeo base na pasta — não há o que queimar.
+        ValueError: os dois existem; escolha qual quer queimar.
+    """
+    pasta = Path(pasta_oracao)
+    de_imagem = pasta / f"{nome_oracao}_video_base{sufixo_imagem}.mp4"
+    de_clipe  = pasta / f"{nome_oracao}_video_base.mp4"
+
+    achou_imagem, achou_clipe = de_imagem.exists(), de_clipe.exists()
+
+    if achou_imagem and achou_clipe:
+        raise ValueError(
+            f"Os dois vídeos base existem em {pasta}:\n"
+            f"  - {de_imagem.name}  (modo imagem)\n"
+            f"  - {de_clipe.name}  (modo vídeo)\n"
+            "Não dá pra adivinhar qual você quer queimar. Passe à mão na "
+            "célula de configuração: MODO_CLIPE = \"imagem\" ou \"video\"."
+        )
+    if achou_imagem:
+        return "imagem"
+    if achou_clipe:
+        return "video"
+    raise FileNotFoundError(
+        f"Nenhum vídeo base em {pasta}. Procurei:\n"
+        f"  - {de_imagem.name}\n"
+        f"  - {de_clipe.name}\n"
+        "Rode um notebook `video-base-*` antes de queimar legenda."
+    )

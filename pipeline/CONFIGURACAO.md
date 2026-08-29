@@ -345,6 +345,25 @@ apontar pra um arquivo com outro nome já salvo em `pasta_oracao`.
 > agora, não implementado). Ordem confirmada: "edge" vem ANTES de "audio" —
 > já existe um arquivo real nesse padrão no Drive (`40_Matt_02_edge_audio.wav`).
 
+### Modo do fundo: detectado, não marcado
+
+Os notebooks `*-burn` não montam vídeo — pegam o `<nome>_video_base*.mp4` que
+já existe e escrevem legenda por cima. Só que esse nome depende de
+`MODO_CLIPE`, e **nenhum dos quatro pedia esse campo**: caíam no padrão
+`"video"` e procuravam `<nome>_video_base.mp4` enquanto o modo imagem tinha
+gravado `<nome>_video_base_img.mp4`. E o sufixo não some no meio do caminho —
+o resultado também sairia sem `_img`, colidindo com a versão de clipe.
+
+Agora `MODO_CLIPE = None` na configuração e `config.detectar_modo_clipe()`
+decide pelo arquivo que **existe** no Drive — mesma ideia do sufixo `_zh` que
+o `caption-multicolor-burn` lê do nome do `.ass`. Com os dois presentes não há
+palpite razoável: aí para e pede que você escolha à mão. Sem nenhum, para
+dizendo o que procurou.
+
+> A regra por trás das duas: **a variante do resultado vem do arquivo que você
+> escolheu, não de uma opção que dá pra esquecer de marcar.** Opção esquecida
+> não dá erro — dá o vídeo errado com o nome certo.
+
 ### De onde vem a narração (e por que ela não é sobrescrita)
 
 `gerar_audio()` procura, **nesta ordem**, antes de cogitar gerar:
