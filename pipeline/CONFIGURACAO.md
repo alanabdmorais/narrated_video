@@ -736,9 +736,18 @@ A conferência final cruza duas listas: **faltando** (capítulo do cânone que o
 zip não trouxe) e **sobrando** (mp3 que nenhum capítulo reclamou). Livro que
 aparece nas duas = `modelo_audio` errado na tabela, não arquivo ausente.
 
-> ⚠️ **Zacarias 14 não existe no índice da fonte** — o site lista só 13
-> capítulos, e o livro tem 14. A conferência reporta como faltando. Se você
-> precisar desse capítulo, vai ter que arrumar o áudio por fora.
+> ⚠️ **Livro de um capítulo só não tem número no nome** — `65_jude.mp3`,
+> `31_obadiah.mp3`, `57_philemon.mp3`, `63_2john.mp3`, `64_3john.mp3`. O
+> capítulo vem de saber que o livro tem um só, nunca do nome: fosse do nome,
+> `63_2john` viraria "2 João capítulo 2", que não existe. Pra qualquer outro
+> livro, nome sem número é recusado — `40_matthew` não diz qual dos 28 é, e
+> chutar o 1 daria um vídeo lendo o capítulo errado sem erro nenhum.
+
+> ✅ **Zacarias 14 EXISTE no zip.** A versão anterior deste documento dizia
+> que não, com base no índice do SITE, que lista 13. O zip trouxe os 14 — a
+> execução completa fechou em 1189 de 1189. Mais um caso do mesmo engano:
+> **o índice da página não é o conteúdo do arquivo**, e foi a página que
+> também gerou a tabela de nomes errada.
 
 ## 8d. Texto da Bíblia (WEB) — `dados_lexico/web-biblia.json`
 

@@ -18,6 +18,7 @@ A sigla segue o padrão OSIS, que é o mesmo que o projeto já usava à mão
     19_Psalm_001         número com TRÊS dígitos
     20_Prov_01           abreviado
     22_Song_of_Solomon_01
+    65_Jude              SEM número: livro de um capítulo só
 
 `modelo_audio` guarda o palpite de cada livro, mas **não é mais a chave de
 busca** — ver `chave_audio()`. A primeira versão deste módulo usou o modelo
@@ -305,6 +306,13 @@ def por_usfm(codigo: str) -> Livro:
 #     22_song_of_solomon_01  -> (22, 1)
 _RE_CHAVE_AUDIO = re.compile(r"^(\d{1,2})\D.*?(\d{1,3})$")
 
+# Livro de UM capítulo só não ganha número na fonte -- o livro inteiro é um
+# arquivo: `31_obadiah`, `57_philemon`, `63_2john`, `64_3john`, `65_jude`.
+# Casa só o número do livro; o capítulo NÃO sai do nome (senão `63_2john`
+# viraria "2 João capítulo 2", que não existe) e é fixado em 1, o único que
+# esses livros têm.
+_RE_SO_LIVRO = re.compile(r"^(\d{1,2})\D")
+
 
 def chave_audio(stem: str) -> tuple[int, int] | None:
     """Extrai `(número do livro, capítulo)` do nome de um arquivo da fonte.
@@ -314,20 +322,34 @@ def chave_audio(stem: str) -> tuple[int, int] | None:
     `Lamentations01`, `Soloman` ou `Solomon`. O que ela garante é a numeração
     canônica, que está no começo e no fim de todo arquivo.
 
-    Devolve `None` quando o nome não tem essa forma, ou quando o número do
-    livro está fora de 1..66 — melhor ignorar um arquivo estranho e ele
-    aparecer na lista de "sobrando" do que casá-lo com o capítulo errado.
-    Áudio trocado não dá erro: sai um vídeo lendo outro capítulo.
+    **Livro de um capítulo só não tem número na fonte** (`65_jude.mp3`), e aí
+    o capítulo vem de saber que o livro tem um só — nunca do nome. Fosse do
+    nome, `63_2john` viraria "2 João capítulo 2", que não existe.
+
+    Devolve `None` quando o nome não tem essa forma, quando o número do livro
+    está fora de 1..66, ou quando o capítulo passa do que o livro tem — melhor
+    ignorar um arquivo estranho e ele aparecer na lista de ignorados do que
+    casá-lo com o capítulo errado. Áudio trocado não dá erro: sai um vídeo
+    lendo outro capítulo.
     """
-    m = _RE_CHAVE_AUDIO.match((stem or "").strip().lower())
-    if not m:
+    stem = (stem or "").strip().lower()
+
+    m = _RE_CHAVE_AUDIO.match(stem)
+    if m:
+        numero, capitulo = int(m.group(1)), int(m.group(2))
+        if numero in _POR_NUMERO and 1 <= capitulo <= _POR_NUMERO[numero].capitulos:
+            return (numero, capitulo)
         return None
-    numero, capitulo = int(m.group(1)), int(m.group(2))
-    if numero not in _POR_NUMERO or capitulo < 1:
-        return None
-    if capitulo > _POR_NUMERO[numero].capitulos:
-        return None
-    return (numero, capitulo)
+
+    # Sem número de capítulo no fim: só vale pra livro de um capítulo só.
+    # Pra qualquer outro livro seria ambíguo -- `40_matthew` não diz QUAL dos
+    # 28 é, e chutar o 1 daria um vídeo lendo o capítulo errado sem erro.
+    m = _RE_SO_LIVRO.match(stem)
+    if m:
+        numero = int(m.group(1))
+        if numero in _POR_NUMERO and _POR_NUMERO[numero].capitulos == 1:
+            return (numero, 1)
+    return None
 
 
 def indexar_por_chave(stems) -> tuple[dict[tuple[int, int], str], list[str], dict]:
