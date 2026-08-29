@@ -654,38 +654,42 @@ some trocando pra `small`. Numa execução com `base`, `chief priests` virou
 
 ### `_manifesto.txt` — contar sem ter contra o que comparar não é conferir
 
-O setup de todo notebook imprimia:
+O setup de todo notebook imprimia `✅ 13 modules copied` — **com visto
+verde**, faltando 18 dos 31. O notebook seguia e quebrava depois num `import`,
+longe da causa.
 
-```
-✅ 13 modules copied from /content/drive/.../pipeline/modulos
-```
+E o diagnóstico óbvio estava errado: o Drive tinha os 31, conferidos byte a
+byte pelo `repositorio-sincronizar`. Quem trouxe 13 foi o `copytree` do setup
+— **o Drive montado do Colab popula a listagem da pasta com atraso**, e uma
+cópia logo depois do `mount` às vezes enxerga só parte dos arquivos.
 
-**Com visto verde.** São 31 módulos; faltavam 18, entre eles os dois mais
-novos. O notebook seguia, e quebrava depois num `import` — longe da causa,
-com uma mensagem que não menciona sincronização.
+Por isso a conferência é de três pontas, e não de duas:
 
-Um número sozinho não conferiu nada: não havia contra o que comparar.
+| Ponta | O que é |
+|---|---|
+| manifesto | o que o repositório tem (gravado pelo sincronizador) |
+| Drive | o que chegou lá |
+| VM | o que a cópia desta sessão trouxe |
 
-O `repositorio-sincronizar` passa a gravar `modulos/_manifesto.txt` com a
-lista do que o repositório tem, e a conferir na hora o que chegou ao Drive.
-Os **27 notebooks** que copiam módulos comparam a pasta contra esse manifesto
-e **param** quando falta alguém, dizendo o nome:
+A causa muda o conserto, então a mensagem muda junto:
 
-```
-🚨 FALTAM 18 de 31 módulos no Drive:
-     drive_utils.py
-     ffmpeg_utils.py
-     ...
-Rode o repositorio-sincronizar.ipynb antes de continuar.
-```
+- **falta no Drive** → rode o `repositorio-sincronizar`
+- **está no Drive, não copiou** → o mount estava acordando: recopia sozinho os
+  que faltaram, e só para se ainda assim não vier
 
-Sem manifesto (Drive nunca sincronizado), avisa e segue — não dá pra exigir
-um arquivo que ainda não existe.
+> Uma mensagem certa sobre a causa errada custa o mesmo que nenhuma mensagem.
+> A primeira versão desta conferência mandava sincronizar um Drive que já
+> estava sincronizado.
 
-> É a terceira vez nesta documentação que o defeito é o mesmo: **um resumo
-> apagou a informação.** "9 arquivos fora do cânone (normal)", "0
-> sobrescritos", e agora "13 módulos copiados ✅". Contagem sem referência é
-> ruído com aparência de conferência.
+**E o validador de sintaxe tinha um buraco no lugar exato do risco.** A edição
+em lote pôs o bloco sem indentação dentro de um `if`, em 20 notebooks — e o
+teste que eu rodava **pulava** justamente as células de setup, porque elas têm
+`!pip`/`!apt`, que não são Python. Agora `nomenclatura.celulas_que_nao_compilam()`
+troca essas linhas por `pass` e compila o resto; entrou no relatório junto com
+os outros três defeitos.
+
+> Pular a célula porque uma linha não é Python é trocar uma dificuldade por
+> uma cegueira — e a cegueira ficou exatamente onde as edições acontecem.
 
 ### `modulos/audio_narracao.py` — onde procurar a narração, num lugar só
 

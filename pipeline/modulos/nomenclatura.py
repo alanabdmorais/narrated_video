@@ -344,10 +344,12 @@ def verificar_repo(raiz: Path | str) -> list[Divergencia]:
 def relatorio(raiz: Path | str) -> str:
     achados = verificar_repo(raiz)
     fantasmas = referencias_fantasma(raiz)
+    quebrados = celulas_que_nao_compilam(raiz)
 
-    if not achados and not fantasmas:
+    if not achados and not fantasmas and not quebrados:
         return (f"✅ Todo nome segue a convenção ({len(EXCECOES)} exceção(ões) "
-                f"registrada(s)) e ninguém cita notebook que não existe.")
+                f"registrada(s)), ninguém cita notebook que não existe, e "
+                f"todas as células compilam.")
 
     linhas: list[str] = []
     if achados:
@@ -363,7 +365,56 @@ def relatorio(raiz: Path | str) -> str:
         linhas.append("")
         linhas.append("Aponte pro nome atual. Se o texto fala da AUSÊNCIA do "
                       "notebook de propósito, registre em MENCOES_DE_AUSENCIA.")
+    if quebrados:
+        if linhas:
+            linhas.append("")
+        linhas.append(f"🚨 {len(quebrados)} célula(s) de código não compilam:")
+        linhas += [f"  {q}" for q in quebrados]
+        linhas.append("")
+        linhas.append("Notebook que não compila falha na primeira célula, "
+                      "depois de você já ter esperado o Drive montar.")
     return "\n".join(linhas)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Quarto defeito: notebook que não compila
+# ─────────────────────────────────────────────────────────────────────────────
+
+def celulas_que_nao_compilam(raiz: Path | str) -> list[str]:
+    """Células de código com erro de sintaxe.
+
+    Existe porque uma edição em lote pôs um bloco sem indentação dentro de um
+    `if`, em 20 notebooks de uma vez — e o teste que eu tinha PULAVA justamente
+    essas células, por causa das linhas de shell (`!pip`, `!apt`). O buraco
+    estava no lugar exato onde a edição acontecia.
+
+    A correção é boba: linha que começa com `!` ou `%` vira `pass`, e o resto
+    compila normal. Pular a célula inteira porque uma linha não é Python é
+    trocar uma dificuldade por uma cegueira.
+    """
+    import ast
+    import json as _json
+    import re as _re
+
+    raiz = Path(raiz)
+    problemas: list[str] = []
+    for arq in sorted((raiz / "pipeline" / "notebooks").glob("*.ipynb")):
+        try:
+            nb = _json.loads(arq.read_text(encoding="utf-8"))
+        except Exception as exc:
+            problemas.append(f"[json] {arq.name}: {exc}")
+            continue
+        for i, celula in enumerate(nb.get("cells", [])):
+            if celula.get("cell_type") != "code":
+                continue
+            fonte = "".join(celula.get("source", []))
+            fonte = _re.sub(r"^(\s*)[!%].*$", r"\1pass", fonte, flags=_re.M)
+            try:
+                ast.parse(fonte)
+            except SyntaxError as exc:
+                problemas.append(
+                    f"[sintaxe] {arq.name} célula {i}, linha {exc.lineno}: {exc.msg}")
+    return problemas
 
 
 if __name__ == "__main__":
