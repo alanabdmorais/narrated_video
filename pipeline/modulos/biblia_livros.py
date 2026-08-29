@@ -237,9 +237,34 @@ def de_nome_projeto(nome: str) -> tuple[Livro, int]:
     return livro, cap
 
 
+#: Códigos USFM que são o MESMO livro numa edição com deuterocanônicos.
+#:
+#: A WEB publicada pelo ebible.org traz Ester e Daniel na forma grega -- `ESG`
+#: e `DAG` -- e não publica `EST`/`DAN` separados. Sem estes apelidos os dois
+#: livros somem do web-biblia.json, que foi o que aconteceu em 29/ago.
+#:
+#: ⚠️  Os dois trazem material a MAIS que o cânone de 66:
+#:
+#:   DAG  Daniel + Susana (13) e Bel (14). Os capítulos 1-12 mantêm a
+#:        numeração canônica, então pedir Daniel 6 devolve Daniel 6. Os dois
+#:        extras simplesmente nunca são pedidos.
+#:
+#:   ESG  Ester com as adições gregas (A-F). Aqui o risco é real: dependendo
+#:        de como a edição as encaixa, a numeração de VERSÍCULO pode deslocar
+#:        -- e roteiro com versículo deslocado desalinha contra o áudio em
+#:        silêncio, que é o defeito que este projeto mais persegue. Por isso o
+#:        notebook AVISA quando usa um apelido, com a contagem de capítulos.
+#:        Antes de fazer um vídeo de Ester, confira o capítulo contra a fonte.
+ALIASES_USFM: dict[str, str] = {
+    "ESG": "EST",   # Ester grego
+    "DAG": "DAN",   # Daniel grego
+}
+
+
 def por_usfm(codigo: str) -> Livro:
     """Busca pelo código USFM, sem diferenciar maiúscula: por_usfm("mat")."""
     chave = codigo.strip().upper()
+    chave = ALIASES_USFM.get(chave, chave)
     if chave not in _POR_USFM:
         raise KeyError(f"código USFM desconhecido: {codigo!r}")
     return _POR_USFM[chave]

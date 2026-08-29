@@ -500,6 +500,28 @@ Gênesis 1:1 sai com as duas colunas intercaladas). O USFM marca parágrafo
 (`\p`) e poesia (`\q1`) explicitamente, que é exatamente a estrutura que o
 `roteiro_versiculos.txt` já tem. O PDF serve pra ler, não pra virar dado.
 
+### Ester e Daniel vêm na forma grega
+
+A WEB do ebible.org publica os dois com os acréscimos deuterocanônicos, sob os
+códigos USFM **`ESG`** e **`DAG`** — e **não** publica `EST`/`DAN` separados.
+Sem apelido, os dois livros somem do `web-biblia.json` (aconteceu em 29/ago).
+`biblia_livros.ALIASES_USFM` resolve.
+
+| | Traz a mais | Risco |
+|---|---|---|
+| `DAG` → Daniel | Susana (13) e Bel (14) | **nenhum** — os capítulos 1–12 mantêm a numeração, e os extras nunca são pedidos |
+| `ESG` → Ester | adições gregas A–F | **real** — dependendo de como a edição as encaixa, a numeração de **versículo** pode deslocar |
+
+Versículo deslocado desalinha contra o áudio **em silêncio**, que é o defeito
+que este notebook inteiro existe pra evitar. Por isso o notebook avisa toda vez
+que usa um apelido, com a contagem de capítulos. **Antes de fazer um vídeo de
+Ester, confira o capítulo contra a fonte.**
+
+> A célula de parsear lista **quais** arquivos ficaram de fora, com o código
+> USFM de cada um. Antes ela só dizia "9 arquivos fora do cânone (normal)" — e
+> quando Ester e Daniel sumiram, a informação que resolvia o caso tinha sido
+> resumida embora. Contagem sem os nomes não diagnostica nada.
+
 **Onde mora.** `dados_lexico/`, junto de `eventos-biblicos.json` e
 `titulos-biblicos.json` — dado de referência **imutável**, versionado, lido por
 módulo. Não vai pra planilha: planilha é pra estado que muda e que você edita à
