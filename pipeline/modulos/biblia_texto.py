@@ -18,7 +18,7 @@ from __future__ import annotations
 
 import re
 import unicodedata
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 import biblia_livros as bl
 
@@ -212,7 +212,7 @@ def narracao_do_capitulo(nome_projeto: str, caminho_biblia: _Path | str) -> str:
 
 # ── Comparação com um roteiro já existente ───────────────────────────────────
 
-def _normalizar(texto: str) -> list[str]:
+def palavras_comparaveis(texto: str) -> list[str]:
     """Palavras comparáveis: sem marcador de versículo, sem pontuação, minúsculas.
 
     Aspas curvas viram retas e acentos caem, senão diferença puramente
@@ -239,6 +239,14 @@ class Comparacao:
     palavras_b: int
     iguais: int
     diferencas: list[tuple[str, str, str]]  # (tipo, trecho_a, trecho_b)
+    # Índice da palavra em A onde cada diferença começa, na mesma ordem de
+    # `diferencas`. Existe pra quem precisa dizer ONDE, não só o quê: com o
+    # índice dá pra achar o bloco de legenda. Procurar o trecho de contexto
+    # com `find()` não serve -- ele começa numa palavra comum ("when", "was"),
+    # e a busca casa a PRIMEIRA ocorrência no texto todo, apontando o bloco 1
+    # pra uma diferença que está no fim. Erro de localização é pior que
+    # nenhuma localização: manda procurar no lugar errado com confiança.
+    posicoes_a: list[int] = field(default_factory=list)
 
     @property
     def similaridade(self) -> float:
@@ -258,11 +266,12 @@ def comparar(texto_a: str, texto_b: str, contexto: int = 6) -> Comparacao:
     """
     import difflib
 
-    a, b = _normalizar(texto_a), _normalizar(texto_b)
+    a, b = palavras_comparaveis(texto_a), palavras_comparaveis(texto_b)
     matcher = difflib.SequenceMatcher(None, a, b, autojunk=False)
 
     iguais = 0
     diferencas: list[tuple[str, str, str]] = []
+    posicoes: list[int] = []
     for tag, i1, i2, j1, j2 in matcher.get_opcodes():
         if tag == "equal":
             iguais += i2 - i1
@@ -272,4 +281,5 @@ def comparar(texto_a: str, texto_b: str, contexto: int = 6) -> Comparacao:
                 " ".join(a[max(0, i1 - contexto):i2 + contexto]),
                 " ".join(b[max(0, j1 - contexto):j2 + contexto]),
             ))
-    return Comparacao(len(a), len(b), iguais, diferencas)
+            posicoes.append(i1)
+    return Comparacao(len(a), len(b), iguais, diferencas, posicoes)

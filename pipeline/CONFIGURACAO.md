@@ -612,6 +612,21 @@ alinha os dois (`biblia_texto.comparar`, o mesmo `difflib` do
 
 Por isso a célula não escreve nada: ela mostra, e quem decide é você.
 
+**O bloco vem do alinhamento, não de uma busca.** `comparar()` devolve
+`posicoes_a` — o índice da palavra em A onde cada diferença começa — e o bloco
+sai daí. A primeira versão procurava o trecho de contexto com `find()`: o
+contexto começa numa palavra comum ("when", "was"), a busca casava a PRIMEIRA
+ocorrência no texto todo, e uma diferença do bloco 39 saía anunciada como
+bloco ~1.
+
+> **Erro de localização é pior que nenhuma localização** — manda procurar no
+> lugar errado, com confiança.
+
+E a célula avisa quando `MODELO_WHISPER` é `tiny`/`base`: boa parte da lista
+some trocando pra `small`. Numa execução com `base`, `chief priests` virou
+`cheap priests`, `myrrh` virou `mirror`, `sent out` virou `sinned out` e
+`reigning` virou `raining` — ruído que parece divergência de texto e não é.
+
 ### `modulos/audio_narracao.py` — onde procurar a narração, num lugar só
 
 A busca pelo áudio existia em **um** lugar (`video_pipeline.gerar_audio`) e os
