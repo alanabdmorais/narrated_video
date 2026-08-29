@@ -295,6 +295,19 @@ def carregar_biblioteca(linhas_planilha, coluna_id="ID", coluna_titulo="Título"
 
     Funciona igual pra vídeo (coluna_url="url") ou imagem
     (coluna_url="Imagem") — só muda o nome da coluna passado.
+
+    Carrega junto `URL Thumbnail`, `Largura` e `Altura` quando a planilha
+    tiver essas colunas. Não são usadas no match — viajam com o candidato
+    até o vídeo, e servem pra duas coisas lá na frente:
+
+      · o thumbnail é o link ESTÁVEL do Pixabay. O da coluna de imagem é
+        assinado e vence; sem carregar o thumbnail junto, um match salvo há
+        meses morre inteiro com 400 e não há de onde recuperar.
+      · largura/altura dizem se a campeã está em pé, pra avisar antes do
+        corte comer dois terços dela.
+
+    Planilha de vídeo não tem essas colunas, e tudo bem: elas ficam vazias e
+    quem consome trata a ausência.
     """
     biblioteca = []
     for linha in linhas_planilha:
@@ -308,6 +321,9 @@ def carregar_biblioteca(linhas_planilha, coluna_id="ID", coluna_titulo="Título"
             "url": linha.get(coluna_url, ""),
             "autor": autor,
             "tags_biblia": tags,
+            "url_thumbnail": str(linha.get("URL Thumbnail", "") or ""),
+            "largura": linha.get("Largura", ""),
+            "altura": linha.get("Altura", ""),
         })
     return biblioteca
 
@@ -416,6 +432,9 @@ def calcular_segmentos_versiculo(resultados, tempos_versiculo, duracao_total_ms,
             "autor": match.get("autor", "Pixabay"),
             "id": match["id"],
             "titulo": match["titulo"],
+            "url_thumbnail": match.get("url_thumbnail", ""),
+            "largura": match.get("largura", ""),
+            "altura": match.get("altura", ""),
         })
 
     return plano
@@ -874,6 +893,10 @@ def gerar_sugestoes_match(versiculos_texto, biblioteca, lista_tags_biblia,
                     "sem_opcao": False, "fonte": "biblioteca",
                     "id": salvo.get("id_midia"), "titulo": salvo.get("titulo"), "url": salvo.get("url_midia"),
                     "autor": salvo.get("autor", "Pixabay"),
+                    # A biblioteca de match guarda só id/url/autor/título, então
+                    # aqui não há thumbnail nem medidas. Fica vazio de propósito:
+                    # o consumidor trata a ausência, e inventar valor seria pior.
+                    "url_thumbnail": "", "largura": "", "altura": "",
                     "score": None, "tags_batidas": [],
                     "palavras_chave": [],
                 })
@@ -985,6 +1008,9 @@ def gerar_sugestoes_match(versiculos_texto, biblioteca, lista_tags_biblia,
                 "sem_opcao": False, "fonte": fonte,
                 "id": candidato["id"], "titulo": candidato["titulo"], "url": candidato["url"],
                 "autor": candidato.get("autor", "Pixabay"),
+                "url_thumbnail": candidato.get("url_thumbnail", ""),
+                "largura": candidato.get("largura", ""),
+                "altura": candidato.get("altura", ""),
                 "score": score, "tags_batidas": sorted(_normalizar_tags(tags_semelhantes) & candidato["tags_biblia"]),
                 "palavras_chave": palavras_chave,
             })

@@ -345,6 +345,40 @@ apontar pra um arquivo com outro nome já salvo em `pasta_oracao`.
 > agora, não implementado). Ordem confirmada: "edge" vem ANTES de "audio" —
 > já existe um arquivo real nesse padrão no Drive (`40_Matt_02_edge_audio.wav`).
 
+### Modo versículo: a campeã é sua, o aviso é meu
+
+No modo **padrão** é o sistema que sorteia a foto, então descartar retrato é
+barato: pula pra próxima linha. No modo **versículo** quem escolhe a campeã é
+você, e descartar significaria desfazer sua escolha. Por isso
+`DESCARTAR_IMAGEM_RETRATO` **não age aqui** — a campeã escolhida é sempre
+usada.
+
+Mas usada calada seria pior: uma campeã em pé perde ~2/3 da altura no corte
+pra 16:9, e o vídeo sai pronto com a imagem decapitada. `baixar_clipes_imagem_por_versiculo()`
+avisa antes, nomeando versículo, título e medidas:
+
+```
+⚠️ 2 campeã(s) em formato retrato — o corte pra 16:9 vai comer cerca de 2/3
+   da altura. Considere escolher outra no match:
+     v7 — sunrise (1080x1920)
+     v14 — prayer (1200x1800)
+```
+
+Quem troca a campeã é você; o código só para de deixar isso passar em branco.
+
+**E o buraco que isso revelou.** O modo versículo montava o `Clipe` só com
+`url` — sem `urls_alternativas`. Ou seja, a reserva contra link vencido
+protegia o modo padrão e **não** o modo versículo, que é justamente onde ela
+pesa mais: um match salvo há meses guarda o link assinado, já vencido, e o
+capítulo inteiro morreria com 400 sem nada pra recuperar. Agora
+`carregar_biblioteca()` carrega `URL Thumbnail`, `Largura` e `Altura` junto do
+candidato e esses campos viajam pelo match até o vídeo.
+
+Planilha de vídeo não tem essas colunas, e match salvo na
+`Biblioteca_Match_Audio` também não guarda thumbnail — nos dois casos os
+campos ficam vazios e quem consome trata a ausência. **Inventar valor seria
+pior que não ter.**
+
 ### Tarja preta na foto: o enquadramento e a orientação
 
 Duas causas independentes, e as duas precisavam de conserto.

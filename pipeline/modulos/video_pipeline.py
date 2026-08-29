@@ -1036,9 +1036,31 @@ class VideoPipeline:
 
         a_processar = [
             Clipe(url=seg["url"], autor=seg.get("autor", "Pixabay"), indice=i + 1,
-                  duracao_seg=seg["duracao_seg"])
+                  duracao_seg=seg["duracao_seg"],
+                  # Mesma reserva do modo padrão. Aqui ela pesa mais: um match
+                  # salvo há meses guarda o link assinado, que já venceu, e sem
+                  # o thumbnail o capítulo inteiro morre com 400 sem recuperação.
+                  urls_alternativas=urls_alternativas_pixabay(seg.get("url_thumbnail", "")))
             for i, seg in enumerate(plano_segmentos)
         ]
+
+        # A campeã que VOCÊ escolheu nunca é descartada -- diferente do modo
+        # padrão, onde é o sistema que sorteia e pode pular a linha seguinte.
+        # Mas uma campeã em pé perde ~2/3 da altura no corte, e isso sairia
+        # calado: o vídeo fica pronto, só com a imagem decapitada. Avisar é o
+        # mínimo; quem troca a campeã é você, não o código.
+        em_pe = [
+            f"v{seg['versiculos'][0]} — {seg.get('titulo') or seg.get('id')} "
+            f"({seg.get('largura')}x{seg.get('altura')})"
+            for seg in plano_segmentos if _e_retrato({"Largura": seg.get("largura"),
+                                                      "Altura": seg.get("altura")})
+        ]
+        if em_pe:
+            logger.warning(
+                "   ⚠️  %d campeã(s) em formato retrato — o corte pra 16:9 vai comer "
+                "cerca de 2/3 da altura. Considere escolher outra no match:\n     %s",
+                len(em_pe), "\n     ".join(em_pe),
+            )
 
         processados: list[Clipe] = []
         with ThreadPoolExecutor(max_workers=2) as executor:
