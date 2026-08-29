@@ -424,7 +424,8 @@ class VideoPipeline:
                     sheet.update_cell(num_linha, col_ok, agora)
                 except Exception as exc:
                     logger.warning("   ⚠️  Não consegui marcar a linha %d: %s", num_linha, exc)
-            logger.info("   📝 %d linha(s) marcadas 'ok' na planilha", len(linhas_para_marcar_ok))
+            logger.info("   📝 %d linha(s) marcadas com data/hora (%s) na planilha",
+                        len(linhas_para_marcar_ok), agora)
 
         self._cp.salvar("clipes_cortados", {
             "total": len(processados),
@@ -711,7 +712,8 @@ class VideoPipeline:
                 sheet.update_cell(num_linha, col_status, agora)
             except Exception as exc:
                 logger.warning("   ⚠️  Não consegui marcar a linha %d: %s", num_linha, exc)
-        logger.info("   📝 %d linha(s) marcadas com data/hora na planilha", len(linhas_para_marcar))
+        logger.info("   📝 %d linha(s) marcadas com data/hora (%s) na planilha",
+                    len(linhas_para_marcar), agora)
 
         self._cp.salvar("clipes_cortados", {
             "total": len(processados), "duracao_audio": round(duracao_total, 1), "modo": "imagem",
