@@ -420,7 +420,9 @@ assert len(ORDEM_FREQUENCIA) == len(CORES_HTML), "ORDEM_FREQUENCIA tem repetido"
 
 SEPARADOR_IDIOMA = " · "
 
-ORDEM_IDIOMAS_PADRAO = ("pt", "en", "es", "fr", "ko", "zh")
+#: Inglês primeiro: é o idioma anfitrião, a mesma ordem da pilha na tela
+#: (constants.POSICOES_Y) e do card. Uma ordem só, nos três lugares.
+ORDEM_IDIOMAS_PADRAO = ("en", "pt", "es", "fr", "ko", "zh")
 
 
 def _idiomas_validos(idiomas: list[str] | None) -> list[str]:

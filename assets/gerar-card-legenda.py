@@ -48,7 +48,7 @@ sumirem no fundo claro.
 
 ## As colunas
 
-    cor   |  português · english · español · français  |  한국어 · 中文
+    cor   |  english · português · español · français  |  한국어 · 中文
 
 Latino e CJK separados porque o coreano e o chinês são curtos e os latinos são
 longos: numa coluna só, as quatro terminações coreanas empurravam o 한국어 pra
@@ -99,16 +99,18 @@ DEZ_MEDIDAS = cores.ORDEM_FREQUENCIA[:10]
 #: Referência de tamanho: as medidas do CSS foram desenhadas pra 10 linhas.
 LINHAS_REFERENCIA = 10
 
-IDIOMAS_LATINOS = ("pt", "en", "es", "fr")
+#: Inglês primeiro — idioma anfitrião, mesma ordem da pilha na tela
+#: (constants.POSICOES_Y) e da legenda na descrição do YouTube.
+IDIOMAS_LATINOS = ("en", "pt", "es", "fr")
 
 VARIANTES = {
     "card-legenda-cores.html": {
-        "idiomas": ["pt", "en", "es", "fr", "ko"],
+        "idiomas": ["en", "pt", "es", "fr", "ko"],
         "cjk": ("ko",),
         "sufixo_png": "",
     },
     "card-legenda-cores-zh.html": {
-        "idiomas": ["pt", "en", "es", "fr", "ko", "zh"],
+        "idiomas": ["en", "pt", "es", "fr", "ko", "zh"],
         "cjk": ("ko", "zh"),
         "sufixo_png": "_zh",
     },

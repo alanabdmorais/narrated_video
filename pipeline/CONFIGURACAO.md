@@ -956,12 +956,26 @@ gramatical — mas sai das mesmas 21 cores com emoji. Fica em
 
 | Ordem na tela | Idioma | Emoji | Cor | Hex |
 |---|---|---|---|---|
-| y=100 | Português | 🟡 | amarelo | `#FFFF00` |
-| y=180 | Inglês | 💚 | verde claro | `#66BB6A` |
+| y=100 | **Inglês** | 💚 | verde claro | `#66BB6A` |
+| y=180 | Português | 🟡 | amarelo | `#FFFF00` |
 | y=260 | Espanhol | 🟠 | laranja | `#FFA500` |
 | y=340 | Francês | 🩵 | azul claro | `#87CEEB` |
 | y=420 | Coreano | 🩷 | rosa | `#FF69B4` |
 | y=500 | Chinês | 🟣 | roxo | `#800080` |
+
+**O inglês é o idioma anfitrião, então é a primeira linha.** É a língua da
+narração, é a origem que o tradutor automático do YouTube usa, e é o que a
+maior parte do público lê. A ordem mora em `constants.POSICOES_Y` /
+`POS_SIGLA_Y`, e é dali que os outros lugares a copiam
+(`sorted(idiomas, key=POSICOES_Y.get)`): a pilha da tela, a legenda da
+descrição e o card do vídeo saem todos na mesma sequência — a mesma ideia da
+ordem por frequência das classes, uma ordem só, aprendida uma vez.
+
+Vizinho não pode se parecer com vizinho. Ao subir o inglês pro topo, o
+amarelo (pt) passou a ficar encostado no laranja (es) — medido, **ΔE\*ab 52,9**,
+mais folgado que o par rosa/roxo (ko/zh, **44,4**) que já estava valendo. O pior
+vizinho da pilha não mudou, então **nenhuma cor precisou mudar** junto com a
+ordem.
 
 Cada idioma manteve a cor que já tinha, só migrada pro tom equivalente da
 paleta — **com uma exceção**: o chinês. O tom mais próximo do `#B388FF` antigo

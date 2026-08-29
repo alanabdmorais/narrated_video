@@ -151,9 +151,11 @@ class PipelineConfig:
             # 100→500), então vizinhos não podem se parecer. Por isso o chinês
             # é roxo 🟣 e não lilás 🪻 — lilás encostaria no rosa 🩷 do
             # coreano, que é a linha logo acima dele.
+            # Listado na ordem em que aparece na tela (ver POSICOES_Y):
+            # inglês no topo, por ser o idioma anfitrião.
             object.__setattr__(self, 'CORES_IDIOMAS', {
+                'en': '#66BB6A',   # 💚 verde claro
                 'pt': '#FFFF00',   # 🟡 amarelo
-                'en': '#66BB6A',   # 📗 verde claro
                 'es': '#FFA500',   # 🟠 laranja
                 'fr': '#87CEEB',   # 🩵 azul claro
                 'ko': '#FF69B4',   # 🩷 rosa

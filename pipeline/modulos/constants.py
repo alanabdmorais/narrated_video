@@ -11,7 +11,7 @@ BASE CORRIGIDA - Funciona para QUALQUER ORAÇÃO
 # já trazem a entrada de "zh" -- são consultados por idioma (.get(lang)),
 # então a entrada extra fica inerte até um notebook pedir "zh"
 # explicitamente em IDIOMAS_ALVO (ver caption-*-zh-*.ipynb).
-IDIOMAS: list[str] = ["pt", "en", "es", "fr", "ko"]
+IDIOMAS: list[str] = ["en", "pt", "es", "fr", "ko"]
 
 SIGLAS_IDIOMAS: dict[str, str] = {
     "pt": "PT-BR",
@@ -34,8 +34,22 @@ NOMES_IDIOMA: dict[str, str] = {
 # ── Posições das legendas na tela (pixels, tela 1280px) ──────────────────────
 # 6 faixas de 80px: a última (zh, y=500) ainda cabe folgado nos 720px de
 # altura -- a legenda fica centrada em an2 (centro-baixo) na posição dada.
-POSICOES_Y: dict[str, int] = {"pt": 100, "en": 180, "es": 260, "fr": 340, "ko": 420, "zh": 500}
-POS_SIGLA_Y: dict[str, int] = {"pt": 65, "en": 145, "es": 225, "fr": 305, "ko": 385, "zh": 465}
+#
+# O INGLÊS VEM PRIMEIRO. É o idioma anfitrião do canal: é ele que o YouTube
+# usa como origem da tradução automática, é a língua da narração, e é a linha
+# que a maior parte do público lê. As outras cinco acompanham embaixo.
+#
+# Esta ordem é a MESMA na descrição do YouTube e no card de legenda -- é ela
+# que o `sorted(idiomas, key=POSICOES_Y.get)` espalha pros outros lugares.
+# Mudar aqui move a pilha da tela E a ordem das legendas junto, de propósito:
+# ordem diferente em cada lugar obriga o espectador a reaprender.
+#
+# Vizinho não pode se parecer com vizinho (as cores estão em
+# config.CORES_IDIOMAS). Com o inglês na frente, amarelo (pt) passa a ficar
+# encostado em laranja (es): medido, ΔE*ab 52,9 -- mais folgado que o par
+# rosa/roxo (ko/zh, ΔE 44,4) que já estava valendo. Nenhuma cor precisou mudar.
+POSICOES_Y: dict[str, int] = {"en": 100, "pt": 180, "es": 260, "fr": 340, "ko": 420, "zh": 500}
+POS_SIGLA_Y: dict[str, int] = {"en": 65, "pt": 145, "es": 225, "fr": 305, "ko": 385, "zh": 465}
 
 # ── Dimensões da tela ─────────────────────────────────────────────────────────
 LARGURA_TELA: int = 1280

@@ -47,7 +47,7 @@ DEF_PARTICULA_KO_ZH = (
 VARIANTES = {
     "central-decisao-cores.html": {
         "com_chines": False,
-        "idiomas": ["pt", "en", "es", "fr", "ko"],
+        "idiomas": ["en", "pt", "es", "fr", "ko"],
         "eyebrow": "Legenda Multicor · 5 Idiomas · 20 classes",
         "titulo_html": "Painel de Classificação — Legenda Multicor (20 classes)",
         "nome_particula": "Partícula (coreano)",
@@ -62,7 +62,7 @@ VARIANTES = {
     },
     "central-decisao-cores-zh.html": {
         "com_chines": True,
-        "idiomas": ["pt", "en", "es", "fr", "ko", "zh"],
+        "idiomas": ["en", "pt", "es", "fr", "ko", "zh"],
         "eyebrow": "Legenda Multicor · 6 Idiomas (com chinês) · 20 classes",
         "titulo_html": "Painel de Classificação — Legenda Multicor, 6 idiomas (20 classes)",
         "nome_particula": "Partícula (coreano/chinês)",
@@ -197,8 +197,11 @@ def gerar(nome_saida: str, v: dict, template: str) -> None:
 #                 cada um. É a garantia: não depende de tradutor nenhum, e o
 #                 exemplo ensina a cor melhor que o nome da classe sozinho.
 #   portugues  -- só português, pra você conferir.
-SEIS = ["pt", "en", "es", "fr", "ko", "zh"]
-CINCO = ["pt", "en", "es", "fr", "ko"]
+# Inglês primeiro: idioma anfitrião. A ordem de exibição vem do
+# POSICOES_Y (a pilha na tela), então basta o conjunto estar certo --
+# mas listar já na ordem certa evita ler isto e achar que divergiu.
+SEIS = ["en", "pt", "es", "fr", "ko", "zh"]
+CINCO = ["en", "pt", "es", "fr", "ko"]
 
 COLINHA_BLOCOS = [
     ("Multi-idioma cor única — 6 idiomas (com chinês)", "idiomas", SEIS),
@@ -212,8 +215,8 @@ COLINHA_BLOCOS = [
     ("Multicolor 5 idiomas — poliglota, com exemplos", "poliglota", CINCO),
     ("Multicolor 5 idiomas — só português", "portugues", CINCO),
 
-    ("Multicolor sem coreano — básica (inglês)", "basica", ["pt", "en", "es", "fr"]),
-    ("Multicolor sem coreano — poliglota, com exemplos", "poliglota", ["pt", "en", "es", "fr"]),
+    ("Multicolor sem coreano — básica (inglês)", "basica", ["en", "pt", "es", "fr"]),
+    ("Multicolor sem coreano — poliglota, com exemplos", "poliglota", ["en", "pt", "es", "fr"]),
 
     ("Multicolor só latinos — básica (inglês)", "basica", ["pt", "es", "fr"]),
     ("Multicolor só latinos — poliglota, com exemplos", "poliglota", ["pt", "es", "fr"]),
