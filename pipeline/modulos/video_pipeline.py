@@ -51,6 +51,7 @@ from ffmpeg_utils import (
     adicionar_trilha_fundo,
     ajustar_velocidade_audio,
     concatenar_videos,
+    converter_para_wav,
     cortar_video,
     imagem_para_clipe,
     obter_duracao,
@@ -84,9 +85,10 @@ class VideoPipeline:
     def gerar_audio(self) -> Path:
         """Gera áudio com Edge TTS e salva no Drive.
 
-        Pula a geração se o áudio já existir localmente (por exemplo, quando o
-        áudio foi carregado manualmente do Drive — gravação própria, mp3
-        convertido, etc.) — nunca sobrescreve um áudio já presente.
+        Antes de gerar qualquer coisa, procura uma narração pronta: na VM, na
+        pasta do vídeo no Drive e no estoque `assets/biblia_audio/` (ver
+        `_trazer_audio_do_drive`). Só cai no Edge TTS quando não achou nada em
+        lugar nenhum — nunca sobrescreve um áudio já presente, aqui ou no Drive.
 
         Se `VELOCIDADE_AUDIO` != 1.0, ajusta a velocidade da narração (sem
         alterar o tom da voz) uma única vez — controlado por checkpoint, para
@@ -99,12 +101,32 @@ class VideoPipeline:
         audio_path  = Path(self._cfg.NOME_AUDIO)
         texto_hash  = hashlib.sha1(self._cfg.TEXTO_ORACAO.encode("utf-8")).hexdigest()[:12]
 
+        # Procura no DRIVE antes de decidir gerar. Sem isto, a checagem abaixo
+        # olhava só o disco da VM do Colab -- que numa sessão nova está sempre
+        # vazio -- e o Edge TTS gerava por cima. Como o upload vai pra
+        # `pasta_assets_audio`, que é alias de `pasta_oracao`, e o nome é o
+        # mesmo, a narração sintética SOBRESCREVIA o áudio que você tinha
+        # subido à mão. Perder uma gravação própria assim é calado: o vídeo
+        # sai pronto, só com a voz errada, e nada no log diz que houve troca.
+        origem_audio = None
+        if not audio_path.exists():
+            origem_audio = self._trazer_audio_do_drive(audio_path)
+
         if audio_path.exists():
             # 🔒 O áudio existente pode ser de uma execução anterior com um
             # TEXTO_ORACAO diferente (ex: você editou a Configuração e rodou de
             # novo sem limpar o áudio antigo primeiro). Sem isso, o pipeline
             # ficaria narrando um texto desatualizado sem avisar.
-            hash_registrado = (self._cp.metadados("audio_gerado") or {}).get("texto_hash")
+            # ...mas só faz sentido comparar hash de texto com áudio que o
+            # Edge TTS gerou a partir dele. Narração humana não tem hash --
+            # comparar dispararia o alarme justamente no caso normal, e
+            # aviso que sempre grita é aviso que ninguém lê.
+            meta = self._cp.metadados("audio_gerado") or {}
+            hash_registrado = (
+                meta.get("texto_hash")
+                if origem_audio is None and meta.get("origem") == "edge_tts"
+                else None
+            )
             if hash_registrado and hash_registrado != texto_hash:
                 logger.warning(
                     "   ⚠️  %s existe, mas foi gerado a partir de um TEXTO_ORACAO "
@@ -115,9 +137,16 @@ class VideoPipeline:
                 )
             logger.info("── Narração: áudio já existe (%s) — pulando geração", audio_path.name)
             self._cp.salvar("audio_gerado", {
-                "arquivo": str(audio_path), "origem": "existente", "texto_hash": texto_hash,
+                "arquivo": str(audio_path), "origem": origem_audio or "existente",
+                "texto_hash": texto_hash,
             })
             self._ajustar_velocidade_audio(audio_path)
+            # Só sobe quando o áudio NÃO veio da pasta do vídeo: aí ele ainda
+            # não está lá, e as fases seguintes (clipes, mescla) o procuram
+            # justamente lá. Vindo da pasta do vídeo, subir seria reescrever
+            # por cima do original -- que é o que este método existe pra evitar.
+            if origem_audio == "estoque":
+                self._drive.upload(audio_path, self._cfg.pasta_oracao, "audio/wav")
             return audio_path
 
         logger.info("── Narração: gerando áudio com Edge TTS")
@@ -133,12 +162,25 @@ class VideoPipeline:
                     await asyncio.sleep(2)
             raise PipelineError("Edge TTS falhou após 3 tentativas")
 
+        falha: list[BaseException] = []
+
         def run_in_thread():
-            asyncio.run(_gerar())
+            try:
+                asyncio.run(_gerar())
+            except BaseException as exc:   # repassada logo abaixo, na thread principal
+                falha.append(exc)
 
         thread = threading.Thread(target=run_in_thread)
         thread.start()
         thread.join()
+
+        # Exceção levantada dentro de uma thread morre com ela: o join() volta
+        # como se tivesse dado certo. Sem isto, "Edge TTS falhou após 3
+        # tentativas" só reaparecia como um FileNotFoundError três linhas
+        # abaixo -- um erro que aponta pro lugar errado é pior que nenhum,
+        # porque manda você procurar o problema onde ele não está.
+        if falha:
+            raise falha[0]
 
         logger.info("✅ Áudio: %s (%.2f MB)", audio_path.name, audio_path.stat().st_size / 1_048_576)
         self._cp.salvar("audio_gerado", {
@@ -147,6 +189,44 @@ class VideoPipeline:
         self._ajustar_velocidade_audio(audio_path)
         self._drive.upload(audio_path, self._cfg.pasta_assets_audio, "audio/wav")
         return audio_path
+
+    # Formatos que uma narração pode chegar, e os dois jeitos de nomeá-la:
+    #   40_Matt_02_audio.wav   o nome do projeto (NOME_AUDIO)
+    #   40_Matt_02.mp3         o nome do estoque (biblia-audio-baixar)
+    _EXTENSOES_AUDIO = (".wav", ".mp3", ".m4a", ".ogg", ".flac")
+
+    def _trazer_audio_do_drive(self, destino: Path) -> str | None:
+        """Traz pra VM uma narração que já exista no Drive, se houver.
+
+        Duas origens, da mais específica pra mais geral:
+          1. `"pasta"`   — a pasta do vídeo: gravação própria, ou o capítulo
+             que você subiu à mão. Manda, porque é a escolha explícita.
+          2. `"estoque"` — `assets/biblia_audio/`, o resultado do
+             `biblia-audio-baixar`. É o que faz "fornecer o áudio" sumir do
+             fluxo num vídeo de capítulo bíblico: se o estoque está lá, o
+             pipeline acha sozinho.
+
+        Retorna o rótulo da origem, ou None se não achou nada — e nesse caso
+        o Edge TTS gera, que é o comportamento certo pra uma oração escrita.
+        """
+        origens = (
+            ("pasta",   self._cfg.pasta_oracao,                             "pasta do vídeo"),
+            ("estoque", self._cfg.pasta_base_drive / "assets" / "biblia_audio", "estoque da Bíblia"),
+        )
+        for rotulo, pasta, descricao in origens:
+            for base in (f"{self._cfg.NOME_ORACAO}_audio", self._cfg.NOME_ORACAO):
+                for ext in self._EXTENSOES_AUDIO:
+                    origem = pasta / f"{base}{ext}"
+                    if not origem.exists():
+                        continue
+                    logger.info("── Narração: achei %s no %s — nada será gerado",
+                                origem.name, descricao)
+                    if ext == ".wav":
+                        shutil.copy2(origem, destino)
+                    else:
+                        converter_para_wav(origem, destino)
+                    return rotulo
+        return None
 
     def _ajustar_velocidade_audio(self, audio_path: Path) -> None:
         """Aplica VELOCIDADE_AUDIO ao áudio final, uma única vez por vídeo."""

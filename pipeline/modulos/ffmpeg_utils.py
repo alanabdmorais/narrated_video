@@ -507,6 +507,28 @@ def adicionar_efeitos_pontuais(
     return saida
 
 
+def converter_para_wav(audio_entrada: Path | str, saida: Path | str) -> Path:
+    """
+    Converte qualquer áudio (mp3, m4a, ogg…) pro wav que o pipeline espera.
+
+    Existe porque as duas origens de narração usam formatos diferentes: uma
+    gravação própria costuma chegar em .wav, e o estoque do
+    `biblia-audio-baixar` é .mp3. Sem converter, o arquivo entraria com o
+    nome `..._audio.wav` mas o conteúdo de outro formato — funciona no
+    FFmpeg, que lê pelo conteúdo, e quebra em qualquer coisa que confie na
+    extensão. Mentir sobre o formato no nome é uma dívida que vence longe
+    de onde foi contraída.
+    """
+    saida = Path(saida)
+    _run(
+        ["ffmpeg", "-y", "-i", str(audio_entrada),
+         "-vn", "-acodec", "pcm_s16le", "-ar", "44100", str(saida)],
+        "converter_para_wav",
+    )
+    logger.info("converter_para_wav: %s → %s", Path(audio_entrada).name, saida.name)
+    return saida
+
+
 def ajustar_velocidade_audio(
     audio_entrada: Path | str,
     saida:         Path | str,

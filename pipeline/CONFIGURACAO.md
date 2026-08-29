@@ -345,6 +345,41 @@ apontar pra um arquivo com outro nome já salvo em `pasta_oracao`.
 > agora, não implementado). Ordem confirmada: "edge" vem ANTES de "audio" —
 > já existe um arquivo real nesse padrão no Drive (`40_Matt_02_edge_audio.wav`).
 
+### De onde vem a narração (e por que ela não é sobrescrita)
+
+`gerar_audio()` procura, **nesta ordem**, antes de cogitar gerar:
+
+| # | Onde | Nomes aceitos | Origem típica |
+|---|---|---|---|
+| 1 | `videos/<nome>/` | `<nome>_audio.*`, `<nome>.*` | gravação própria, ou o capítulo que você subiu à mão |
+| 2 | `assets/biblia_audio/` | `<nome>_audio.*`, `<nome>.*` | o estoque do `biblia-audio-baixar` |
+| 3 | — | — | Edge TTS, a partir de `TEXTO_ORACAO` |
+
+Extensões: `.wav`, `.mp3`, `.m4a`, `.ogg`, `.flac`. O que não for `.wav` é
+convertido (`ffmpeg_utils.converter_para_wav`) — o pipeline inteiro espera
+`<nome>_audio.wav`, e gravar um mp3 com nome de wav é uma dívida que vence
+longe de onde foi contraída.
+
+Vindo do **estoque**, o áudio é subido pra `videos/<nome>/` no fim: é lá que
+as fases seguintes (clipes, mescla) o procuram. Vindo da **pasta do vídeo**,
+nada é subido — subir seria reescrever por cima do original.
+
+> ⚠️ **O defeito que isto conserta.** A checagem antiga olhava só o disco da
+> VM do Colab, que numa sessão nova está sempre vazio. Resultado: o Edge TTS
+> gerava e subia pra `pasta_assets_audio` — que é alias de `pasta_oracao`,
+> com o mesmo nome de arquivo. A narração sintética **sobrescrevia no Drive**
+> a gravação humana. E em silêncio: o vídeo saía pronto, só com a voz errada.
+> A docstring já prometia "nunca sobrescreve um áudio já presente" — só que
+> "presente" significava presente *na VM*, não no Drive.
+
+Duas consequências práticas: o aviso de `texto_hash` divergente agora só vale
+pra áudio que o Edge TTS gerou (narração humana não tem hash de texto —
+comparar disparava alarme falso no caso normal), e uma falha do Edge TTS
+depois de 3 tentativas volta como `PipelineError` de verdade. Antes ela era
+levantada dentro de uma `threading.Thread` e morria com ela: o `join()`
+voltava como se tivesse dado certo, e o erro reaparecia como um
+`FileNotFoundError` três linhas abaixo, apontando pro lugar errado.
+
 ### Classificação morfológica / relatório
 
 | Propriedade | Padrão gerado |
