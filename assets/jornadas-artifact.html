@@ -66,7 +66,7 @@ table.simples th{font-family:'IBM Plex Mono',monospace;font-size:11px;
   <header>
     <p class="eyebrow">narrated_video · mapa de jornadas</p>
     <h1>O que rodar pra conseguir o quê</h1>
-    <p class="lede">São 31 notebooks. A pergunta que se faz na prática nunca é
+    <p class="lede">São 32 notebooks. A pergunta que se faz na prática nunca é
       "o que este notebook faz?" — é a inversa: <b>eu quero um resultado assim,
       o que eu rodo?</b> Este mapa responde essa.</p>
     <p class="lede">Gerado de <code>pipeline/modulos/jornadas.py</code>, que se
@@ -88,6 +88,7 @@ table.simples th{font-family:'IBM Plex Mono',monospace;font-size:11px;
   multi_idioma(&quot;multi-idioma&quot;)
   multicolor(&quot;multicolor&quot;)
   sincronizar{{&quot;sincronizar&quot;}}
+  conferir_audio{{&quot;conferir-audio&quot;}}
   portao{{&quot;portao&quot;}}
   compilacao(&quot;compilacao&quot;)
   estoque_imagem --&gt; base_versiculo
@@ -97,6 +98,7 @@ table.simples th{font-family:'IBM Plex Mono',monospace;font-size:11px;
   legenda_unica --&gt; base_trilhas
   legenda_unica --&gt; multi_idioma
   multi_idioma --&gt; multicolor
+  biblia --&gt; conferir_audio
   biblia --&gt; compilacao</pre>
 
   <div class="aviso"><b>Os quatro níveis de vídeo não são uma cadeia de
@@ -108,7 +110,7 @@ table.simples th{font-family:'IBM Plex Mono',monospace;font-size:11px;
     arquivo é pré-requisito, não pro nível de baixo.</div>
 
   <div class="chips" id="chips">
-    <span class="chip ativo" data-f="todos">todas (14)</span>
+    <span class="chip ativo" data-f="todos">todas (15)</span>
     <span class="chip" data-f="preparo">preparo</span>
     <span class="chip" data-f="vídeo">vídeo</span>
     <span class="chip" data-f="apoio">apoio</span>
@@ -301,6 +303,21 @@ table.simples th{font-family:'IBM Plex Mono',monospace;font-size:11px;
 <li><div><div class="passo-nb"><code>repositorio-sincronizar</code></div><div class="passo-produz">→ Drive igual ao repositório</div><div class="passo-nota">Mostra o que vai mudar ANTES de mudar, e confere por hash DEPOIS — copiar pra Drive montado falha calado.</div></div></li>
           </ol>
 <div class="armadilha">⚠️ O código vive no GitHub e o Colab lê do Drive; sem esta ponte os dois divergem em silêncio. Em 29/ago o Drive estava 56 commits atrás — faltavam 10 notebooks e 7 módulos. Teste rodado assim executa código velho e falha por motivo que já não existe. A direção é uma só: GitHub → Drive; edição feita direto no Colab e não levada pro git é sobrescrita.</div>
+        </div>
+      </article>
+      <article class="j" data-tipo="apoio">
+        <div class="j-cab">
+          <div class="j-id">conferir-audio</div>
+          <h3>O áudio fala o mesmo que o texto?</h3>
+        </div>
+        <div class="j-corpo">
+          <div class="linha"><div class="rot">quando</div><div class="val">Antes de fazer vídeo de um capítulo novo — e uma vez, pra calibrar o que é normal na sua gravação.</div></div>
+          <div class="linha"><div class="rot">entrega</div><div class="val">A lista de trechos onde a narração e o texto divergem, ordenada pelo tamanho.</div></div>
+<div class="linha"><div class="rot">depende de</div><div class="val deps"><span class="dep">biblia</span></div></div><div class="linha"><div class="rot">custo</div><div class="val">Whisper &#x27;small&#x27; com GPU: ~1 min por capítulo. A transcrição fica salva num .txt, então recomparar não paga de novo.</div></div>
+          <ol class="passos">
+<li><div><div class="passo-nb"><code>biblia-audio-conferir</code></div><div class="passo-produz">→ `&lt;nome&gt;_whisper_bruto_&lt;modelo&gt;.txt` + o relatório de divergências</div></div></li>
+          </ol>
+<div class="armadilha">⚠️ Não tem limiar, de propósito: fala contra texto escrito nunca dá 1,0 e não há medição pra dizer quanto é bom. O que decide é a FORMA — medido no Mateus 2: 14 erros de nome próprio dão 0,9675 em 14 trechos pequenos, e 40 palavras faltando dão 0,9328 num trecho só. A nota engana; o trecho grande é o achado.</div>
         </div>
       </article>
       <article class="j" data-tipo="apoio">

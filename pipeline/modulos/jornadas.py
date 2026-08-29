@@ -338,6 +338,29 @@ JORNADAS: tuple[Jornada, ...] = (
     ),
 
     Jornada(
+        id="conferir-audio",
+        tipo=APOIO,
+        titulo="O áudio fala o mesmo que o texto?",
+        quando="Antes de fazer vídeo de um capítulo novo — e uma vez, pra "
+               "calibrar o que é normal na sua gravação.",
+        entrega="A lista de trechos onde a narração e o texto divergem, "
+                "ordenada pelo tamanho.",
+        depende_de=("biblia",),
+        custo="Whisper 'small' com GPU: ~1 min por capítulo. A transcrição "
+              "fica salva num .txt, então recomparar não paga de novo.",
+        passos=(
+            Passo("biblia-audio-conferir",
+                  "`<nome>_whisper_bruto_<modelo>.txt` + o relatório de divergências"),
+        ),
+        armadilha="Não tem limiar, de propósito: fala contra texto escrito "
+                  "nunca dá 1,0 e não há medição pra dizer quanto é bom. O que "
+                  "decide é a FORMA — medido no Mateus 2: 14 erros de nome "
+                  "próprio dão 0,9675 em 14 trechos pequenos, e 40 palavras "
+                  "faltando dão 0,9328 num trecho só. A nota engana; o trecho "
+                  "grande é o achado.",
+    ),
+
+    Jornada(
         id="portao",
         tipo=APOIO,
         titulo="Portão de qualidade",

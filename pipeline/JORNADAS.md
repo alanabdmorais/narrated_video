@@ -6,7 +6,7 @@
 > notebooks (`python3 pipeline/modulos/jornadas.py`), então notebook novo que
 > ninguém encaixou numa jornada é acusado em vez de sumir do mapa.
 
-São 31 notebooks. A pergunta que se faz na prática nunca é "o que este
+São 32 notebooks. A pergunta que se faz na prática nunca é "o que este
 notebook faz?" — é a inversa: **"eu quero um resultado assim; o que eu rodo?"**
 Este documento responde essa.
 
@@ -53,6 +53,7 @@ flowchart LR
   multi_idioma("multi-idioma")
   multicolor("multicolor")
   sincronizar{{"sincronizar"}}
+  conferir_audio{{"conferir-audio"}}
   portao{{"portao"}}
   compilacao("compilacao")
   estoque_imagem --> base_versiculo
@@ -62,6 +63,7 @@ flowchart LR
   legenda_unica --> base_trilhas
   legenda_unica --> multi_idioma
   multi_idioma --> multicolor
+  biblia --> conferir_audio
   biblia --> compilacao
 ```
 
@@ -256,6 +258,22 @@ flowchart LR
 | 1 | `repositorio-sincronizar`<br>Mostra o que vai mudar ANTES de mudar, e confere por hash DEPOIS — copiar pra Drive montado falha calado. | Drive igual ao repositório |
 
 > ⚠️ O código vive no GitHub e o Colab lê do Drive; sem esta ponte os dois divergem em silêncio. Em 29/ago o Drive estava 56 commits atrás — faltavam 10 notebooks e 7 módulos. Teste rodado assim executa código velho e falha por motivo que já não existe. A direção é uma só: GitHub → Drive; edição feita direto no Colab e não levada pro git é sobrescrita.
+
+### `conferir-audio` — O áudio fala o mesmo que o texto?
+
+**Tipo** apoio · **Quando** Antes de fazer vídeo de um capítulo novo — e uma vez, pra calibrar o que é normal na sua gravação.
+
+**Entrega** A lista de trechos onde a narração e o texto divergem, ordenada pelo tamanho.
+
+**Depende de** `biblia`
+
+**Custo** Whisper 'small' com GPU: ~1 min por capítulo. A transcrição fica salva num .txt, então recomparar não paga de novo.
+
+| # | Notebook | Produz |
+|---|---|---|
+| 1 | `biblia-audio-conferir` | `<nome>_whisper_bruto_<modelo>.txt` + o relatório de divergências |
+
+> ⚠️ Não tem limiar, de propósito: fala contra texto escrito nunca dá 1,0 e não há medição pra dizer quanto é bom. O que decide é a FORMA — medido no Mateus 2: 14 erros de nome próprio dão 0,9675 em 14 trechos pequenos, e 40 palavras faltando dão 0,9328 num trecho só. A nota engana; o trecho grande é o achado.
 
 ### `portao` — Portão de qualidade
 
