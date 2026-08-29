@@ -680,8 +680,35 @@ Fonte única do nome de capítulo. `livro.nome_projeto(cap)` devolve o padrão d
 projeto (`40_Matt_02`, sigla OSIS — a mesma que já vinha sendo usada à mão) e
 `livro.stem_audio(cap)` devolve o nome na fonte.
 
-**Os nomes do AudioTreasure são irregulares**, por isso cada livro carrega seu
-próprio `modelo_audio` em vez de o código deduzir um padrão que não existe:
+**Os nomes do AudioTreasure são irregulares** — e, pior, *imprevisíveis*. A
+primeira versão montou `modelo_audio` a partir do índice do SITE, e o zip usa
+outros nomes. O download saiu com **120 capítulos "faltando" que estavam todos
+lá dentro**:
+
+| a tabela esperava | o zip tinha |
+|---|---|
+| `20_proverbs_01` | `20_prov_01` |
+| `25_lamentations01` | `25_lam1` |
+| `22_song_of_soloman_01` | `22_song_of_solomon_01` |
+
+Mateus, 1-2 Coríntios, Gálatas, 1-2 Tessalonicenses, Filemom, 2-3 João,
+Judas e Obadias, todos assim.
+
+> **Prever o nome exato de um arquivo alheio é uma aposta que se perde em
+> silêncio.** O que a fonte garante não é o nome — é a numeração canônica, que
+> está no começo e no fim de todo arquivo.
+
+`chave_audio(stem)` extrai `(livro, capítulo)` de qualquer forma que a fonte
+use, e é por essa chave que arquivo e capítulo se casam.
+`indexar_por_chave()` devolve o índice, os arquivos que não viraram chave, e
+as **colisões** — dois arquivos disputando o mesmo capítulo não são resolvidos
+em silêncio, porque áudio trocado não dá erro: sai um vídeo lendo outro
+capítulo.
+
+`modelo_audio` continua na tabela, rebaixado: só alimenta a mensagem
+*"esperava algo como X"* quando um capítulo falta de verdade.
+
+Os nomes que a fonte usa, pra referência:
 
 | Livro | Na fonte | Irregularidade |
 |---|---|---|

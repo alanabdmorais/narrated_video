@@ -10,21 +10,33 @@ Fonte única de verdade pra:
 A sigla segue o padrão OSIS, que é o mesmo que o projeto já usava à mão
 ("Matt" em 40_Matt_02) -- então capítulos antigos continuam batendo.
 
-⚠️ Os nomes de arquivo do AudioTreasure são IRREGULARES. Por isso cada livro
-carrega seu próprio `modelo_audio` em vez de o código tentar deduzir um
-padrão que não existe:
+⚠️ Os nomes de arquivo do AudioTreasure são IRREGULARES:
 
     01_Genesis_01        underscore antes do número (a maioria)
     40_Matthew01         SEM underscore
-    25_Lamentations03    SEM underscore
+    25_Lam1              abreviado, e sem zero à esquerda
     19_Psalm_001         número com TRÊS dígitos
-    22_Song_of_Soloman_01   "Soloman" escrito assim mesmo, na fonte
+    20_Prov_01           abreviado
+    22_Song_of_Solomon_01
 
-Deduzir isso em runtime só esconderia o problema; explícito, quebra alto se
-a fonte mudar.
+`modelo_audio` guarda o palpite de cada livro, mas **não é mais a chave de
+busca** — ver `chave_audio()`. A primeira versão deste módulo usou o modelo
+como chave, montado a partir do índice do SITE. O zip usa outros nomes, e o
+download saiu com 120 capítulos "faltando" que estavam todos lá:
+
+    esperava 20_proverbs_01   o zip tinha 20_prov_01
+    esperava 25_lamentations01              25_lam1
+    esperava 22_song_of_soloman_01          22_song_of_solomon_01
+
+A lição: **prever o nome exato de um arquivo alheio é uma aposta que se perde
+em silêncio.** O que a fonte garante de verdade é o par (número do livro,
+número do capítulo) — os dois estão no nome, no começo e no fim, e é por eles
+que se casa agora. `modelo_audio` sobrou só pra mensagem de erro dizer o que
+se esperava encontrar.
 """
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 
 
@@ -53,9 +65,19 @@ class Livro:
         return f"{self.numero:02d}_{self.sigla}_{capitulo:0{self.largura_capitulo}d}"
 
     def stem_audio(self, capitulo: int) -> str:
-        """Nome do arquivo (sem .mp3) como o AudioTreasure publica."""
+        """Palpite do nome do arquivo (sem .mp3) no AudioTreasure.
+
+        ⚠️ **Palpite, não garantia** — a fonte não segue padrão previsível.
+        Serve pra dizer "esperava encontrar X" numa mensagem de erro. Pra
+        CASAR arquivo com capítulo, use `chave_audio()`.
+        """
         self._validar(capitulo)
         return self.modelo_audio.format(cap=capitulo)
+
+    def chave(self, capitulo: int) -> tuple[int, int]:
+        """A chave que casa este capítulo com um arquivo da fonte."""
+        self._validar(capitulo)
+        return (self.numero, capitulo)
 
     def _validar(self, capitulo: int) -> None:
         if not 1 <= capitulo <= self.capitulos:
@@ -268,3 +290,71 @@ def por_usfm(codigo: str) -> Livro:
     if chave not in _POR_USFM:
         raise KeyError(f"código USFM desconhecido: {codigo!r}")
     return _POR_USFM[chave]
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Casar arquivo da fonte com capítulo do cânone
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Número do livro no começo, número do capítulo no fim, qualquer coisa no meio:
+#     40_matthew01           -> (40, 1)
+#     20_prov_01             -> (20, 1)
+#     25_lam1                -> (25, 1)
+#     19_psalm_001           -> (19, 1)
+#     46_1corinthians_01     -> (46, 1)   ← o "1" do meio não confunde
+#     22_song_of_solomon_01  -> (22, 1)
+_RE_CHAVE_AUDIO = re.compile(r"^(\d{1,2})\D.*?(\d{1,3})$")
+
+
+def chave_audio(stem: str) -> tuple[int, int] | None:
+    """Extrai `(número do livro, capítulo)` do nome de um arquivo da fonte.
+
+    É assim que arquivo e capítulo se casam — e não pelo nome inteiro. Do nome
+    completo a fonte não garante nada: `Prov` ou `Proverbs`, `Lam1` ou
+    `Lamentations01`, `Soloman` ou `Solomon`. O que ela garante é a numeração
+    canônica, que está no começo e no fim de todo arquivo.
+
+    Devolve `None` quando o nome não tem essa forma, ou quando o número do
+    livro está fora de 1..66 — melhor ignorar um arquivo estranho e ele
+    aparecer na lista de "sobrando" do que casá-lo com o capítulo errado.
+    Áudio trocado não dá erro: sai um vídeo lendo outro capítulo.
+    """
+    m = _RE_CHAVE_AUDIO.match((stem or "").strip().lower())
+    if not m:
+        return None
+    numero, capitulo = int(m.group(1)), int(m.group(2))
+    if numero not in _POR_NUMERO or capitulo < 1:
+        return None
+    if capitulo > _POR_NUMERO[numero].capitulos:
+        return None
+    return (numero, capitulo)
+
+
+def indexar_por_chave(stems) -> tuple[dict[tuple[int, int], str], list[str], dict]:
+    """Indexa nomes de arquivo por `(livro, capítulo)`.
+
+    Devolve três coisas, e nenhuma delas é resumo:
+      · `indice`      — chave -> stem
+      · `ignorados`   — nomes que não viraram chave nenhuma
+      · `colisoes`    — chave -> lista de stems, quando mais de um disputou
+
+    Colisão não é escolhida em silêncio: o primeiro fica no índice e o caso
+    inteiro sai na lista, pra você ver. Dois arquivos brigando pelo mesmo
+    capítulo quer dizer que a fonte mudou de forma — decidir sozinho aqui
+    seria escolher no escuro.
+    """
+    indice: dict[tuple[int, int], str] = {}
+    ignorados: list[str] = []
+    colisoes: dict[tuple[int, int], list[str]] = {}
+
+    for stem in stems:
+        chave = chave_audio(stem)
+        if chave is None:
+            ignorados.append(stem)
+            continue
+        if chave in indice:
+            colisoes.setdefault(chave, [indice[chave]]).append(stem)
+            continue
+        indice[chave] = stem
+
+    return indice, sorted(ignorados), colisoes
