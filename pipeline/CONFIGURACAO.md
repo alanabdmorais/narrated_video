@@ -869,6 +869,36 @@ que lembrasse.
 > Aviso que aparece sempre vira paisagem. Por isso o `avisar_gpu()` é
 > silencioso quando o ambiente combina -- ele só fala quando há o que fazer.
 
+### Documentação que ninguém alcança é documentação que não existe
+
+Três documentos das cores existiam, versionados, gerados do `cores.py` e em
+dia -- a central de decisão (as 20 classes e as 21 cores), o card de legenda
+(as duas telas que abrem e fecham o vídeo) e a colinha da descrição do
+YouTube. Ninguém conseguia abrir nenhum deles.
+
+O motivo é uma decisão antiga que ficou correta pelo lado errado: o
+sincronizador cobre `PASTAS = ["modulos", "notebooks", "dados_lexico"]`, tudo
+sob `pipeline/`, e `assets/` ficou de fora **de propósito** -- lá moram o
+`biblia-almeida.csv` de 4,5 MB, a marca e as planilhas, que não têm por que
+ocupar o Drive. A documentação pegou carona no que foi excluído.
+
+Agora ela viaja: uma lista **explícita** (não um glob, pra nada novo entrar
+sem alguém decidir) copiada de `assets/` pra `pipeline/documentacao/`. O
+destino fica dentro de `pipeline/` de propósito -- é o que preserva a regra de
+que este notebook **nunca escreve fora dela**, e é essa regra que garante que
+ele jamais toque no vídeo ou no áudio.
+
+A conferência inclui um caso que o resto do sincronizador não tem: arquivo que
+está na lista e não no repositório. Ele é **acusado, não copiado** -- quase
+sempre é um documento renomeado, e criar um vazio no Drive esconderia isso.
+
+As três também foram publicadas como Artifact, que é o caminho sem Colab e sem
+Drive: abre no celular, no navegador, em qualquer lugar.
+
+> Um arquivo pode estar versionado, correto e atualizado, e ainda assim não
+> existir pra quem precisa dele. "Está no repositório" não é o mesmo que "dá
+> pra consultar".
+
 ### Auditoria das cores: 3 erros em 610 peças, e 33 falsos alarmes meus
 
 Decodifiquei o `.ass` de volta pra classes gramaticais e conferi peça por peça:
