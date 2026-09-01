@@ -117,20 +117,40 @@ def _extra_args_cookies(cookies_path: Optional[Path]) -> list[str]:
     return []
 
 
+#: Uma vez que o YouTube diz "cookies no longer valid" nesta execução, todo
+#: "Sign in to confirm" que vier depois é quase certamente o MESMO problema --
+#: o yt-dlp só não repete a mensagem específica a cada chamada. Sem lembrar
+#: disso, um lote de 4 idiomas sai com o primeiro dizendo "troque o cookie" e
+#: os outros três dizendo "é o IP do Colab, espere" -- dois consertos opostos
+#: pro mesmo defeito, e o conselho errado em 3 de 4.
+_COOKIE_JA_ACUSADO_EXPIRADO = False
+
+_TROQUE_O_COOKIE = (
+    "Exporte um cookies.txt novo de uma aba REALMENTE logada em youtube.com "
+    "(não uma aba em branco) e substitua o arquivo no Drive."
+)
+
+
 def _diagnosticar_stderr(stderr: str) -> Optional[str]:
     """Reconhece os erros mais comuns do yt-dlp e devolve uma mensagem
     acionável, ou None se não reconhecer nada específico."""
+    global _COOKIE_JA_ACUSADO_EXPIRADO
     if "no longer valid" in stderr or "have likely been rotated" in stderr:
-        return (
-            "Cookies expirados — o YouTube invalidou essa sessão. Exporte um "
-            "cookies.txt novo de uma aba REALMENTE logada em youtube.com "
-            "(não uma aba em branco) e substitua o arquivo no Drive."
-        )
+        _COOKIE_JA_ACUSADO_EXPIRADO = True
+        return "Cookies expirados — o YouTube invalidou essa sessão. " + _TROQUE_O_COOKIE
     if "Sign in to confirm" in stderr:
+        if _COOKIE_JA_ACUSADO_EXPIRADO:
+            return (
+                "Cookies expirados — o YouTube já acusou isso nesta execução, num "
+                "idioma anterior. Este erro de 'bot' é o mesmo problema sem a "
+                "mensagem específica; não é o IP do Colab. " + _TROQUE_O_COOKIE
+            )
         return (
             "Bloqueio de bot do YouTube (comum em IPs de nuvem como o Colab). "
-            "Confirme que há um cookies.txt válido — se persistir, é limitação "
-            "do YouTube contra o IP do Colab no momento."
+            "Antes de culpar o IP, confirme que o cookies.txt não venceu — "
+            "cookie expirado dá exatamente este erro, muitas vezes sem a "
+            "mensagem 'no longer valid'. Se o cookie está novo e mesmo assim "
+            "persiste, aí sim é limitação do YouTube contra o IP do Colab."
         )
     if "Requested format is not available" in stderr:
         return (

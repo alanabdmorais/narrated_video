@@ -800,6 +800,36 @@ poliglota, narrada pelo David Williams em inglês. Continua variável.
 > saber qual sem olhar. Aqui a documentação estava certa — o que só se descobriu
 > conferindo.
 
+### Um lote de 4 idiomas, um defeito só, dois consertos opostos
+
+O `cookies.txt` venceu no meio de um `baixar_legendas_youtube` e a saída ficou
+assim:
+
+```
+[pt] Cookies expirados — exporte um cookies.txt novo
+[es] Bloqueio de bot (comum em IPs de nuvem como o Colab) — é limitação do IP
+[fr] Bloqueio de bot ...
+[ko] Bloqueio de bot ...
+```
+
+Um defeito só, e dois conselhos que se contradizem: o primeiro manda trocar o
+arquivo, os outros três mandam esperar. Três de quatro apontando pro lugar
+errado, e o errado é o que dá vontade de acreditar — porque "é o IP do Colab"
+não exige fazer nada.
+
+A causa é banal: o `yt-dlp` não repete o aviso `no longer valid` em toda
+chamada; nas seguintes sobra só o `Sign in to confirm`, que é o mesmo erro de
+sempre. O diagnóstico era feito chamada a chamada, sem memória.
+
+Agora o reconhecedor lembra: visto um `no longer valid` na execução, todo
+`Sign in to confirm` seguinte é atribuído ao cookie. E o texto do caso genérico
+mudou de "é limitação do IP" para "antes de culpar o IP, confirme que o cookie
+não venceu" — porque cookie vencido dá exatamente esse erro, muitas vezes sem
+a mensagem específica.
+
+> Duas mensagens que mandam fazer coisas opostas não são duas mensagens: é uma
+> que está errada. E a que absolve o operador de agir é a mais cara.
+
 ### Guarda que depende de um arquivo opcional é guarda que falta na hora
 
 A conferência do setup fazia duas perguntas e amarrava as duas ao
