@@ -981,6 +981,87 @@ vezes. O alinhamento entre idiomas continua sendo o problema em aberto do nível
 > Métrica escolhida depois da solução mede a solução, não o problema. O sinal
 > de alerta estava à vista: 0,1% é bom demais pra um problema difícil.
 
+*(O "problema em aberto" durou um dia: ver a seção seguinte. A proporcional
+continua no código como reserva, e continua acertando 57%.)*
+
+### A âncora que já estava lá: a grade do YouTube
+
+O problema em aberto acima -- alinhamento entre idiomas -- estava resolvido nos
+próprios arquivos que o pipeline já baixava, e o pipeline jogava a solução fora
+todo dia.
+
+**As faixas de legenda de um mesmo vídeo do YouTube compartilham a mesma grade
+de tempos.** A tradução automática é feita bloco a bloco, então o bloco que
+começa em `00:00:04,520` é a mesma frase em inglês, português, espanhol,
+francês e coreano. Medido no Mateus 2:
+
+| | blocos | na grade do inglês | fora |
+|---|---|---|---|
+| en | 102 | — | — |
+| pt | 101 | 101 | 0 |
+| es | 102 | 102 | 0 |
+| fr | 102 | 102 | 0 |
+| ko | 91 | 91 | 0 |
+
+Nenhum bloco fora. O coreano tem 11 a menos porque a tradução deixou slots
+vazios, não porque tenha grade própria.
+
+O `extrair_texto_unico()` colapsava tudo num texto corrido antes de repartir --
+e é ali que o par tempo↔texto morria. Agora ele é uma casca fina sobre
+`fatiar_em_slots()`, que faz a mesma limpeza guardando de qual bloco veio cada
+frase. O texto que sai é byte a byte o mesmo (conferido nos cinco idiomas).
+
+A ponte até a legenda mestre é por **texto**, não por tempo: a legenda do
+YouTube e a mestre são do mesmo vídeo mas de linhas do tempo diferentes (a do
+YouTube tem a abertura do vídeo na frente, e termina em 3:39 contra 3:16 da
+mestre). Como as duas estão no idioma mestre, o `difflib` casa palavra a
+palavra -- 96,6% no Mateus 2.
+
+São **102 âncoras**, contra as 23 fronteiras de versículo que eu ia usar (a
+proposta anterior) e contra nenhuma da repartição proporcional pura.
+
+#### O resultado, na mesma régua
+
+A régua é a mesma da seção anterior -- nome próprio caindo no bloco certo --,
+com uma correção no instrumento: o pareamento era por ordem, e uma ocorrência a
+mais ou a menos no idioma-alvo deslocava toda a lista, penalizando acertos.
+Agora cada ocorrência do mestre é pareada com a **mais próxima** do alvo, 1 a 1.
+Isso mexe nos dois métodos igualmente (a proporcional sai de 55% pra 57%).
+
+| | proporcional | grade do YouTube |
+|---|---|---|
+| pt | 22/40 (55%) | **40/40 (100%)** |
+| es | 19/39 (49%) | **39/39 (100%)** |
+| fr | 22/40 (55%) | **40/40 (100%)** |
+| ko | 27/39 (69%) | **33/39 (85%)** |
+| **total** | **90/158 (57%)** | **152/158 (96%)** |
+
+O coreano fica atrás pelos 11 slots vazios e pela ordem das palavras (o lugar
+vem antes do sujeito), não por falha da âncora.
+
+#### Os dois limiares, e por que eles existem
+
+`repartir_pela_grade()` **recusa** em vez de entregar alinhamento ruim
+silenciosamente, e cai na proporcional com aviso:
+
+| limiar | valor | pega o caso de |
+|---|---|---|
+| blocos do alvo que estão na grade | 80% | legenda enviada à parte pelo autor do vídeo, com grade própria |
+| palavras da mestre que casam com a do YouTube | 70% | mestre de outra edição/tradução |
+
+Ambos foram calibrados contra dado conhecido (100% e 96,6% no Mateus 2) e
+testados com o caso negativo construído -- legenda deslocada 7s, mestre trocado
+por outro texto. Um limiar que nunca recusa nada não protege nada.
+
+> Tentei também uma variante em que o slot vazio no alvo cede o espaço dele ao
+> slot cheio anterior, esperando ajudar o coreano. Não mudou um único bloco.
+> Ficou de fora: complicação que não paga.
+
+**Consequência de configuração:** o idioma mestre precisa continuar na
+`IDIOMAS_ALVO` do `caption-multilang-sources-gather.ipynb`, porque é a legenda
+do YouTube dele que é a grade. Sem ela o `redistribuir_idiomas()` avisa e cai na
+proporcional -- não quebra, mas volta dos 96% pros 57%.
+
 ### Espaço fino entre morfemas coreanos
 
 Na mesma queima, as sílabas coreanas saíram espremidas. A causa é geométrica:

@@ -40,6 +40,7 @@ from srt_utils import (
     ajustar_para_n_partes,
     conferir_redistribuicao,
     repartir_como,
+    repartir_pela_grade,
     alinhar_versiculos,
     extrair_texto_unico,
     gerar_legendas_versiculo,
@@ -250,6 +251,29 @@ class LanguageCaptionsPipeline:
         logger.info("── Legenda mestre carregada: %s (%d blocos)", destino.name, len(legendas))
         return legendas
 
+    def _carregar_grade_mestre(self) -> list[Legenda]:
+        """Baixa a legenda do YouTube no IDIOMA MESTRE — a grade de tempos que
+        serve de âncora entre idiomas (ver repartir_pela_grade em srt_utils).
+
+        Não achar é motivo de aviso, não de parada: sem ela a redistribuição
+        cai na repartição proporcional, que funciona pior mas funciona.
+        """
+        nome = self._cfg.nome_srt_yt(self._cfg.IDIOMA_MESTRE)
+        local = Path(nome)
+        self._drive.download(self._cfg.pasta_oracao, nome, local)
+        if not local.exists():
+            logger.warning(
+                "   ⚠️  Grade de tempos ausente: '%s' não está no Drive. Sem ela a "
+                "repartição é proporcional (57%% de acerto no Mateus 2, contra 96%% "
+                "com a grade). Rode o caption-multilang-sources-gather.ipynb com "
+                "'%s' na lista de idiomas.",
+                nome, self._cfg.IDIOMA_MESTRE,
+            )
+            return []
+        legendas = ler_srt(local)
+        logger.info("   ⚓ Grade de tempos: %s (%d blocos)", nome, len(legendas))
+        return legendas
+
     def redistribuir_idiomas(self, idiomas: list[str]) -> dict[str, list[Legenda]]:
         """
         Para cada idioma: carrega o texto bruto (YouTube ou Whisper, conforme
@@ -257,15 +281,28 @@ class LanguageCaptionsPipeline:
         legenda mestre corta o texto dela, e salva o SRT final
         ({NOME}_{lang}.srt).
 
-        A repartição era feita por IA e passou a ser proporcional (ver
-        repartir_como em srt_utils). Medido no Mateus 2, o desvio de cada
-        idioma em relação ao mestre caiu de 1,5-2,1% para 0,1% -- e sumiram
-        junto o laço, o bloco vazio e a palavra perdida, porque a saída tem as
-        mesmas palavras da entrada por construção.
+        Duas maneiras de repartir, nesta ordem:
+
+        1. ANCORADA NA GRADE (repartir_pela_grade) -- quando o texto vem do
+           YouTube. As faixas de legenda de um mesmo vídeo são traduzidas bloco
+           a bloco, então todos os idiomas compartilham a MESMA grade de
+           tempos: cada bloco dessa grade é uma âncora exata entre idiomas.
+        2. PROPORCIONAL (repartir_como) -- reserva, quando o texto vem do
+           Whisper (que tem grade própria) ou quando a grade não confere.
+
+        A repartição já foi por IA, que inventava palavra e deixava bloco
+        vazio. As duas de hoje devolvem exatamente as palavras da entrada, na
+        ordem da entrada, por construção -- mudam só ONDE cortam.
+
+        Medido no Mateus 2 pela medida independente (nome próprio caindo no
+        mesmo bloco do mestre): proporcional 90/158 = 57%, ancorada na grade
+        152/158 = 96% (pt, es e fr em 100%; coreano em 85%, porque 11 blocos
+        da grade vieram vazios na tradução coreana).
         """
         legendas_mestre  = self.carregar_legenda_mestre()
         n                = len(legendas_mestre)
         textos_referencia = [leg.texto for leg in legendas_mestre]
+        legendas_grade    = self._carregar_grade_mestre()
 
         resultado: dict[str, list[Legenda]] = {}
         for lang in idiomas:
@@ -289,7 +326,17 @@ class LanguageCaptionsPipeline:
 
             texto = extrair_texto_unico(legendas_brutas) if fonte == "yt" else texto_corrido(legendas_brutas)
 
-            partes = repartir_como(texto, textos_referencia)
+            partes: list[str] = []
+            if fonte == "yt" and legendas_grade:
+                partes, motivo = repartir_pela_grade(
+                    legendas_brutas, legendas_grade, textos_referencia)
+                if partes:
+                    logger.info("   ⚓ [%s] %s", lang, motivo)
+                else:
+                    logger.warning("   ⚠️  [%s] sem âncora de grade (%s) — indo de "
+                                   "repartição proporcional", lang, motivo)
+            if not partes:
+                partes = repartir_como(texto, textos_referencia)
 
             # Rede de segurança: a repartição proporcional devolve exatamente n
             # partes por construção, então isto nunca deve disparar. Fica porque

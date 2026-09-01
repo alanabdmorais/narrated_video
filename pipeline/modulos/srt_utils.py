@@ -293,6 +293,37 @@ def texto_corrido(legendas: list[Legenda]) -> str:
     return " ".join(leg.texto for leg in legendas)
 
 
+def fatiar_em_slots(legendas: list[Legenda]) -> list[tuple[tuple[int, int], str]]:
+    """
+    Mesma limpeza do extrair_texto_unico, só que SEM jogar fora de qual bloco
+    veio cada frase: devolve [((inicio_ms, fim_ms), frase), ...] na ordem do
+    arquivo, com frase vazia onde o bloco foi descartado.
+
+    Existe porque as faixas de legenda do YouTube de um mesmo vídeo compartilham
+    a MESMA grade de tempos entre idiomas (a tradução automática é feita bloco a
+    bloco). Esse par tempo↔texto é uma âncora exata entre idiomas -- e o
+    extrair_texto_unico, que colapsa tudo num texto corrido, a descartava.
+
+    Invariante: " ".join(frases não vazias) == extrair_texto_unico(legendas).
+    """
+    slots: list[tuple[tuple[int, int], str]] = []
+    visto: set[str] = set()
+
+    for leg in legendas:
+        tempo = (leg.inicio_ms, leg.fim_ms)
+        if leg.duracao_ms < 50:  # artefato (legenda quase instantânea)
+            slots.append((tempo, ""))
+            continue
+        frase = _extrair_prefixo(leg.texto)
+        if frase and frase not in visto:
+            visto.add(frase)
+            slots.append((tempo, frase))
+        else:
+            slots.append((tempo, ""))
+
+    return slots
+
+
 def extrair_texto_unico(legendas: list[Legenda]) -> str:
     """
     Remove frases duplicadas (artefato comum das legendas automáticas do
@@ -300,18 +331,7 @@ def extrair_texto_unico(legendas: list[Legenda]) -> str:
     parte do anterior). Detecta o padrão "frase frase" e mantém só uma
     ocorrência. Retorna o texto corrido sem duplicatas.
     """
-    frases_unicas: list[str] = []
-    visto: set[str] = set()
-
-    for leg in legendas:
-        if leg.duracao_ms < 50:  # artefato (legenda quase instantânea)
-            continue
-        frase = _extrair_prefixo(leg.texto)
-        if frase and frase not in visto:
-            frases_unicas.append(frase)
-            visto.add(frase)
-
-    return " ".join(frases_unicas)
+    return " ".join(frase for _, frase in fatiar_em_slots(legendas) if frase)
 
 
 def _extrair_prefixo(texto: str) -> str:
@@ -327,6 +347,171 @@ def _extrair_prefixo(texto: str) -> str:
         if prefixo == seguinte:
             return prefixo
     return texto
+
+
+# ── Repartição ancorada na grade do YouTube ───────────────────────────────────
+
+# Quanto do texto do idioma-alvo precisa cair em slots que existem na grade
+# para a âncora valer. Medido no Mateus 2: pt/es/fr/ko deram 100%. Legenda
+# enviada à parte pelo autor do vídeo (em vez de traduzida automaticamente)
+# teria grade própria e daria perto de 0 -- é esse caso que o limiar pega.
+_MINIMO_SLOTS_NA_GRADE = 0.80
+# Quanto das palavras do mestre o difflib precisa casar contra a legenda do
+# YouTube no MESMO idioma. Medido no Mateus 2: 96,6%. Uma tradução diferente
+# derrubaria isso.
+_MINIMO_CASAMENTO_MESTRE = 0.70
+
+
+def _coordenadas_na_grade(
+    slots: list[tuple[tuple[int, int], str]],
+    indice_por_tempo: dict[tuple[int, int], int],
+) -> tuple[list[str], list[float], int, int]:
+    """Espalha as palavras de cada slot dentro do índice desse slot na grade:
+    a k-ésima de n palavras do slot i fica na coordenada i + k/n.
+
+    Devolve (palavras, coordenadas, slots_aproveitados, slots_fora_da_grade).
+    """
+    palavras: list[str] = []
+    coordenadas: list[float] = []
+    dentro = fora = 0
+
+    for tempo, texto in slots:
+        if not texto.strip():
+            continue
+        i = indice_por_tempo.get(tempo)
+        if i is None:
+            fora += 1
+            continue
+        dentro += 1
+        ws = texto.split()
+        for k, w in enumerate(ws):
+            palavras.append(w)
+            coordenadas.append(i + k / len(ws))
+
+    return palavras, coordenadas, dentro, fora
+
+
+def repartir_pela_grade(
+    legendas_alvo: list[Legenda],
+    legendas_grade: list[Legenda],
+    textos_referencia: list[str],
+) -> tuple[list[str], str]:
+    """Reparte o texto do idioma-alvo nos blocos da legenda mestre usando como
+    âncora a GRADE de tempos das legendas do YouTube.
+
+    Devolve (partes, motivo) -- `partes` vazio quando a âncora não vale, e
+    `motivo` sempre explica o que aconteceu, pra quem chama poder avisar e cair
+    no repartir_como.
+
+        legendas_alvo       legenda crua do YouTube no idioma-alvo   (yt_pt)
+        legendas_grade      legenda crua do YouTube no idioma MESTRE (yt_en)
+        textos_referencia   texto de cada bloco da legenda mestre
+
+    Por que isso funciona: as faixas de legenda de um mesmo vídeo do YouTube
+    são traduzidas bloco a bloco, então todas compartilham a mesma grade de
+    tempos. Cada slot dessa grade é uma âncora exata entre idiomas -- no
+    Mateus 2 são 102 âncoras, contra as 23 fronteiras de versículo que eu ia
+    usar e contra nenhuma da repartição proporcional pura.
+
+    A ponte até a mestre é feita por texto, não por tempo: a legenda do YouTube
+    e a mestre são do mesmo vídeo mas de linhas do tempo diferentes (a do
+    YouTube tem a abertura do vídeo na frente). Como as duas estão no idioma
+    mestre, o difflib casa palavra a palavra.
+
+    Medido no Mateus 2 (nome próprio caindo no mesmo bloco do mestre, medida
+    independente de proporção): a repartição proporcional acerta 90/158 = 57%,
+    esta aqui acerta 152/158 = 96% -- pt, es e fr em 100%, coreano em 85%.
+    """
+    n = len(textos_referencia)
+    if n == 0:
+        return [], "a legenda mestre está vazia"
+
+    slots_grade = fatiar_em_slots(legendas_grade)
+    indice_por_tempo = {tempo: i for i, (tempo, _) in enumerate(slots_grade)}
+
+    pal_grade, coord_grade, _, _ = _coordenadas_na_grade(slots_grade, indice_por_tempo)
+    if not pal_grade:
+        return [], "a legenda do YouTube no idioma mestre veio vazia"
+
+    # ── ponte mestre ↔ grade, por texto ──────────────────────────────────────
+    pal_mestre: list[str] = []
+    primeira_palavra: dict[int, int] = {}
+    for b, texto in enumerate(textos_referencia):
+        for w in texto.split():
+            primeira_palavra.setdefault(b, len(pal_mestre))
+            pal_mestre.append(w)
+    if not pal_mestre:
+        return [], "a legenda mestre não tem palavras"
+
+    sm = difflib.SequenceMatcher(
+        None, [_normalizar_palavra(w) for w in pal_mestre],
+        [_normalizar_palavra(w) for w in pal_grade], autojunk=False)
+
+    casadas = sum(bl.size for bl in sm.get_matching_blocks())
+    proporcao = casadas / len(pal_mestre)
+    if proporcao < _MINIMO_CASAMENTO_MESTRE:
+        return [], (f"a legenda mestre e a do YouTube no idioma mestre só casam "
+                    f"{proporcao:.0%} das palavras (mínimo {_MINIMO_CASAMENTO_MESTRE:.0%}) "
+                    f"— são edições diferentes?")
+
+    mapa: dict[int, int] = {}
+    for tag, i1, i2, j1, j2 in sm.get_opcodes():
+        if tag == "equal":
+            for k in range(i2 - i1):
+                mapa[i1 + k] = j1 + k
+        elif tag == "replace":
+            n_a, n_b = i2 - i1, j2 - j1
+            for k in range(n_a):
+                mapa[i1 + k] = min(j1 + int(k * n_b / max(n_a, 1)), j2 - 1)
+
+    # ── fronteira de cada bloco do mestre, em coordenada de grade ────────────
+    fronteiras: list[float] = []
+    for b in range(n):
+        i = primeira_palavra.get(b)          # None = bloco vazio na mestre
+        j = mapa.get(i) if i is not None else None
+        if j is None and i is not None:
+            for d in range(1, 15):     # bloco cuja 1ª palavra o difflib não casou
+                if i - d in mapa:
+                    j = mapa[i - d] + d
+                    break
+                if i + d in mapa:
+                    j = mapa[i + d] - d
+                    break
+        j = max(0, min(j if j is not None else 0, len(coord_grade) - 1))
+        fronteiras.append(coord_grade[j])
+    # bloco vazio no mestre pode gerar fronteira fora de ordem; monotoniza
+    for b in range(1, n):
+        fronteiras[b] = max(fronteiras[b], fronteiras[b - 1])
+    fronteiras[0] = float("-inf")
+    fronteiras.append(float("inf"))
+
+    # ── palavras do alvo, na coordenada da grade ─────────────────────────────
+    slots_alvo = fatiar_em_slots(legendas_alvo)
+    pal_alvo, coord_alvo, dentro, fora = _coordenadas_na_grade(slots_alvo, indice_por_tempo)
+    if dentro + fora == 0:
+        return [], "a legenda do YouTube no idioma-alvo veio vazia"
+    aproveitados = dentro / (dentro + fora)
+    if aproveitados < _MINIMO_SLOTS_NA_GRADE:
+        return [], (f"só {aproveitados:.0%} dos blocos do idioma-alvo estão na grade do "
+                    f"idioma mestre (mínimo {_MINIMO_SLOTS_NA_GRADE:.0%}) — a legenda "
+                    f"deste idioma não é tradução automática da mestre")
+
+    partes: list[list[str]] = [[] for _ in range(n)]
+    b = 0
+    for w, c in zip(pal_alvo, coord_alvo):
+        while b + 1 < n and c >= fronteiras[b + 1]:
+            b += 1
+        partes[b].append(w)
+
+    return [" ".join(p) for p in partes], (
+        f"{dentro} blocos ancorados na grade ({aproveitados:.0%}), "
+        f"ponte com a mestre em {proporcao:.0%} das palavras")
+
+
+def _normalizar_palavra(p: str) -> str:
+    """Só o miolo alfanumérico, sem caixa — pra comparar palavra de edições
+    diferentes do mesmo texto."""
+    return re.sub(r"[^\w]", "", p, flags=re.UNICODE).lower()
 
 
 # ── Alinhamento de versículos (indicador livro:versículo) ──────────────────────
