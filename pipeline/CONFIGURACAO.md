@@ -614,6 +614,26 @@ Agora o checkpoint guarda o `sha1` do SRT gerado. Na execução seguinte:
 E a mensagem diz o modelo da transcrição anterior, que é o que faz você
 entender por que ela apareceu.
 
+### Aspa de citação não é divergência
+
+`palavras_comparaveis()` preservava apóstrofo pra não quebrar `child's` e
+`wouldn't` — certo. Só que a WEB usa **aspa simples** pra abrir e fechar fala
+de profeta, e o mesmo caractere nas bordas do token virava parte da palavra:
+
+```
+'you    ≠  you
+israel' ≠  israel
+```
+
+Três das 16 divergências do Mateus 2 eram isso — pontuação, no meio de uma
+lista que existe justamente pra mostrar divergência de texto.
+
+Agora o apóstrofo é tirado só das **bordas**: no meio continua sendo parte da
+palavra.
+
+> Ruído numa lista de conferência gasta a atenção que a lista pede. Quem lê
+> 16 itens sabendo que 3 são falsos passa a ler os 16 com menos cuidado.
+
 ### Conferir o Whisper contra o roteiro (sem substituir)
 
 O SRT do `caption-single-generate` traz duas coisas, e só uma pode estar

@@ -228,6 +228,14 @@ def palavras_comparaveis(texto: str) -> list[str]:
         if re.fullmatch(r"\d{1,3}", tok):
             continue  # marcador de versículo
         tok = re.sub(r"[^\w']", "", tok)
+        # Apóstrofo NO MEIO é parte da palavra ("child's", "wouldn't"); nas
+        # BORDAS é aspa simples de citação, que a WEB usa pra abrir e fechar
+        # fala de profeta. Sem tirar, `'you` não casava com `you` e `israel'`
+        # não casava com `israel` -- três "divergências" que eram só
+        # pontuação, no meio de uma lista que existe pra mostrar divergência
+        # de verdade. Ruído numa lista de conferência gasta a atenção que a
+        # lista pede.
+        tok = tok.strip("'")
         if tok:
             palavras.append(tok)
     return palavras
