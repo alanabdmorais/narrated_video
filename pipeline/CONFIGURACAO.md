@@ -869,6 +869,47 @@ que lembrasse.
 > Aviso que aparece sempre vira paisagem. Por isso o `avisar_gpu()` é
 > silencioso quando o ambiente combina -- ele só fala quando há o que fazer.
 
+### A análise gramatical devolve a forma subjacente, não o que está escrito
+
+O `.ass` do Mateus 2 saiu com o texto errado em quatro dos cinco idiomas:
+
+| idioma | blocos com texto alterado | exemplo |
+|---|---|---|
+| en | **0** | — |
+| pt | 20 | `nos dias do rei` virou `em os dias de o rei` |
+| es | 15 | `del rey` virou `de el rey` |
+| fr | 9 | `au temps du roi` virou `à le temps de le roi` |
+| ko | 41 | `태어나셨을` virou `태어나시었을` |
+
+A causa é a mesma nos dois analisadores, e é de projeto, não bug deles:
+
+- O **Stanza** segue a convenção do Universal Dependencies e expande contração
+  em palavras sintáticas. `sentenca.words` dá `de`+`a` onde está escrito `da`.
+  Quem preserva o escrito é `sentenca.tokens`.
+- O **Kiwi** devolve morfemas. A sílaba `셨` é `시`+`었`, e imprimir a forma de
+  cada morfema reescreve a palavra numa conjugação que ninguém usa.
+
+Os dois estão certos no que fazem -- a análise **é** sobre a estrutura
+subjacente. O erro foi usar o resultado da análise como texto de exibição. A
+análise serve pra escolher a COR; o que vai pra tela tem que ser o que está no
+SRT.
+
+O inglês passou ileso, e é por isso que o defeito viveu tanto: é o idioma
+mestre, o mais olhado, e o único da lista sem contração desse tipo.
+
+Agora o Stanza colore por token (classe vinda da primeira palavra sintática --
+numa contração, a preposição) e o Kiwi recorta o texto do original pela posição
+de cada morfema, fundindo os que dividem a mesma sílaba.
+
+**E o notebook passou a conferir o próprio resultado.** A mesma
+`classificacao_confere()` que guarda o cache roda agora depois de classificar:
+as peças têm que reproduzir o SRT, letra por letra. Rodada contra o `.ass` de
+hoje, ela acusa pt, es, fr e ko e fica calada no en.
+
+> Não deu pra instalar o Kiwi no ambiente onde escrevi o conserto, então o
+> coreano vai sem teste local. Foi por isso que a conferência entrou junto: ela
+> não depende de eu ter acertado.
+
 ### Reaproveitar cache é bom; reaproveitar cache cego não
 
 O `caption-multicolor-generate` guarda no Drive a classificação gramatical de
