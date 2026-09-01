@@ -800,6 +800,33 @@ poliglota, narrada pelo David Williams em inglês. Continua variável.
 > saber qual sem olhar. Aqui a documentação estava certa — o que só se descobriu
 > conferindo.
 
+### Dois avisos discordaram, e o mais grosseiro estava errado
+
+Numa rodada do sincronizador, o aviso `ESTE NOTEBOOK SE ATUALIZOU` disparou --
+mandando fechar a aba e rodar de novo -- enquanto a conferência de aba velha,
+na Configuração, ficava calada. As duas olham a mesma coisa e responderam
+diferente.
+
+A calada estava certa: o código que rodou já era o novo (gravou o manifesto,
+imprimiu a lista de arquivos esperados no Drive). Quem errou foi o outro, e o
+motivo é o critério:
+
+| aviso | compara |
+|---|---|
+| `ESTE NOTEBOOK SE ATUALIZOU` | os **bytes** do arquivo |
+| conferência de aba velha | o **código das células** |
+
+Um `.ipynb` difere em bytes por saída de célula, `execution_count` e metadado
+do Colab, com o código idêntico. Então o critério de bytes dispara em toda
+rodada em que o arquivo tenha sido executado -- e mandar fechar a aba sem
+motivo é como qualquer outro alarme falso: ensina a ignorar.
+
+Os dois passaram a usar o mesmo critério. Testado nos dois casos: só a saída
+mudou → cala; o código mudou → avisa.
+
+> Quando duas checagens da mesma coisa discordam, a resposta não é escolher a
+> mais barulhenta -- é ver qual delas mede o que interessa.
+
 ### Contagem certa, conteúdo quebrado
 
 O `ajustar_para_n_partes` garante que a redistribuição por IA devolva
