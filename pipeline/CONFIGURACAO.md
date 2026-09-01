@@ -827,6 +827,30 @@ mudou → cala; o código mudou → avisa.
 > Quando duas checagens da mesma coisa discordam, a resposta não é escolher a
 > mais barulhenta -- é ver qual delas mede o que interessa.
 
+### Reaproveitar cache é bom; reaproveitar cache cego não
+
+O `caption-multicolor-generate` guarda no Drive a classificação gramatical de
+cada idioma (`_classificacao_multicolor_{lang}.json`) e, se o arquivo já
+existir, usa ele em vez de rodar Stanza/Kiwi de novo. A intenção é boa: a
+classificação pode ter sido corrigida à mão, e rodar de novo apagaria a
+correção.
+
+O problema é que o reaproveitamento não conferia nada. E as peças salvas
+carregam o **texto**, não só a classe -- então uma classificação de uma versão
+anterior da legenda faz o vídeo exibir as palavras antigas, com o SRT novo
+parado ao lado. Nada falha. Sai errado.
+
+No 40_Matt_02 isso significaria queimar `ouro, incenso, música e mirra` depois
+de todo o trabalho de tirar o `música`.
+
+Agora o reaproveitamento confere se a classificação é DESTA legenda antes de
+aceitar. A comparação ignora espaço e pontuação, porque o tokenizador do Stanza
+separa `l'adorer` em duas peças e o Kiwi quebra a palavra coreana em morfemas:
+o que tem que bater são as letras, na ordem.
+
+> O cache não estava errado por existir -- estava errado por não saber de que
+> ele é cache.
+
 ### O detector que acusou o certo e deixou passar o errado
 
 A primeira versão do `conferir_redistribuicao` procurava repetição comparando o

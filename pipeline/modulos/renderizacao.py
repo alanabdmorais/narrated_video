@@ -181,6 +181,35 @@ def salvar_classificacao_multicolor(blocos: list[dict], caminho_saida: Path | st
     return caminho_saida
 
 
+def classificacao_confere(blocos_salvos: list[dict], legendas) -> str | None:
+    """A classificação salva no Drive corresponde ao SRT que está sendo usado
+    agora? Devolve None se confere, ou o motivo da divergência.
+
+    Existe porque o reaproveitamento é cego: o notebook multicolor carrega o
+    JSON salvo e usa no lugar de rodar Stanza/Kiwi de novo -- e as peças
+    carregam o TEXTO, não só a classe. Uma classificação de uma versão
+    anterior da legenda faz o vídeo exibir as palavras antigas, com o SRT
+    novo parado ao lado. Nada falha; sai errado.
+
+    A comparação ignora espaço e pontuação: o tokenizador do Stanza separa
+    "l'adorer" em duas peças e o Kiwi quebra a palavra coreana em morfemas.
+    O que tem que bater são as letras, na ordem.
+    """
+    if len(blocos_salvos) != len(legendas):
+        return (f"{len(blocos_salvos)} bloco(s) salvos contra {len(legendas)} "
+                f"no SRT atual")
+
+    def letras(s: str) -> str:
+        return "".join(c for c in s.lower() if c.isalnum())
+
+    for i, (bloco, leg) in enumerate(zip(blocos_salvos, legendas), 1):
+        do_json = letras("".join(p.texto for p in bloco.get("pecas", [])))
+        do_srt  = letras(leg.texto)
+        if do_json != do_srt:
+            return f"o bloco {i} não bate com o SRT atual"
+    return None
+
+
 def carregar_classificacao_multicolor(caminho: Path | str) -> list[dict]:
     """Carrega de volta o JSON salvo por salvar_classificacao_multicolor()
     -- reconstrói as PecaColorida a partir dos dicts, no formato que
