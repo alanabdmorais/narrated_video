@@ -634,6 +634,57 @@ palavra.
 > Ruído numa lista de conferência gasta a atenção que a lista pede. Quem lê
 > 16 itens sabendo que 3 são falsos passa a ler os 16 com menos cuidado.
 
+### A regra: faz sentido em inglês?
+
+Quando não dá pra ouvir divergência por divergência, vale:
+
+> **Faz sentido em inglês?** Sim → fica o Whisper. Não → vai pro roteiro.
+
+Ela acerta o caso comum sem exigir o áudio: o Whisper erra grafia de nome
+próprio, e grafia errada não é palavra. `Arkeleus` não existe; `Archelaus`
+existe. `troubled in all Jerusalem` não é inglês; `troubled, and all Jerusalem`
+é.
+
+**A preferência é do Whisper, não do roteiro** — e isso é deliberado. A legenda
+tem que dizer o que se ouve. Onde o David Williams lê diferente do escrito, o
+Whisper está certo: `Herod the king` fica, mesmo o roteiro trazendo
+`King Herod`, porque as duas formas são inglês e só o áudio decidiria.
+
+> ⚠️ **A regra é julgamento, não automação.** `Seeing their treasures` é
+> gramatical e mesmo assim está errado — os tesouros são deles, não algo que
+> viram. Nenhum código decide isso; quem decide é quem lê. Por isso o
+> `caption-single-revisar` mostra e não escreve.
+
+Aplicada ao Mateus 2 (16 divergências, `small`), a regra trocou **4**:
+
+| Bloco | Whisper | Vira | Por quê |
+|---|---|---|---|
+| 4 | `troubled in all Jerusalem` | `troubled, and all Jerusalem` | não é inglês |
+| 19 | `Seeing their treasures` | `Opening their treasures` | não fecha o sentido |
+| 33 | `weeping in great mourning` | `weeping and great mourning` | a frase é lista de três |
+| 39 | `Arkeleus` | `Archelaus` | não é grafia de nada |
+
+E manteve o Whisper em `Herod the king`, `for thus it is written`,
+`shall come forth`, `that they shouldn't return`, `through the prophets`,
+`in Rama` — todas inglês válido.
+
+### `caption-single-revisar` — ouvir cada divergência
+
+Toca o trecho do áudio de cada divergência (com folga de contexto), com as duas
+versões do texto ao lado. Só o áudio separa "o Whisper errou" de "o Dave leu
+diferente".
+
+O trecho é achado pelo tempo do bloco, e o bloco vem de `cmp.posicoes_a` — não
+de procurar o texto. Buscar pela primeira palavra do contexto casaria a
+primeira ocorrência dela no capítulo, e **o áudio tocado seria o do lugar
+errado**: uma revisão que confirma a coisa errada com o ouvido é pior que
+nenhuma.
+
+Não escreve no SRT. O contexto impresso é o trecho **normalizado** — sem
+pontuação, minúsculo — que serve pra achar o lugar, não pra colar. Trocar
+automático colaria texto sem pontuação no meio da legenda, e isso sairia no
+vídeo.
+
 ### Conferir o Whisper contra o roteiro (sem substituir)
 
 O SRT do `caption-single-generate` traz duas coisas, e só uma pode estar

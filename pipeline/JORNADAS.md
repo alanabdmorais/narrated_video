@@ -6,7 +6,7 @@
 > notebooks (`python3 pipeline/modulos/jornadas.py`), então notebook novo que
 > ninguém encaixou numa jornada é acusado em vez de sumir do mapa.
 
-São 32 notebooks. A pergunta que se faz na prática nunca é "o que este
+São 33 notebooks. A pergunta que se faz na prática nunca é "o que este
 notebook faz?" — é a inversa: **"eu quero um resultado assim; o que eu rodo?"**
 Este documento responde essa.
 
@@ -187,8 +187,9 @@ flowchart LR
 
 | # | Notebook | Produz |
 |---|---|---|
-| 1 | `caption-single-generate`<br>Vale baixar, corrigir e resubir com o mesmo nome — Whisper sempre pede uma passada. | `<nome>_whisper_<mestre>.srt` |
-| 2 | `caption-single-burn` | `<nome>_final[_img].mp4` |
+| 1 | `caption-single-generate`<br>Já lista onde o Whisper discorda do roteiro do capítulo. Vale baixar, corrigir e resubir com o mesmo nome — Whisper sempre pede uma passada. | `<nome>_whisper_<mestre>.srt` |
+| 2 | `caption-single-revisar`<br>OPCIONAL: toca o trecho do áudio de cada divergência. Só o áudio separa 'o Whisper errou' de 'o Dave leu diferente' — sem ouvir, vale a regra 'faz sentido em inglês? sim fica o Whisper, não vai pro roteiro'. | as trocas a fazer no SRT, pra você aplicar |
+| 3 | `caption-single-burn` | `<nome>_final[_img].mp4` |
 
 > ⚠️ Os dois passos precisam de coisas diferentes: o `generate` precisa só da narração (etapa 6 de qualquer notebook de vídeo base), o `burn` precisa do vídeo base pronto. E é o `generate` que é pré-requisito dos níveis 2 e 3 — o `burn` não é pré-requisito de nada.
 

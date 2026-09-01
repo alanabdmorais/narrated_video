@@ -66,7 +66,7 @@ table.simples th{font-family:'IBM Plex Mono',monospace;font-size:11px;
   <header>
     <p class="eyebrow">narrated_video · mapa de jornadas</p>
     <h1>O que rodar pra conseguir o quê</h1>
-    <p class="lede">São 32 notebooks. A pergunta que se faz na prática nunca é
+    <p class="lede">São 33 notebooks. A pergunta que se faz na prática nunca é
       "o que este notebook faz?" — é a inversa: <b>eu quero um resultado assim,
       o que eu rodo?</b> Este mapa responde essa.</p>
     <p class="lede">Gerado de <code>pipeline/modulos/jornadas.py</code>, que se
@@ -251,7 +251,8 @@ table.simples th{font-family:'IBM Plex Mono',monospace;font-size:11px;
           <div class="linha"><div class="rot">entrega</div><div class="val">`&lt;nome&gt;_final[_img].mp4` + o SRT mestre `&lt;nome&gt;_whisper_&lt;mestre&gt;.srt`.</div></div>
 
           <ol class="passos">
-<li><div><div class="passo-nb"><code>caption-single-generate</code></div><div class="passo-produz">→ `&lt;nome&gt;_whisper_&lt;mestre&gt;.srt`</div><div class="passo-nota">Vale baixar, corrigir e resubir com o mesmo nome — Whisper sempre pede uma passada.</div></div></li>
+<li><div><div class="passo-nb"><code>caption-single-generate</code></div><div class="passo-produz">→ `&lt;nome&gt;_whisper_&lt;mestre&gt;.srt`</div><div class="passo-nota">Já lista onde o Whisper discorda do roteiro do capítulo. Vale baixar, corrigir e resubir com o mesmo nome — Whisper sempre pede uma passada.</div></div></li>
+<li><div><div class="passo-nb"><code>caption-single-revisar</code></div><div class="passo-produz">→ as trocas a fazer no SRT, pra você aplicar</div><div class="passo-nota">OPCIONAL: toca o trecho do áudio de cada divergência. Só o áudio separa &#x27;o Whisper errou&#x27; de &#x27;o Dave leu diferente&#x27; — sem ouvir, vale a regra &#x27;faz sentido em inglês? sim fica o Whisper, não vai pro roteiro&#x27;.</div></div></li>
 <li><div><div class="passo-nb"><code>caption-single-burn</code></div><div class="passo-produz">→ `&lt;nome&gt;_final[_img].mp4`</div></div></li>
           </ol>
 <div class="armadilha">⚠️ Os dois passos precisam de coisas diferentes: o `generate` precisa só da narração (etapa 6 de qualquer notebook de vídeo base), o `burn` precisa do vídeo base pronto. E é o `generate` que é pré-requisito dos níveis 2 e 3 — o `burn` não é pré-requisito de nada.</div>

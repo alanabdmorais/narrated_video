@@ -245,8 +245,14 @@ JORNADAS: tuple[Jornada, ...] = (
         # que é falso.
         passos=(
             Passo("caption-single-generate", "`<nome>_whisper_<mestre>.srt`",
-                  nota="Vale baixar, corrigir e resubir com o mesmo nome — "
+                  nota="Já lista onde o Whisper discorda do roteiro do capítulo. "
+                       "Vale baixar, corrigir e resubir com o mesmo nome — "
                        "Whisper sempre pede uma passada."),
+            Passo("caption-single-revisar", "as trocas a fazer no SRT, pra você aplicar",
+                  nota="OPCIONAL: toca o trecho do áudio de cada divergência. Só o "
+                       "áudio separa 'o Whisper errou' de 'o Dave leu diferente' — "
+                       "sem ouvir, vale a regra 'faz sentido em inglês? sim fica o "
+                       "Whisper, não vai pro roteiro'."),
             Passo("caption-single-burn", "`<nome>_final[_img].mp4`"),
         ),
         armadilha="Os dois passos precisam de coisas diferentes: o `generate` "
