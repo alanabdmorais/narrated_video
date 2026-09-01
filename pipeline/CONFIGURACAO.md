@@ -800,6 +800,70 @@ poliglota, narrada pelo David Williams em inglês. Continua variável.
 > saber qual sem olhar. Aqui a documentação estava certa — o que só se descobriu
 > conferindo.
 
+### Contagem certa, conteúdo quebrado
+
+O `ajustar_para_n_partes` garante que a redistribuição por IA devolva
+exatamente N blocos, "sem descartar texto". Ele cumpre o que promete -- e a
+promessa é só sobre a contagem. No Mateus 2 o resultado saiu assim:
+
+| idioma | o que veio |
+|---|---|
+| fr | os blocos 34, 37, 38 e 39 repetem o **começo do capítulo** -- a IA entrou em laço |
+| pt | 98 palavras no último bloco, 9x a mediana: a IA devolveu partes demais e o excedente foi fundido na última posição, como documentado |
+| es | um bloco repetindo outro anterior |
+
+Os quatro SRTs foram salvos, enviados pro Drive e reportados com `✅ 43 blocos`.
+O único sinal era um aviso genérico -- "revise o resultado com atenção" -- que
+não diz o que olhar, e por isso não é olhado.
+
+O `conferir_redistribuicao()` agora procura os defeitos que a contagem não
+cobre: bloco repetindo texto anterior, bloco muito maior que a mediana, e o
+marcador de preenchimento. Dispara com o número do bloco.
+
+**A calibração importou mais que a checagem.** Comparar o texto inteiro deixa
+passar a repetição parcial (a IA reescreve e o corte cai noutro lugar).
+Comparar o começo pega -- mas o tamanho do começo decide tudo:
+
+| prefixo | pega no francês quebrado | falso positivo nas fontes boas |
+|---|---|---|
+| 4 palavras | 5 | 3 |
+| 6 palavras | 5 | 2 a 3 |
+| **8 palavras** | **5** | **0** |
+
+E os falsos positivos com prefixo curto não eram ruído: eram a **fala do anjo
+a José**, que no capítulo aparece duas vezes quase igual (v13 e v20).
+Repetição legítima existe no texto bíblico. Acusá-la ensinaria a ignorar o
+aviso, e aí o laço de verdade passaria junto.
+
+> Na primeira implementação eu deixei blocos de 4 a 7 palavras entrarem
+> comparando o texto inteiro -- parecia generoso e devolveu na hora os três
+> falsos positivos que a calibração tinha eliminado. Medir o limiar e depois
+> não respeitá-lo é o mesmo que não ter medido.
+
+### A fonte do texto por idioma: o padrão era "whisper", e estava errado
+
+O `FONTE_TEXTO_IDIOMA` vinha com `"whisper"` nos quatro idiomas, com um
+comentário recomendando isso "para vídeos de estudo poliglota, onde a legenda
+deve casar com o que se ouve".
+
+O argumento não se aplica: o `queimar_idiomas()` usa **só o vídeo base e as
+legendas**. O `.wav` dublado nunca é tocado -- ele existe apenas como fonte de
+texto. O espectador ouve a narração em inglês, e para ela o mestre já é o
+`whisper_en` corrigido à mão.
+
+E o custo é medido, contando os nomes próprios do capítulo:
+
+| | YouTube | Whisper |
+|---|---|---|
+| pt | 19/19 | 14/19 |
+| es | 19/19 | 14/19 |
+| fr | 19/19 | 13/19 |
+| ko | 18/18 | 10/18 |
+
+> Um padrão com justificativa escrita ao lado é mais difícil de questionar que
+> um padrão sem nenhuma. A justificativa aqui era plausível, estava logo acima
+> do valor, e descrevia um vídeo que este pipeline não produz.
+
 ### Texto de referência num idioma ALVO não é gabarito de redação
 
 Decisão tomada: vamos ter a Bíblia coreana inteira em JSON, no mesmo formato do

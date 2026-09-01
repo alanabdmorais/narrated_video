@@ -136,6 +136,82 @@ def ajustar_para_n_partes(partes: list[str], n: int) -> tuple[list[str], bool]:
     return partes, True
 
 
+def conferir_redistribuicao(partes: list[str]) -> list[str]:
+    """Procura, no resultado da redistribuição por IA, os defeitos que o
+    `ajustar_para_n_partes` NÃO conserta -- ele garante a contagem, não o
+    conteúdo. Devolve uma lista de problemas legíveis (vazia = nada achado).
+
+    Por que isto existe: no Mateus 2, a redistribuição do francês devolveu o
+    COMEÇO do capítulo de novo nos blocos 34, 37, 38 e 39 -- a IA entrou em
+    laço. O português recebeu 99 palavras no último bloco (9x a mediana),
+    porque a IA devolveu partes demais e o ajuste funde o excedente na última
+    posição, como está documentado. Os dois SRTs foram salvos, enviados pro
+    Drive e reportados com ✅. Contagem certa, conteúdo quebrado.
+
+    Nenhuma destas checagens precisa saber o idioma -- são defeitos de forma.
+    """
+    problemas: list[str] = []
+
+    # ── Repetição: a IA voltou a escrever um trecho anterior ────────────────
+    # Só conta parte com 4+ palavras: fragmento curto pode se repetir de
+    # verdade (um "disse ele", um refrão) e acusar isso seria ruído.
+    # A repetição costuma ser PARCIAL -- a IA reescreve o trecho e o corte cai
+    # noutro lugar --, então comparar texto inteiro deixa passar. O critério é
+    # o começo do bloco, e o tamanho desse começo foi CALIBRADO no Mateus 2:
+    #
+    #   prefixo   pega no francês quebrado   falso positivo nas fontes boas
+    #      4                5                        3
+    #      6                5                        2 a 3
+    #      8                5                        0
+    #
+    # Os falsos positivos com prefixo curto não são ruído aleatório: são a fala
+    # do anjo a José, que no capítulo aparece duas vezes quase igual (v13 e
+    # v20). Repetição legítima existe no texto bíblico, e acusá-la ensinaria a
+    # ignorar o aviso. Oito palavras separam as duas coisas sem sobra.
+    # Bloco com menos de 8 palavras fica FORA. Deixá-lo entrar comparando o
+    # texto inteiro parece generoso e devolve na hora os falsos positivos que a
+    # calibração tinha eliminado: são blocos curtos idênticos das legendas do
+    # YouTube -- de novo a fala do anjo. Repetição curta passa despercebida, e
+    # esse é o preço aceito pra que todo disparo seja de verdade.
+    PREFIXO = 8
+    vistos: dict[str, int] = {}
+    repetidos: list[str] = []
+    for i, parte in enumerate(partes, 1):
+        palavras = parte.lower().split()
+        if len(palavras) < PREFIXO:
+            continue
+        chave = " ".join(palavras[:PREFIXO])
+        if chave in vistos:
+            repetidos.append(f"{i} repete o {vistos[chave]}")
+        else:
+            vistos[chave] = i
+    if repetidos:
+        problemas.append(f"{len(repetidos)} bloco(s) repetindo texto anterior: "
+                         + "; ".join(repetidos[:6])
+                         + ("; ..." if len(repetidos) > 6 else ""))
+
+    # ── Bloco inchado: sobra de texto empurrada pro fim ─────────────────────
+    tamanhos = [len(p.split()) for p in partes]
+    if tamanhos:
+        mediana = sorted(tamanhos)[len(tamanhos) // 2]
+        # O piso de 25 palavras evita alarme quando a mediana é minúscula.
+        limite = max(3 * mediana, 25)
+        inchados = [f"{i} ({t} palavras)" for i, t in enumerate(tamanhos, 1) if t > limite]
+        if inchados:
+            problemas.append(
+                f"{len(inchados)} bloco(s) muito maior(es) que a mediana de "
+                f"{mediana} palavras: " + "; ".join(inchados[:6])
+                + ("; ..." if len(inchados) > 6 else ""))
+
+    # ── Marcador de preenchimento ───────────────────────────────────────────
+    vazios = [str(i) for i, p in enumerate(partes, 1) if "[revisar manualmente]" in p]
+    if vazios:
+        problemas.append(f"{len(vazios)} bloco(s) preenchidos com marcador de "
+                         f"revisão (a IA devolveu texto de menos): " + ", ".join(vazios[:10]))
+
+    return problemas
+
+
 # ── Extração de texto contínuo (para redistribuição via IA) ────────────────────
 
 def texto_corrido(legendas: list[Legenda]) -> str:

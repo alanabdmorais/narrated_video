@@ -38,6 +38,7 @@ from groq_client import GroqClient, GroqError
 from models import Legenda, Palavra
 from srt_utils import (
     ajustar_para_n_partes,
+    conferir_redistribuicao,
     alinhar_versiculos,
     extrair_texto_unico,
     gerar_legendas_versiculo,
@@ -301,6 +302,10 @@ class LanguageCaptionsPipeline:
                     "automaticamente. Revise o resultado com atenção.",
                     lang, n,
                 )
+
+            # A contagem estar certa não quer dizer que o conteúdo esteja.
+            for _problema in conferir_redistribuicao(partes):
+                logger.warning("   🚩 [%s] %s", lang, _problema)
 
             legendas_final = [
                 Legenda(id=i + 1, inicio_ms=leg_m.inicio_ms, fim_ms=leg_m.fim_ms, texto=texto_parte)
