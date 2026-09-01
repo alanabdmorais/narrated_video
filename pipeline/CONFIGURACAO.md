@@ -869,6 +869,60 @@ que lembrasse.
 > Aviso que aparece sempre vira paisagem. Por isso o `avisar_gpu()` é
 > silencioso quando o ambiente combina -- ele só fala quando há o que fazer.
 
+### A métrica circular, e o que ela escondia
+
+A queima do Mateus 2 mostrou os cinco idiomas dessincronizados entre si. Os
+TEMPOS estavam perfeitos -- os 43 blocos de todo idioma são os do mestre, zero
+divergência. O que estava fora do lugar era o conteúdo: no bloco 28 o inglês
+dizia *"Then Herod, when he saw that he was mocked"* enquanto o espanhol ainda
+mostrava o versículo anterior.
+
+Propus trocar a redistribuição por IA por uma repartição **proporcional**:
+cortar cada idioma nos mesmos pontos proporcionais em que o mestre corta o
+inglês. Medi o "desvio" e deu 0,1% contra 1,5-2,1% da IA.
+
+**O número não valia nada.** A métrica era a proporção do texto já exibida em
+cada bloco -- exatamente a grandeza que o repartidor proporcional minimiza por
+construção. Eu tinha medido o repartidor com a régua dele mesmo. E o teste que
+desmontou isso foi olhar um caso concreto: no bloco 28 o português da IA estava
+CERTO (*"Então Herodes, quando viu que havia sido zombado"*) e o proporcional
+piorou.
+
+A medida independente é nome próprio: se o bloco inglês fala de Herodes, o
+bloco de mesmo número no outro idioma tem que falar de Herodes. Isso não tem
+relação com contagem de caracteres.
+
+| | IA | proporcional |
+|---|---|---|
+| pt | 16/34 | 18/34 |
+| es | 13/34 | 16/34 |
+| fr | 11/34 | 18/34 |
+| ko | 19/34 | 23/34 |
+| **total** | **59/136 (43%)** | **75/136 (55%)** |
+
+A proporcional ganha, e por isso ficou. Mas o que a medida honesta mostra é que
+**nenhuma das duas resolve**: a melhor ainda erra o bloco quase metade das
+vezes. O alinhamento entre idiomas continua sendo o problema em aberto do nível
+2, e a proporcional é uma melhora, não um conserto.
+
+> Métrica escolhida depois da solução mede a solução, não o problema. O sinal
+> de alerta estava à vista: 0,1% é bom demais pra um problema difícil.
+
+### Espaço fino entre morfemas coreanos
+
+Na mesma queima, as sílabas coreanas saíram espremidas. A causa é geométrica:
+morfema dentro da mesma palavra escrita não pode ser separado por espaço (`베들레헴`
++ `에서` é uma palavra só), então as peças ficam coladas -- e cada peça carrega
+uma borda colorida de 6px, que encosta na vizinha. Nos idiomas latinos isso não
+acontece: cada caixa é uma palavra inteira, com espaço em volta.
+
+No bloco 1 do coreano, 6 dos 13 pares de peças ficam colados; no português, 0 de 9.
+
+Agora as peças coladas são separadas por um espaço fino (U+2009), configurável
+em `ESPACO_ENTRE_PECAS_COLADAS`. Se a fonte não tiver o glifo, o conserto
+alternativo é reduzir o `BOX_BORDER` -- o problema é a borda, o espaço só a
+compensa.
+
 ### A análise gramatical devolve a forma subjacente, não o que está escrito
 
 O `.ass` do Mateus 2 saiu com o texto errado em quatro dos cinco idiomas:

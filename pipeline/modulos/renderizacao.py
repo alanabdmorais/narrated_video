@@ -99,7 +99,15 @@ def _linha_colorida_ass(pecas: list[PecaColorida], box_border: int, tamanho_font
         luminancia = 0.299 * r + 0.587 * g + 0.114 * b
         cor_texto = "&H00000000" if luminancia > 128 else "&H00FFFFFF"
 
-        espaco_antes = "" if peca.colado_anterior else " "
+        # Peça colada é morfema dentro da MESMA palavra escrita (só coreano):
+        # separar com espaço normal quebraria a palavra. Mas juntar com nada
+        # faz as bordas coloridas de 6px encostarem, e as sílabas saem
+        # espremidas -- foi o que apareceu na primeira queima. Um espaço fino
+        # (U+2009) dá folga pras caixas sem abrir a palavra.
+        #
+        # Se a fonte não tiver o glifo e aparecer um quadrado, troque por ""
+        # e reduza o box_border: o problema é a borda, o espaço só a compensa.
+        espaco_antes = espaco_colado if peca.colado_anterior else " "
         partes.append(
             f"{espaco_antes}{{\\1c{cor_texto}\\3c{cor_fundo}\\bord{box_border}\\shad0{fonte_tag}}}{texto_safe}"
         )
@@ -113,6 +121,7 @@ def gerar_ass(
     config: PipelineConfig,
     caminho_saida: Optional[Path | str] = None,
     box_border: int = 6,
+    espaco_colado: str = "\u2009",
 ) -> Path:
     """
     Gera o .ass com a classificação nova.
@@ -123,6 +132,8 @@ def gerar_ass(
             PecaColorida).
         config: PipelineConfig — usa LARGURA_TELA/ALTURA_TELA/POSICOES_Y/
             TAMANHO_FONTE_TAG (mesmos campos do sistema antigo).
+        espaco_colado: o que separa duas peças da mesma palavra escrita.
+            Padrão: espaço fino (U+2009).
         box_border: largura da borda em px (a "espessura" da caixa).
     """
     if caminho_saida is None:

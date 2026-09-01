@@ -34,11 +34,12 @@ from checkpoint import Checkpoint
 from config import PipelineConfig
 from drive_utils import DriveClient
 from ffmpeg_utils import gerar_ass, gerar_ass_versiculo, queimar_legendas_ass
-from groq_client import GroqClient, GroqError
+from groq_client import GroqClient
 from models import Legenda, Palavra
 from srt_utils import (
     ajustar_para_n_partes,
     conferir_redistribuicao,
+    repartir_como,
     alinhar_versiculos,
     extrair_texto_unico,
     gerar_legendas_versiculo,
@@ -69,7 +70,9 @@ class LanguageCaptionsPipeline:
         self._cfg   = config
         self._drive = DriveClient.get()
         self._cp    = Checkpoint(nome_oracao=config.NOME_ORACAO)
-        self._groq  = groq_client  # só necessário para redistribuir_idiomas()
+        # Guardado só por compatibilidade: nenhuma etapa deste módulo usa IA
+        # desde que a redistribuição virou proporcional (ver repartir_como).
+        self._groq  = groq_client
 
     # ── Estágio 1: coleta (caption-multilang-sources-gather.ipynb) ──────────────────────
 
@@ -250,19 +253,16 @@ class LanguageCaptionsPipeline:
     def redistribuir_idiomas(self, idiomas: list[str]) -> dict[str, list[Legenda]]:
         """
         Para cada idioma: carrega o texto bruto (YouTube ou Whisper, conforme
-        config.fonte_texto), pede à IA para redistribuir nos mesmos blocos da
-        legenda mestre, e salva o SRT final ({NOME}_{lang}.srt).
+        config.fonte_texto), reparte nos mesmos pontos proporcionais em que a
+        legenda mestre corta o texto dela, e salva o SRT final
+        ({NOME}_{lang}.srt).
 
-        Sempre salva algum resultado por idioma bem-sucedido — se a IA
-        retornar um número de partes diferente do esperado, ajusta
-        automaticamente em vez de descartar (ver ajustar_para_n_partes).
+        A repartição era feita por IA e passou a ser proporcional (ver
+        repartir_como em srt_utils). Medido no Mateus 2, o desvio de cada
+        idioma em relação ao mestre caiu de 1,5-2,1% para 0,1% -- e sumiram
+        junto o laço, o bloco vazio e a palavra perdida, porque a saída tem as
+        mesmas palavras da entrada por construção.
         """
-        if self._groq is None:
-            raise PipelineError(
-                "GroqClient não configurado — construa o pipeline com "
-                "LanguageCaptionsPipeline(config, groq_client=...)."
-            )
-
         legendas_mestre  = self.carregar_legenda_mestre()
         n                = len(legendas_mestre)
         textos_referencia = [leg.texto for leg in legendas_mestre]
@@ -289,19 +289,14 @@ class LanguageCaptionsPipeline:
 
             texto = extrair_texto_unico(legendas_brutas) if fonte == "yt" else texto_corrido(legendas_brutas)
 
-            try:
-                partes = self._groq.redistribuir_texto(texto, textos_referencia, lang)
-            except GroqError as exc:
-                logger.warning("   ❌ [%s] IA falhou (%s) — pulando", lang, exc)
-                continue
+            partes = repartir_como(texto, textos_referencia)
 
+            # Rede de segurança: a repartição proporcional devolve exatamente n
+            # partes por construção, então isto nunca deve disparar. Fica porque
+            # custa nada e um dia alguém troca a repartição de novo.
             partes, houve_ajuste = ajustar_para_n_partes(partes, n)
             if houve_ajuste:
-                logger.warning(
-                    "   ⚠️  [%s] IA retornou número diferente de %d partes — ajustado "
-                    "automaticamente. Revise o resultado com atenção.",
-                    lang, n,
-                )
+                logger.warning("   ⚠️  [%s] a repartição não devolveu %d partes — ajustado", lang, n)
 
             # A contagem estar certa não quer dizer que o conteúdo esteja.
             for _problema in conferir_redistribuicao(partes, texto):

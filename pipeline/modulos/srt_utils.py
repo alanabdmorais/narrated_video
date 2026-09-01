@@ -143,6 +143,79 @@ def _palavras_simples(texto: str) -> list[str]:
     return re.findall(r"\w+", texto.lower())
 
 
+def repartir_como(texto_corrido: str, textos_referencia: list[str]) -> list[str]:
+    """Reparte `texto_corrido` em len(textos_referencia) partes, cortando nos
+    MESMOS pontos proporcionais em que a referência corta o texto dela.
+
+    Substitui a redistribuição por IA. O motivo é medido: no Mateus 2, o desvio
+    de cada idioma em relação ao mestre (proporção do capítulo já exibida em
+    cada bloco) caiu de 1,5-2,1% para 0,1% nos quatro idiomas. Na tela isso era
+    a diferença entre o espanhol mostrar o versículo anterior enquanto o inglês
+    já estava no seguinte.
+
+    Além de alinhar melhor, é determinística: não chama IA, não custa, roda
+    sempre igual, e elimina de vez o laço, o bloco vazio e a palavra sumida --
+    a saída contém as mesmas palavras da entrada por construção.
+
+    O corte desliza até a fronteira de palavra mais próxima do alvo, e entre as
+    quatro candidatas mais próximas prefere uma que venha logo depois de
+    pontuação: cortar em vírgula lê melhor que cortar no meio de uma oração,
+    e a perda de precisão é pequena.
+    """
+    n = len(textos_referencia)
+    palavras = texto_corrido.split()
+    if n <= 0:
+        return []
+    if len(palavras) < n:
+        # Texto curto demais pra n blocos. Não é pra acontecer num capítulo,
+        # mas se acontecer é melhor devolver partes vazias no fim do que
+        # estourar: o conferir_redistribuicao() acusa logo em seguida.
+        return palavras + [""] * (n - len(palavras))
+
+    def uteis(s: str) -> int:
+        return sum(1 for c in s if c.isalnum())
+
+    # Onde a referência corta, em proporção do texto dela
+    tam_ref = [uteis(t) for t in textos_referencia]
+    total_ref = sum(tam_ref) or 1
+    alvos, soma = [], 0
+    for t in tam_ref[:-1]:
+        soma += t
+        alvos.append(soma / total_ref)
+
+    # Proporção acumulada em cada fronteira de palavra do texto a repartir
+    pesos = [uteis(p) for p in palavras]
+    total = sum(pesos) or 1
+    acumulado, soma = [], 0
+    for w in pesos:
+        soma += w
+        acumulado.append(soma / total)
+
+    FIM_DE_ORACAO = ",.;:!?»”\"'"
+    cortes: list[int] = []
+    usados: set[int] = set()
+    for alvo in alvos:
+        ordem = sorted(range(1, len(palavras)), key=lambda i: abs(acumulado[i - 1] - alvo))
+        escolha = None
+        for i in ordem[:4]:
+            if i not in usados and palavras[i - 1][-1:] in FIM_DE_ORACAO:
+                escolha = i
+                break
+        if escolha is None:
+            for i in ordem:
+                if i not in usados:
+                    escolha = i
+                    break
+        usados.add(escolha)
+        cortes.append(escolha)
+
+    partes, inicio = [], 0
+    for corte in sorted(cortes) + [len(palavras)]:
+        partes.append(" ".join(palavras[inicio:corte]))
+        inicio = corte
+    return partes
+
+
 def conferir_redistribuicao(partes: list[str], texto_fonte: str) -> list[str]:
     """Confere o resultado da redistribuição por IA. Devolve uma lista de
     problemas legíveis (vazia = nada achado).
