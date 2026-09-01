@@ -800,6 +800,42 @@ poliglota, narrada pelo David Williams em inglês. Continua variável.
 > saber qual sem olhar. Aqui a documentação estava certa — o que só se descobriu
 > conferindo.
 
+### Guarda que depende de um arquivo opcional é guarda que falta na hora
+
+A conferência do setup fazia duas perguntas e amarrava as duas ao
+`_manifesto.txt`:
+
+| pergunta | precisa do manifesto? |
+|---|---|
+| a cópia Drive → VM trouxe tudo? | **não** — é comparar duas pastas |
+| o Drive está atrás do repositório? | sim, só ele sabe |
+
+Sem o manifesto ela imprimia `⚠️ sem _manifesto.txt` e seguia **sem conferir
+nada**. Foi exatamente assim que um `✅ 13 modules copied` passou com visto
+verde num Drive que tinha 31 — no dia em que o manifesto ainda não existia,
+porque o sincronizador que o grava não tinha chegado a rodar de verdade.
+
+Comparar 13 com 31 nunca dependeu de manifesto. As duas perguntas agora são
+independentes: a primeira sempre roda (e se recopia sozinha, que é o conserto
+do mount preguiçoso); a segunda avisa que não pode responder.
+
+> Guarda opcional falta justamente no cenário ruim, porque o que a desliga
+> costuma ser a mesma bagunça que ela existia pra pegar.
+
+### `sys.modules` não sabe que o arquivo mudou
+
+Copiar um `.py` novo por cima não desfaz um `import` já feito: o Python guarda
+o módulo em `sys.modules` e reaproveita. Numa sessão longa do Colab, o notebook
+roda com o `config.py` de ontem mesmo depois de um sync perfeito.
+
+O sintoma aparece longe da causa. Aqui foi um `nome_srt_whisper()` devolvendo
+`40_Matt_02_edge_pt.srt` — o nome antigo, aposentado há tempos — enquanto o
+arquivo no Drive já dizia `_whisper_`. Nada falha; só sai errado.
+
+O setup agora descarrega de `sys.modules` tudo que veio de `/content/pipeline`
+depois de copiar, o que equivale a reiniciar o runtime sem perder o resto da
+sessão.
+
 ### A aba do Colab é uma cópia, e cópia envelhece
 
 O sincronizador atualizou a si mesmo numa rodada. Nas rodadas seguintes ele
