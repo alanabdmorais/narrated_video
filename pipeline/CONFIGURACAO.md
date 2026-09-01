@@ -869,6 +869,49 @@ que lembrasse.
 > Aviso que aparece sempre vira paisagem. Por isso o `avisar_gpu()` é
 > silencioso quando o ambiente combina -- ele só fala quando há o que fazer.
 
+### Auditoria das cores: 3 erros em 610 peças, e 33 falsos alarmes meus
+
+Decodifiquei o `.ass` de volta pra classes gramaticais e conferi peça por peça:
+
+| verificação | resultado |
+|---|---|
+| nome próprio → amarelo | **39/39** em en, pt, es e fr |
+| pontuação → cinza | **100%** nos cinco idiomas |
+| contração (`da`, `del`, `du`, `au`) → preposição | ✅ |
+| toda cor mapeia pra uma classe conhecida | ✅ |
+
+Os suspeitos que eu levantei eram, na maioria, **erro do meu teste**:
+
+- Francês `des`: 5× artigo, 3× preposição -- e os dois estão certos. *"des mages
+  venus d'Orient"* é artigo indefinido plural; *"roi des Juifs"* é a contração
+  `de`+`les`.
+- Coreano: 33 de 184 morfemas não saíram como partícula, e os que olhei estavam
+  todos corretos -- `이` como demonstrativo ("esta notícia"), `과` como
+  conjunção ("sacerdotes E escribas"), `가` como verbo ("ir"), `이` como cópula.
+  Testei sílabas soltas que têm vários papéis gramaticais.
+
+Sobraram **três** erros reais, todos em português e todos discutíveis por um
+gramático:
+
+| | o Stanza deu | devia ser |
+|---|---|---|
+| *"**Ao** verem a estrela"* | conjunção | preposição |
+| *"passou **a** viver"* | conjunção | preposição |
+| *"**Tu**, Belém, terra de Judá"* | interjeição | pronome |
+
+Os três têm a mesma origem: o Stanza analisa a **função** (abre oração
+temporal; chama alguém) e a legenda pinta por **classe**. As duas leituras são
+legítimas; a que a legenda precisa é a segunda.
+
+A regra do infinitivo precisa saber o que vem depois -- *"passou a viver"* tem
+preposição, *"passou a fome"* não --, então `classificar_palavra_stanza()`
+ganhou `upos_seguinte`/`feats_seguinte`, opcionais: sem eles a função se
+comporta como antes.
+
+> Antes de acusar o classificador, olhei o contexto de cada caso. Dos 36
+> suspeitos, 33 eram acerto dele e erro do teste. Um teste que não distingue
+> "a ferramenta errou" de "eu perguntei errado" não mede a ferramenta.
+
 ### A métrica circular, e o que ela escondia
 
 A queima do Mateus 2 mostrou os cinco idiomas dessincronizados entre si. Os
