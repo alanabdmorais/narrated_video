@@ -800,6 +800,35 @@ poliglota, narrada pelo David Williams em inglês. Continua variável.
 > saber qual sem olhar. Aqui a documentação estava certa — o que só se descobriu
 > conferindo.
 
+### A aba do Colab é uma cópia, e cópia envelhece
+
+O sincronizador atualizou a si mesmo numa rodada. Nas rodadas seguintes ele
+disse `♻️ 0 · ✅ Drive idêntico ao repositório, byte a byte` -- e estava certo,
+o Drive estava mesmo em dia. Só que o que rodou continuou sendo o código de
+ontem: o Colab lê o `.ipynb` quando você **abre a aba** e guarda as células na
+memória; ele não relê o arquivo a cada execução.
+
+Resultado: o `_manifesto.txt` não era escrito, e nada avisava. O aviso de
+auto-atualização que existia só dispara **na rodada em que a cópia acontece** —
+quem roda depois não recebe aviso nenhum. Alarme que toca uma vez e cala é
+quase pior que alarme nenhum, porque o problema continua e você já acha que
+passou.
+
+Pior ainda, o silêncio tem um lado destrutivo: se o Colab autossalvar a aba
+velha, ele grava o notebook antigo por cima do novo no Drive, desfazendo o
+sync sem uma linha de log.
+
+A checagem agora roda na Configuração, toda vez: o texto da célula que está
+executando tem que ser **igual a alguma célula** do `.ipynb` que está no Drive.
+Não precisa de sentinela nem de número de versão pra manter.
+
+> A primeira versão dessa checagem procurava o texto *dentro* do arquivo
+> inteiro, e passava exatamente no caso que ela existe pra pegar: quando a
+> versão nova só **acrescenta** linhas no fim de uma célula, a versão velha é
+> um prefixo dela — e prefixo continua sendo substring. Só apareceu porque o
+> teste simulou a aba velha em vez de conferir a atual. Teste que só exercita
+> o caso bom não é teste, é confirmação.
+
 ### `_manifesto.txt` — contar sem ter contra o que comparar não é conferir
 
 O setup de todo notebook imprimia `✅ 13 modules copied` — **com visto
