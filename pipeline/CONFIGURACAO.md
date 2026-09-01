@@ -800,6 +800,49 @@ poliglota, narrada pelo David Williams em inglês. Continua variável.
 > saber qual sem olhar. Aqui a documentação estava certa — o que só se descobriu
 > conferindo.
 
+### Texto de referência num idioma ALVO não é gabarito de redação
+
+Decisão tomada: vamos ter a Bíblia coreana inteira em JSON, no mesmo formato do
+`web-biblia.json`. O `parsear_usfm` já é agnóstico de idioma, então a máquina
+custa pouco. Falta resolver a licença antes de guardar o texto completo no
+repositório.
+
+O que precisa sobreviver a essa decisão é o **limite de uso**, que foi medido no
+Mateus 2 contra um texto de referência coreano:
+
+| | resultado |
+|---|---|
+| nomes próprios, legenda do YouTube | **16 / 16** |
+| nomes próprios, transcrição Whisper | 9 / 16 |
+| similaridade palavra a palavra, legenda do YouTube | **0,2853** |
+| similaridade palavra a palavra, Whisper | 0,2317 |
+
+No inglês a mesma métrica deu 0,9692 e serviu pra achar 4 erros reais — porque
+lá a narração **é** a WEB Classic lida em voz alta. No coreano ela não mede nada:
+a legenda é uma tradução da WEB feita pelo YouTube, e a referência é uma tradução
+independente do grego. Divergir é o comportamento correto das duas.
+
+E é pior que "inútil em valor absoluto": **0,2853 contra 0,2317 é quase empate**,
+enquanto a diferença real (16/16 contra 9/16) é entre usável e imprestável. A
+métrica nem ordena direito.
+
+Então, seja qual for o formato do arquivo: **nunca ligar comparação de
+similaridade num idioma alvo.** O que a referência responde bem é nome próprio e
+contagem de item — foi assim que ela confirmou que o `음악` sobrava nos presentes
+dos magos (a referência lista três) e que o Whisper escreveu `모략` ("estratagema")
+no lugar de `몰약` ("mirra"), uma sílaba de diferença, palavra real, frase
+gramatical.
+
+> Mesmo formato de arquivo, mesmo código, mesma cara de relatório -- e valor
+> probatório completamente diferente. O que muda não é o dado, é o que ele pode
+> provar.
+
+**Cuidado no desenho:** a mesma medição mostrou que a comparação tem que aceitar
+**conjunto de grafias**, não uma forma canônica. 애굽 e 이집트 são os dois "Egito";
+아켈라오 e 아르켈라우스 são os dois "Arquelau"; 황금 e 금 são os dois "ouro". Num
+teste com uma forma única por nome, a legenda BOA reprovaria em 3 de 4 termos --
+todas falsas. Alarme que erra o alvo ensina a ignorar o alarme.
+
 ### Um lote de 4 idiomas, um defeito só, dois consertos opostos
 
 O `cookies.txt` venceu no meio de um `baixar_legendas_youtube` e a saída ficou
