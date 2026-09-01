@@ -652,6 +652,51 @@ some trocando pra `small`. Numa execução com `base`, `chief priests` virou
 `cheap priests`, `myrrh` virou `mirror`, `sent out` virou `sinned out` e
 `reigning` virou `raining` — ruído que parece divergência de texto e não é.
 
+### O sincronizador que se atualiza roda a versão velha
+
+O Colab carrega o código do notebook na memória quando você **abre** o
+arquivo. Se a cópia troca o `.ipynb` no Drive no meio da execução, as células
+que continuam rodando são as **antigas** — e o que a versão nova faria (gravar
+o `_manifesto.txt`, por exemplo) simplesmente não acontece, sem erro nenhum.
+
+Foi o que houve: o sync rodou, disse "Drive idêntico byte a byte", e o
+`caption-single-generate` seguinte reclamou `⚠️ sem _manifesto.txt`. Os dois
+estavam certos — o manifesto era código que ainda não tinha rodado.
+
+Agora o `repositorio-sincronizar` avisa quando se atualiza:
+
+```
+⚠️  ESTE NOTEBOOK SE ATUALIZOU NESTA RODADA.
+    O que acabou de rodar é a versão ANTIGA...
+    Feche a aba, abra de novo e rode outra vez.
+```
+
+> Um notebook que se reescreve precisa de **duas passadas**, e a primeira não
+> tem como saber o que a segunda vai fazer. O melhor que ela pode fazer é
+> dizer isso.
+
+### `MODELO_WHISPER = "small"` é o padrão, e o motivo é medido
+
+O padrão era `"base"`, com um comentário dizendo que era "bom pra narração
+clara de um só locutor". Medido no Mateus 2, mesma narração:
+
+| Modelo | Divergências contra o roteiro | Similaridade |
+|---|---|---|
+| `base` | 24 | 0,9521 |
+| `small` | ~5 | — |
+
+O `base` ouviu `cheap priests`, `and mirror`, `sinned out`, `was raining`,
+`in a hold a surrounding`. Texto bíblico é cheio de nome próprio, e é neles
+que ele tropeça.
+
+**E esse SRT é o mestre de segmentação de todos os idiomas** — erro aqui se
+propaga pro vídeo inteiro.
+
+> Havia um motivo escondido pra insistir no padrão errado: a configuração vive
+> **dentro do arquivo que o sync sobrescreve.** Trocar pra `small` à mão e
+> sincronizar depois desfaz a troca, silenciosamente. Enquanto o padrão do
+> repositório estiver errado, ele volta toda vez.
+
 ### `_manifesto.txt` — contar sem ter contra o que comparar não é conferir
 
 O setup de todo notebook imprimia `✅ 13 modules copied` — **com visto
