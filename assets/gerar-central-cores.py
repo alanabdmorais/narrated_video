@@ -49,7 +49,7 @@ VARIANTES = {
         "com_chines": False,
         "idiomas": ["en", "pt", "es", "fr", "ko"],
         "eyebrow": "Legenda Multicor · 5 Idiomas · 20 classes",
-        "titulo_html": "Painel de Classificação — Legenda Multicor (20 classes)",
+        "titulo_html": "Central de Decisão de Cores",
         "nome_particula": "Partícula (coreano)",
         "def_particula": DEF_PARTICULA_KO,
         "origem_particula_stanza": [],
@@ -64,7 +64,7 @@ VARIANTES = {
         "com_chines": True,
         "idiomas": ["en", "pt", "es", "fr", "ko", "zh"],
         "eyebrow": "Legenda Multicor · 6 Idiomas (com chinês) · 20 classes",
-        "titulo_html": "Painel de Classificação — Legenda Multicor, 6 idiomas (20 classes)",
+        "titulo_html": "Central de Cores com Chinês",
         "nome_particula": "Partícula (coreano/chinês)",
         "def_particula": DEF_PARTICULA_KO_ZH,
         "origem_particula_stanza": ["ZH: PART (的, 了, 吗, 着, 过...)"],
@@ -304,7 +304,7 @@ def gerar_colinha(nome_saida: str) -> None:
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Colinha — legenda de cores pra descrição do YouTube</title>
+<title>Colinha de Cores do YouTube</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=IBM+Plex+Sans:wght@400;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>{COLINHA_CSS}</style>
