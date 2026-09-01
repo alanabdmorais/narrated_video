@@ -827,6 +827,48 @@ mudou → cala; o código mudou → avisa.
 > Quando duas checagens da mesma coisa discordam, a resposta não é escolher a
 > mais barulhenta -- é ver qual delas mede o que interessa.
 
+### O manifesto virou arquivo, e a GPU virou etiqueta
+
+Duas coisas de bastidor, feitas enquanto o Colab não devolvia máquina.
+
+**O `_manifesto.txt` agora é versionado.** Ele era escrito pelo
+`repositorio-sincronizar`, e isso o tornava refém de qual VERSÃO do
+sincronizador tinha rodado -- e o sincronizador se atualiza sozinho, então a
+passada que traz a versão nova ainda roda a antiga. Foram **três rodadas** até
+o arquivo existir, com todo notebook nesse meio-tempo imprimindo "sem
+_manifesto.txt" e conferindo menos do que podia.
+
+Como artefato versionado ele viaja na cópia normal, como qualquer outro
+arquivo, e não depende de ninguém lembrar de nada. O preço é o de sempre --
+arquivo gerado pode divergir da fonte --, então virou o **quinto defeito** do
+`nomenclatura.relatorio()`: o manifesto tem que listar exatamente os `.py` que
+existem. `gerar_manifesto()` reescreve.
+
+O código que o gravava saiu do sincronizador. Se ficasse, escreveria por cima
+com outro cabeçalho e o arquivo apareceria como "mudou" em toda sincronização,
+para sempre.
+
+**Todo notebook agora diz se precisa de GPU.** Uma linha logo abaixo do título:
+
+| | |
+|---|---|
+| ⚡ Ligue a GPU | os 5 que rodam Whisper |
+| 🖥️ CPU basta | os outros 28 |
+
+E, nos 20 que copiam módulos, um aviso em tempo de execução (`ambiente.py`)
+que fala **só quando o ambiente não combina** -- inclusive no caso que custou
+caro: estar num ambiente com GPU sem usá-la.
+
+Isso não é preciosismo de organização. Em 01/set o Colab parou de conceder
+ambiente no meio do teste ("não há back-ends disponíveis"), e parte da cota
+tinha sido gasta por notebooks que não usam GPU pra nada, rodando com GPU só
+porque a seleção ficou de antes. A própria documentação do Colab recomenda
+voltar pra CPU quando não se está usando o acelerador; o que faltava era algo
+que lembrasse.
+
+> Aviso que aparece sempre vira paisagem. Por isso o `avisar_gpu()` é
+> silencioso quando o ambiente combina -- ele só fala quando há o que fazer.
+
 ### Reaproveitar cache é bom; reaproveitar cache cego não
 
 O `caption-multicolor-generate` guarda no Drive a classificação gramatical de

@@ -1,0 +1,34 @@
+# Lista dos módulos do repositório, para o setup dos notebooks conferir
+# o que chegou no Drive. Gerado por nomenclatura.gerar_manifesto().
+ambiente.py
+audio_narracao.py
+biblia_livros.py
+biblia_texto.py
+caption_pipeline.py
+checkpoint.py
+classificacao.py
+classificacao_ko.py
+compilacao_pipeline.py
+config.py
+constants.py
+cores.py
+dicionario_sinonimos.py
+dicionario_sinonimos_clima.py
+drive_utils.py
+ffmpeg_utils.py
+groq_client.py
+jornadas.py
+language_captions_pipeline.py
+match_pipeline.py
+models.py
+nomenclatura.py
+pixabay_seed_pipeline.py
+pixabay_urls.py
+qualidade.py
+renderizacao.py
+srt_utils.py
+tempos_cache.py
+trilha_pipeline.py
+video_pipeline.py
+whisper_utils.py
+youtube_utils.py

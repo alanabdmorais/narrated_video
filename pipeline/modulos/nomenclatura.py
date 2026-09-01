@@ -345,11 +345,12 @@ def relatorio(raiz: Path | str) -> str:
     achados = verificar_repo(raiz)
     fantasmas = referencias_fantasma(raiz)
     quebrados = celulas_que_nao_compilam(raiz)
+    manifesto = manifesto_desatualizado(raiz)
 
-    if not achados and not fantasmas and not quebrados:
+    if not achados and not fantasmas and not quebrados and not manifesto:
         return (f"✅ Todo nome segue a convenção ({len(EXCECOES)} exceção(ões) "
-                f"registrada(s)), ninguém cita notebook que não existe, e "
-                f"todas as células compilam.")
+                f"registrada(s)), ninguém cita notebook que não existe, "
+                f"todas as células compilam, e o manifesto está em dia.")
 
     linhas: list[str] = []
     if achados:
@@ -373,6 +374,13 @@ def relatorio(raiz: Path | str) -> str:
         linhas.append("")
         linhas.append("Notebook que não compila falha na primeira célula, "
                       "depois de você já ter esperado o Drive montar.")
+    if manifesto:
+        if linhas:
+            linhas.append("")
+        linhas.append(f"⚠️  manifesto de módulos fora de sincronia ({len(manifesto)}):")
+        linhas += [f"  {m}" for m in manifesto]
+        linhas.append("")
+        linhas.append("Rode nomenclatura.gerar_manifesto(raiz) e versione o arquivo.")
     return "\n".join(linhas)
 
 
@@ -414,6 +422,58 @@ def celulas_que_nao_compilam(raiz: Path | str) -> list[str]:
             except SyntaxError as exc:
                 problemas.append(
                     f"[sintaxe] {arq.name} célula {i}, linha {exc.lineno}: {exc.msg}")
+    return problemas
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Quinto defeito: manifesto de módulos fora de sincronia
+# ─────────────────────────────────────────────────────────────────────────────
+#
+# O `_manifesto.txt` é a lista dos módulos que o repositório tem. O setup de
+# cada notebook compara o que achou no Drive contra ela e diz o NOME do que
+# falta -- contar "31 módulos copiados" sem ter contra o que comparar não é
+# conferir nada.
+#
+# Ele era escrito pelo repositorio-sincronizar, e isso o tornava refém de qual
+# VERSÃO do sincronizador tinha rodado: o notebook se atualiza sozinho, e a
+# passada que o atualiza roda o código antigo. Foram três rodadas até o arquivo
+# existir. Como artefato versionado ele viaja na cópia normal, como qualquer
+# outro arquivo, e não depende de ninguém lembrar de nada.
+#
+# O preço de virar arquivo é o de sempre: pode divergir. Por isso a conferência.
+
+NOME_MANIFESTO = "_manifesto.txt"
+
+
+def _modulos_do_repo(raiz: Path) -> list[str]:
+    return sorted(f.name for f in (Path(raiz) / "pipeline" / "modulos").glob("*.py"))
+
+
+def gerar_manifesto(raiz: Path | str) -> Path:
+    """(Re)escreve o `_manifesto.txt` a partir dos .py que existem agora."""
+    raiz = Path(raiz)
+    destino = raiz / "pipeline" / "modulos" / NOME_MANIFESTO
+    nomes = _modulos_do_repo(raiz)
+    destino.write_text(
+        "# Lista dos módulos do repositório, para o setup dos notebooks conferir\n"
+        "# o que chegou no Drive. Gerado por nomenclatura.gerar_manifesto().\n"
+        + "\n".join(nomes) + "\n",
+        encoding="utf-8")
+    return destino
+
+
+def manifesto_desatualizado(raiz: Path | str) -> list[str]:
+    """O manifesto lista exatamente os módulos que existem? Devolve as
+    divergências (vazio = em dia)."""
+    raiz = Path(raiz)
+    caminho = raiz / "pipeline" / "modulos" / NOME_MANIFESTO
+    if not caminho.exists():
+        return [f"{NOME_MANIFESTO} não existe — rode nomenclatura.gerar_manifesto()"]
+    listados = {l.strip() for l in caminho.read_text(encoding="utf-8").splitlines()
+                if l.strip() and not l.startswith("#")}
+    existem = set(_modulos_do_repo(raiz))
+    problemas = [f"{n} existe mas não está no manifesto" for n in sorted(existem - listados)]
+    problemas += [f"{n} está no manifesto mas não existe" for n in sorted(listados - existem)]
     return problemas
 
 
