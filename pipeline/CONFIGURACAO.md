@@ -827,6 +827,46 @@ mudou → cala; o código mudou → avisa.
 > Quando duas checagens da mesma coisa discordam, a resposta não é escolher a
 > mais barulhenta -- é ver qual delas mede o que interessa.
 
+### O detector que acusou o certo e deixou passar o errado
+
+A primeira versão do `conferir_redistribuicao` procurava repetição comparando o
+começo dos blocos, com o prefixo calibrado em 8 palavras. Na rodada seguinte ela
+falhou **nos dois sentidos ao mesmo tempo**:
+
+| | |
+|---|---|
+| acusou | 3 blocos legítimos (pt 37, es 37, es 39) |
+| deixou passar | 3 blocos VAZIOS no francês, e 3 palavras sumidas |
+
+Os três acusados são versículos paralelos de Mateus 2: "levantou-se, tomou o
+menino e sua mãe" abre o v14 e o v21; a fala do anjo a José se repete no v13 e
+no v20. Depois da redistribuição eles caem em blocos que começam igual, **de
+propósito**.
+
+O erro de método foi calibrar no conjunto errado: medi o prefixo contra as
+legendas de ORIGEM, onde os cortes caem noutro lugar, e apliquei o limiar na
+SAÍDA redistribuída, onde os cortes seguem o mestre. Nenhum limiar resolveria
+-- não há o que separar, a repetição é real.
+
+A troca foi de heurística por conferência **exata**, e ela já existia no
+enunciado: o prompt manda "não repita nem omita nenhuma palavra do texto
+original". A IA só reparte. Então a concatenação das partes tem que ter as
+mesmas palavras da fonte, na mesma ordem -- e isso pega de uma vez palavra
+sumida, palavra inventada, bloco vazio e laço, sem opinar sobre repetição.
+
+Validada nas duas rodadas reais:
+
+| | rodada boa (fonte yt) | rodada quebrada (fonte whisper) |
+|---|---|---|
+| pt | 1 palavra sumida (`profeta`) | bloco 43 com 98 palavras |
+| es | nada | nada |
+| fr | 2 sumidas + 3 blocos vazios | **229 palavras surgindo do nada** (o laço) |
+| ko | 3 sumidas, 1 surgida | 35 sumidas, 18 surgidas |
+
+> Quando existe um contrato exato, conferir por semelhança é escolher trabalhar
+> com um instrumento pior do que o disponível. O prompt já dizia o que tinha que
+> valer; bastava comparar.
+
 ### Contagem certa, conteúdo quebrado
 
 O `ajustar_para_n_partes` garante que a redistribuição por IA devolva

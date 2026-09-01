@@ -13,6 +13,7 @@ Funções:
 """
 from __future__ import annotations
 
+import difflib
 import logging
 import re
 from pathlib import Path
@@ -136,66 +137,66 @@ def ajustar_para_n_partes(partes: list[str], n: int) -> tuple[list[str], bool]:
     return partes, True
 
 
-def conferir_redistribuicao(partes: list[str]) -> list[str]:
-    """Procura, no resultado da redistribuição por IA, os defeitos que o
-    `ajustar_para_n_partes` NÃO conserta -- ele garante a contagem, não o
-    conteúdo. Devolve uma lista de problemas legíveis (vazia = nada achado).
+def _palavras_simples(texto: str) -> list[str]:
+    """Palavras comparáveis, sem pontuação e sem caixa. Serve pra qualquer
+    idioma do projeto -- \\w cobre acento, hangul e ideograma."""
+    return re.findall(r"\w+", texto.lower())
 
-    Por que isto existe: no Mateus 2, a redistribuição do francês devolveu o
-    COMEÇO do capítulo de novo nos blocos 34, 37, 38 e 39 -- a IA entrou em
-    laço. O português recebeu 99 palavras no último bloco (9x a mediana),
-    porque a IA devolveu partes demais e o ajuste funde o excedente na última
-    posição, como está documentado. Os dois SRTs foram salvos, enviados pro
-    Drive e reportados com ✅. Contagem certa, conteúdo quebrado.
 
-    Nenhuma destas checagens precisa saber o idioma -- são defeitos de forma.
+def conferir_redistribuicao(partes: list[str], texto_fonte: str) -> list[str]:
+    """Confere o resultado da redistribuição por IA. Devolve uma lista de
+    problemas legíveis (vazia = nada achado).
+
+    A checagem principal é EXATA, não heurística, porque o contrato é exato: o
+    prompt manda "não repita nem omita nenhuma palavra do texto original" -- a
+    IA só reparte. Então a concatenação das partes tem que ter as mesmas
+    palavras da fonte, na mesma ordem. Isso pega de uma vez palavra sumida,
+    palavra inventada, bloco vazio e o laço em que a IA reescreve um trecho.
+
+    A primeira versão disto era um detector de repetição por prefixo, e ele
+    falhou nos dois sentidos ao mesmo tempo: acusou três blocos legítimos e
+    deixou passar três blocos vazios. O motivo é que Mateus 2 tem versículos
+    paralelos -- "levantou-se, tomou o menino e sua mãe" abre o v14 e o v21, e
+    a fala do anjo se repete no v13 e no v20. Depois da redistribuição esses
+    trechos caem em blocos que COMEÇAM igual, de propósito. Nenhum limiar de
+    prefixo separa isso de um laço da IA, porque não há o que separar: a
+    repetição é real e correta.
     """
     problemas: list[str] = []
 
-    # ── Repetição: a IA voltou a escrever um trecho anterior ────────────────
-    # Só conta parte com 4+ palavras: fragmento curto pode se repetir de
-    # verdade (um "disse ele", um refrão) e acusar isso seria ruído.
-    # A repetição costuma ser PARCIAL -- a IA reescreve o trecho e o corte cai
-    # noutro lugar --, então comparar texto inteiro deixa passar. O critério é
-    # o começo do bloco, e o tamanho desse começo foi CALIBRADO no Mateus 2:
-    #
-    #   prefixo   pega no francês quebrado   falso positivo nas fontes boas
-    #      4                5                        3
-    #      6                5                        2 a 3
-    #      8                5                        0
-    #
-    # Os falsos positivos com prefixo curto não são ruído aleatório: são a fala
-    # do anjo a José, que no capítulo aparece duas vezes quase igual (v13 e
-    # v20). Repetição legítima existe no texto bíblico, e acusá-la ensinaria a
-    # ignorar o aviso. Oito palavras separam as duas coisas sem sobra.
-    # Bloco com menos de 8 palavras fica FORA. Deixá-lo entrar comparando o
-    # texto inteiro parece generoso e devolve na hora os falsos positivos que a
-    # calibração tinha eliminado: são blocos curtos idênticos das legendas do
-    # YouTube -- de novo a fala do anjo. Repetição curta passa despercebida, e
-    # esse é o preço aceito pra que todo disparo seja de verdade.
-    PREFIXO = 8
-    vistos: dict[str, int] = {}
-    repetidos: list[str] = []
-    for i, parte in enumerate(partes, 1):
-        palavras = parte.lower().split()
-        if len(palavras) < PREFIXO:
-            continue
-        chave = " ".join(palavras[:PREFIXO])
-        if chave in vistos:
-            repetidos.append(f"{i} repete o {vistos[chave]}")
-        else:
-            vistos[chave] = i
-    if repetidos:
-        problemas.append(f"{len(repetidos)} bloco(s) repetindo texto anterior: "
-                         + "; ".join(repetidos[:6])
-                         + ("; ..." if len(repetidos) > 6 else ""))
+    # ── A fonte foi preservada? ─────────────────────────────────────────────
+    a = _palavras_simples(texto_fonte)
+    b = _palavras_simples(" ".join(partes))
+    if a:
+        sm = difflib.SequenceMatcher(None, a, b)
+        sumiram, surgiram = [], []
+        for tag, i1, i2, j1, j2 in sm.get_opcodes():
+            if tag in ("delete", "replace"):
+                sumiram.extend(a[i1:i2])
+            if tag in ("insert", "replace"):
+                surgiram.extend(b[j1:j2])
+        if sumiram:
+            problemas.append(f"{len(sumiram)} palavra(s) da fonte sumiram: "
+                             + ", ".join(sumiram[:8]) + ("; ..." if len(sumiram) > 8 else ""))
+        if surgiram:
+            problemas.append(f"{len(surgiram)} palavra(s) apareceram do nada: "
+                             + ", ".join(surgiram[:8]) + ("; ..." if len(surgiram) > 8 else ""))
 
-    # ── Bloco inchado: sobra de texto empurrada pro fim ─────────────────────
-    tamanhos = [len(p.split()) for p in partes]
+    # ── Bloco vazio ─────────────────────────────────────────────────────────
+    # Sai da conferência acima também (as palavras foram parar noutro bloco ou
+    # sumiram), mas vale nomear: bloco vazio some da tela sem deixar rastro.
+    vazios = [str(i) for i, x in enumerate(partes, 1) if not x.strip()]
+    if vazios:
+        problemas.append(f"{len(vazios)} bloco(s) sem texto nenhum: " + ", ".join(vazios[:10]))
+
+    # ── Bloco inchado ───────────────────────────────────────────────────────
+    # Defeito diferente: não perde texto, mas joga um parágrafo inteiro num
+    # bloco só -- ilegível na tela. É o que o ajustar_para_n_partes faz quando
+    # a IA devolve partes demais (funde o excedente na última posição).
+    tamanhos = [len(x.split()) for x in partes]
     if tamanhos:
         mediana = sorted(tamanhos)[len(tamanhos) // 2]
-        # O piso de 25 palavras evita alarme quando a mediana é minúscula.
-        limite = max(3 * mediana, 25)
+        limite = max(3 * mediana, 25)   # o piso evita alarme com mediana minúscula
         inchados = [f"{i} ({t} palavras)" for i, t in enumerate(tamanhos, 1) if t > limite]
         if inchados:
             problemas.append(
@@ -204,10 +205,10 @@ def conferir_redistribuicao(partes: list[str]) -> list[str]:
                 + ("; ..." if len(inchados) > 6 else ""))
 
     # ── Marcador de preenchimento ───────────────────────────────────────────
-    vazios = [str(i) for i, p in enumerate(partes, 1) if "[revisar manualmente]" in p]
-    if vazios:
-        problemas.append(f"{len(vazios)} bloco(s) preenchidos com marcador de "
-                         f"revisão (a IA devolveu texto de menos): " + ", ".join(vazios[:10]))
+    marcados = [str(i) for i, x in enumerate(partes, 1) if "[revisar manualmente]" in x]
+    if marcados:
+        problemas.append(f"{len(marcados)} bloco(s) preenchidos com marcador de "
+                         f"revisão (a IA devolveu texto de menos): " + ", ".join(marcados[:10]))
 
     return problemas
 

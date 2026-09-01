@@ -304,7 +304,7 @@ class LanguageCaptionsPipeline:
                 )
 
             # A contagem estar certa não quer dizer que o conteúdo esteja.
-            for _problema in conferir_redistribuicao(partes):
+            for _problema in conferir_redistribuicao(partes, texto):
                 logger.warning("   🚩 [%s] %s", lang, _problema)
 
             legendas_final = [
