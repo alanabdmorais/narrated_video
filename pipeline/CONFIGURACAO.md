@@ -768,6 +768,38 @@ propaga pro vídeo inteiro.
 > sincronizar depois desfaz a troca, silenciosamente. Enquanto o padrão do
 > repositório estiver errado, ele volta toda vez.
 
+O padrão foi propagado depois pro resto do caminho: os dois
+`caption-multilang-*-sources-gather` (que transcrevem as faixas dubladas) e os
+próprios `def ...(modelo="small")` de `caption_pipeline` e
+`language_captions_pipeline`. Duas razões pra não deixar só nos notebooks: as
+faixas dubladas **não são em inglês**, onde o `base` erra mais, não menos; e um
+`default=` de função é o valor que vale quando alguém chama sem passar nada —
+deixar um `"base"` esquecido lá é o mesmo padrão errado, só escondido um nível
+abaixo.
+
+`compilacao-montar` ficou em `"base"` de propósito: lá o Whisper só serve pra
+**alinhar por sequência de palavras**, que tolera erro de transcrição, e trocar
+o modelo invalida o cache de tempos de todos os capítulos já processados.
+Padrão certo não é padrão único — é o padrão que cabe no uso.
+
+### `IDIOMA_MESTRE` já valia `"en"` na documentação e `"pt"` no código
+
+A tabela de configuração deste arquivo dizia `"en"`. O `PipelineConfig` dizia
+`"pt"`. Todo notebook passava `IDIOMA_MESTRE = "en"` explicitamente, então a
+divergência nunca apareceu — até o dia em que um notebook novo esquecesse de
+passar.
+
+E o modo de falhar é traiçoeiro, porque o idioma mestre é o que as três funções
+de coleta **pulam de propósito** (ele já foi resolvido no
+`caption-single-generate`). Um `"pt"` esquecido não dá erro: ele pula o
+português e processa o inglês, sobrescrevendo exatamente a legenda que foi
+corrigida à mão. O padrão agora é `"en"`, que é o uso corrente — a Bíblia
+poliglota, narrada pelo David Williams em inglês. Continua variável.
+
+> Documentação e código discordando é uma das duas estar errada, e não dá pra
+> saber qual sem olhar. Aqui a documentação estava certa — o que só se descobriu
+> conferindo.
+
 ### `_manifesto.txt` — contar sem ter contra o que comparar não é conferir
 
 O setup de todo notebook imprimia `✅ 13 modules copied` — **com visto

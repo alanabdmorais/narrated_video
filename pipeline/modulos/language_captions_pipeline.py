@@ -150,7 +150,7 @@ class LanguageCaptionsPipeline:
         self._cp.salvar("audio_idiomas_baixados", {"idiomas": list(resultados.keys())})
         return resultados
 
-    def transcrever_audio_idiomas(self, idiomas: list[str], modelo: str = "base") -> dict[str, Path]:
+    def transcrever_audio_idiomas(self, idiomas: list[str], modelo: str = "small") -> dict[str, Path]:
         """Transcreve com Whisper o áudio de cada idioma (já baixado por
         baixar_audio_idiomas() — se não estiver local, baixa do Drive antes)
         e salva como {NOME}_whisper_{lang}.srt no Drive.
@@ -220,7 +220,7 @@ class LanguageCaptionsPipeline:
         return resultados
 
     def baixar_audio_e_transcrever(
-        self, url: str, idiomas: list[str], modelo: str = "base"
+        self, url: str, idiomas: list[str], modelo: str = "small"
     ) -> dict[str, Path]:
         """Atalho que combina baixar_audio_idiomas() + transcrever_audio_idiomas()
         em uma única chamada (mantido por compatibilidade — prefira as duas

@@ -149,8 +149,16 @@ class PipelineConfig:
     # ── Idioma mestre ─────────────────────────────────────────────────────────
     # Idioma do áudio/roteiro que serve de mestre de TIMESTAMPS (Whisper roda
     # nesse idioma) e de TEXTO (roteiro.txt ou legenda do YouTube nesse mesmo
-    # idioma). Os outros 3 idiomas são redistribuídos em cima desse molde.
-    IDIOMA_MESTRE:   str   = "pt"
+    # idioma). Os outros idiomas são redistribuídos em cima desse molde.
+    #
+    # Continua sendo variável -- qualquer notebook passa outro valor. O padrão
+    # é "en" porque a Bíblia poliglota é o uso corrente e a narração dela é a
+    # do David Williams, em inglês. Errar esse valor não dá erro: as três
+    # funções que baixam/transcrevem PULAM o idioma mestre de propósito (ele já
+    # foi resolvido no caption-single-generate), então um "pt" esquecido aqui
+    # protegeria o idioma errado -- pularia o português e sobrescreveria a
+    # legenda inglesa corrigida à mão. Falha silenciosa e cara de desfazer.
+    IDIOMA_MESTRE:   str   = "en"
 
     # ── Cores por idioma (modo simples — 1 cor por idioma) ───────────────────
     CORES_IDIOMAS: dict[str, str] = None  # preenchido no __post_init__

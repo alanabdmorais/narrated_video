@@ -142,7 +142,7 @@ class CaptionPipeline:
             return False
         return sha_registrado == _sha1(caminho)
 
-    def transcrever_whisper(self, modelo: str = "base") -> Path:
+    def transcrever_whisper(self, modelo: str = "small") -> Path:
         """
         Transcreve o áudio com Whisper e salva o resultado como SRT.
 
