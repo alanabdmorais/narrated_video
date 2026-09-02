@@ -38,6 +38,7 @@ from groq_client import GroqClient
 from models import Legenda, Palavra
 from srt_utils import (
     ajustar_para_n_partes,
+    escolher_legenda_mestre,
     conferir_redistribuicao,
     repartir_como,
     repartir_pela_grade,
@@ -236,14 +237,25 @@ class LanguageCaptionsPipeline:
     # ── Estágio 2: redistribuição (caption-multilang-generate.ipynb) ──────────
 
     def carregar_legenda_mestre(self) -> list[Legenda]:
-        """Carrega a legenda mestre do Drive — sempre a versão mais recente."""
-        nome    = self._cfg.nome_legenda_mestre
+        """Carrega a legenda mestre do Drive — sempre a versão mais recente.
+
+        Prefere o nome próprio (`<nome>_mestre.srt`); só cai nos lugares onde
+        ela morava antes se ele não existir, e aí avisando qual escolheu.
+        """
+        nome, aviso = escolher_legenda_mestre(
+            self._cfg.nome_legenda_mestre,
+            self._cfg.nomes_legenda_mestre_legado,
+            lambda n: self._drive.download(self._cfg.pasta_oracao, n, Path(n))
+                      and Path(n).exists(),
+        )
+        if aviso:
+            logger.warning("   ⚠️  Legenda mestre: %s", aviso)
         destino = Path(nome)
-        self._drive.download(self._cfg.pasta_oracao, nome, destino)
         if not destino.exists():
             raise PipelineError(
                 f"Legenda mestre não encontrada no Drive: {self._cfg.pasta_oracao / nome}. "
-                f"Rode o caption-single-generate.ipynb primeiro (ou confira NOME_LEGENDA_MESTRE)."
+                f"Rode o caption-single-generate.ipynb e depois a célula "
+                f"'PROMOVER A MESTRE' do caption-single-revisar.ipynb."
             )
         legendas = ler_srt(destino)
         if not legendas:

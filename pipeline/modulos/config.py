@@ -433,17 +433,50 @@ class PipelineConfig:
         """Arquivo SRT que define segmentação/tempos para os outros idiomas
         (mestre de SEGMENTAÇÃO -- ver bloco "Os 3 mestres do vídeo" acima).
 
-        Se NOME_LEGENDA_MESTRE estiver vazio (padrão), reaproveita
-        nome_legenda_unica. Preencha para usar um molde diferente.
+        UM ARQUIVO, UM PAPEL. `<nome>_mestre.srt` não é gerado por nenhuma
+        etapa: ele nasce de um ato explícito ("promover a mestre", no fim do
+        caption-single-revisar.ipynb), porque é o momento em que um arquivo
+        corrigido à mão vira contrato pra todos os idiomas.
+
+        Antes disto a mestre era um arquivo emprestado -- na prática o
+        `_whisper_<mestre>.srt`, cujo nome quer dizer o OPOSTO ("saída crua do
+        Whisper"), e que a célula de transcrição reescreve. Daí ter sido
+        preciso inventar o PROTEGER_LEGENDA_MESTRE, que recusa gravar quando o
+        destino tem o nome da mestre. Sem idioma no nome de propósito: existe
+        exatamente UMA mestre por vídeo, seja qual for o idioma dela, e um
+        `_mestre_pt.srt` convidaria a acreditar no contrário.
+
+        NOME_LEGENDA_MESTRE preenchido continua vencendo -- serve pra apontar
+        um molde diferente sem renomear nada.
         """
-        return self.NOME_LEGENDA_MESTRE.strip() or self.nome_legenda_unica
+        return self.NOME_LEGENDA_MESTRE.strip() or f"{self.NOME_ORACAO}_mestre.srt"
+
+    @property
+    def nomes_legenda_mestre_legado(self) -> tuple[str, ...]:
+        """Onde a mestre morava antes de ter nome próprio, na ordem em que
+        procurar. Serve pros vídeos que já existem: sem `_mestre.srt`, o
+        pipeline cai num destes AVISANDO qual escolheu -- o modo de falhar
+        que não se aceita aqui é um arquivo virar mestre em silêncio.
+
+        Sem repetição: com NOME_LEGENDA_UNICA vazio (o padrão),
+        nome_legenda_unica JÁ é o NOME_SRT_PT_WHISPER, e listar o mesmo nome
+        duas vezes faria a mensagem de aviso repetir o arquivo."""
+        vistos: list[str] = []
+        for nome in (self.nome_legenda_unica, self.NOME_SRT_PT_WHISPER):
+            if nome not in vistos:
+                vistos.append(nome)
+        return tuple(vistos)
 
     # ── Proteção da legenda mestre contra sobrescrita acidental ───────────────
     # Se True (padrão), qualquer função que geraria/sobrescreveria um SRT cujo
     # nome bate com nome_legenda_mestre recusa a operação em vez de sobrescrever
-    # silenciosamente — protege correções manuais já feitas na legenda mestre
-    # (ex: rodar a célula de transcrição do caption-single-generate.ipynb de novo, sem
-    # querer, depois de já ter corrigido o arquivo à mão).
+    # silenciosamente.
+    #
+    # Desde que a mestre ganhou nome próprio (`<nome>_mestre.srt`, que nenhuma
+    # etapa gera), esta trava não dispara no caminho normal -- ela existia
+    # porque a mestre era um arquivo emprestado, que a célula de transcrição
+    # reescrevia. Fica como rede pra quem preenche NOME_LEGENDA_MESTRE
+    # apontando pra um arquivo que o pipeline gera.
     # Coloque False só quando quiser mesmo re-gerar a mestre do zero.
     PROTEGER_LEGENDA_MESTRE: bool = True
 

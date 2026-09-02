@@ -1062,6 +1062,54 @@ por outro texto. Um limiar que nunca recusa nada não protege nada.
 do YouTube dele que é a grade. Sem ela o `redistribuir_idiomas()` avisa e cai na
 proporcional -- não quebra, mas volta dos 96% pros 57%.
 
+### A legenda mestre ganhou nome próprio
+
+`<nome>_mestre.srt`. Antes ela era um arquivo **emprestado** — na prática o
+`_whisper_<mestre>.srt` —, e isso tinha deixado três marcas:
+
+1. **Existia uma trava só por causa disso.** `PROTEGER_LEGENDA_MESTRE` faz o
+   `caption_pipeline` recusar gravar um SRT cujo nome de destino é o da mestre.
+   Ela existia porque a mestre tinha o mesmo nome que a célula de transcrição
+   escreve. Continua no código como rede pra quem preenche
+   `NOME_LEGENDA_MESTRE` à mão, mas não dispara mais no caminho normal.
+2. **O nome dizia o oposto.** `_whisper_en` quer dizer "saída crua do Whisper
+   para o inglês". A mestre é o arquivo corrigido à mão que vira contrato pra
+   todos os idiomas.
+3. **O padrão apontava pra um nome ambíguo.** Com `NOME_LEGENDA_MESTRE` vazio,
+   a mestre caía em `nome_legenda_unica` = `<nome>_<mestre>.srt` — e existe um
+   `40_Matt_02_en.srt` no Drive, noutra pasta, com **23 blocos** (um por
+   versículo), de julho.
+
+**Sem idioma no nome, de propósito.** Existe exatamente uma mestre por vídeo,
+seja qual for o idioma dela; `_mestre_pt.srt` convidaria a acreditar que há uma
+por idioma, que é justamente o que a mestre existe pra impedir. Vídeo narrado
+em português tem `<nome>_mestre.srt` igual.
+
+**Nasce de um ato explícito.** A célula "PROMOVER A MESTRE", no fim do
+`caption-single-revisar.ipynb`. Nenhuma etapa do pipeline gera esse arquivo — e
+é essa propriedade que aposenta a trava. A promoção é também o único momento em
+que o arquivo vira contrato, então é onde ele é conferido: bloco vazio, tempo
+fora de ordem, bloco invadindo o seguinte. Defeito ali se espalha calado por
+cinco idiomas. Promover por cima de uma mestre diferente **mostra a diferença e
+não grava** — trocar a mestre obriga a refazer todos os `<nome>_<lang>.srt` e a
+classificação multicor junto.
+
+**Compatibilidade nunca em silêncio.** `escolher_legenda_mestre()` procura o
+nome próprio; se não achar, cai em `nomes_legenda_mestre_legado` **avisando qual
+arquivo escolheu e mandando promover**. O modo de falhar que este nome existe
+pra impedir é um arquivo virar mestre por descuido de configuração.
+
+Sete lugares decidiam quem era a mestre; agora é um só. Dos que mudaram, dois
+merecem nota:
+
+- o `caption-multicolor-generate` lia o `_whisper_<mestre>.srt` direto pro
+  idioma mestre — um segundo lugar decidindo, que discordaria do resto no dia
+  em que a mestre fosse outro arquivo;
+- os `video-base-*-versiculo-trilhas*` **não** mudaram de arquivo, só de nome
+  de variável: o que eles querem ali é o TEMPO do áudio pra achar o versículo,
+  e eles rodam **antes** da promoção. Chamar aquilo de "legenda mestre" era a
+  mesma confusão em outro lugar.
+
 ### O erro de classificação é mudo — as três camadas contra ele
 
 O Stanza e o Kiwi erram, e o modo de errar é o pior possível: sai uma cor

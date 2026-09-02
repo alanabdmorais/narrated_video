@@ -17,6 +17,7 @@ import difflib
 import logging
 import re
 from pathlib import Path
+from typing import Optional
 
 from models import Legenda, str_para_ms
 
@@ -653,3 +654,39 @@ def gerar_legendas_versiculo(
             texto=f"{label_livro} {capitulo}:{v}",
         ))
     return legendas
+
+
+# ── Qual arquivo é a legenda mestre ───────────────────────────────────────────
+
+def escolher_legenda_mestre(
+    nome_oficial: str,
+    legados: tuple[str, ...],
+    existe,
+) -> tuple[str, Optional[str]]:
+    """Resolve QUAL arquivo é a legenda mestre, devolvendo (nome, aviso).
+
+    `existe` é uma função nome -> bool: quem chama é que sabe olhar o Drive.
+    Fica assim pra esta decisão ser testável sem Drive nenhum -- ela é o
+    contrato de todo o nível 2, e contrato que só dá pra conferir rodando o
+    pipeline inteiro ninguém confere.
+
+    A ordem é: o nome oficial (`<nome>_mestre.srt`) primeiro; se não existir,
+    os lugares onde a mestre morava antes de ter nome próprio, e aí SEMPRE com
+    aviso. Um arquivo virar mestre em silêncio é o defeito que este nome
+    próprio existe pra impedir.
+    """
+    if existe(nome_oficial):
+        return nome_oficial, None
+
+    for nome in legados:
+        if nome != nome_oficial and existe(nome):
+            return nome, (
+                f"'{nome_oficial}' não está no Drive, então a mestre desta vez é "
+                f"'{nome}' (era ali que ela morava antes de ter nome próprio). "
+                f"Rode a célula 'PROMOVER A MESTRE' do caption-single-revisar.ipynb "
+                f"pra fixar isso — enquanto não rodar, qual arquivo manda depende "
+                f"de quais existem na pasta.")
+
+    return nome_oficial, (
+        f"não achei nem '{nome_oficial}' nem nenhum dos antigos "
+        f"({', '.join(legados)}) no Drive.")
