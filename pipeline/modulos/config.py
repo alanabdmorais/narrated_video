@@ -552,6 +552,17 @@ class PipelineConfig:
         rodar o Stanza/Kiwi de novo pra esse idioma."""
         return f"{self.NOME_ORACAO}_classificacao_multicolor_{lang}.json"
 
+    def nome_revisao_classes(self) -> str:
+        """CSV com TODAS as peças de TODOS os idiomas da legenda multicor --
+        uma linha por peça, pra abrir no Sheets, corrigir a coluna `classe` e
+        subir de volta antes de gerar o .ass (ver revisao_classes.py)."""
+        return f"{self.NOME_ORACAO}_classes_revisar.csv"
+
+    def nome_pagina_revisao_classes(self) -> str:
+        """Página HTML com a legenda multicor pintada com as cores de verdade,
+        pra achar o erro de classe sem precisar assistir o vídeo."""
+        return f"{self.NOME_ORACAO}_classes_revisar.html"
+
     def nome_match_json(self, capitulo: int) -> str:
         """JSON com o resultado do match versículo↔vídeo/imagem (match-scene-verse.ipynb)."""
         return f"match_{self.NOME_ORACAO}_cap{capitulo}.json"

@@ -34,10 +34,17 @@ from cores import cor_html as cor_html_classe
 class PecaColorida(NamedTuple):
     """Um pedaço de texto com sua classe gramatical, pronto pra renderizar.
     `colado_anterior=True` = sem espaço antes desse pedaço (só pro coreano,
-    pedaços 2+ da mesma palavra escrita)."""
+    pedaços 2+ da mesma palavra escrita).
+
+    `upos` é o rótulo CRU do analisador (Stanza: PROPN, ADP, SCONJ...; Kiwi:
+    NNP, JKS, EF...). Não entra na cor -- existe pra revisão poder distinguir
+    "o analisador errou" de "a regra mapeou errado", que pedem conserto em
+    lugares diferentes. Opcional: fica "" em classificação salva antes disto.
+    """
     texto: str
     classe: str
     colado_anterior: bool = False
+    upos: str = ""
 
 
 _ASS_HEADER = """[Script Info]
@@ -182,7 +189,8 @@ def salvar_classificacao_multicolor(blocos: list[dict], caminho_saida: Path | st
             "inicio_ms": bloco["inicio_ms"],
             "fim_ms": bloco["fim_ms"],
             "pecas": [
-                {"texto": p.texto, "classe": p.classe, "colado_anterior": p.colado_anterior}
+                {"texto": p.texto, "classe": p.classe,
+                 "colado_anterior": p.colado_anterior, "upos": p.upos}
                 for p in bloco.get("pecas", [])
             ],
         }
@@ -231,7 +239,8 @@ def carregar_classificacao_multicolor(caminho: Path | str) -> list[dict]:
             "inicio_ms": bloco["inicio_ms"],
             "fim_ms": bloco["fim_ms"],
             "pecas": [
-                PecaColorida(p["texto"], p["classe"], p.get("colado_anterior", False))
+                PecaColorida(p["texto"], p["classe"], p.get("colado_anterior", False),
+                             p.get("upos", ""))
                 for p in bloco.get("pecas", [])
             ],
         }

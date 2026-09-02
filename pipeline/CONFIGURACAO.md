@@ -1062,6 +1062,106 @@ por outro texto. Um limiar que nunca recusa nada não protege nada.
 do YouTube dele que é a grade. Sem ela o `redistribuir_idiomas()` avisa e cai na
 proporcional -- não quebra, mas volta dos 96% pros 57%.
 
+### O erro de classificação é mudo — as três camadas contra ele
+
+O Stanza e o Kiwi erram, e o modo de errar é o pior possível: sai uma cor
+plausível, nada falha, e o defeito aparece assistindo o vídeo pronto. Três
+camadas agora, em ordem de quanto poupam de trabalho humano.
+
+#### 1. Correção automática (célula 4)
+
+`revisao_classes.corrigir_pontuacao()` — invariante **mecânica**, não
+linguística: peça só de sinais é pontuação, peça com letra não é. No Mateus 2
+não corrige nada (as 3.349 peças já respeitam) — é guarda, não conserto.
+Existe porque o erro aqui é invisível: a classe `outro` do Kiwi (tag
+imprevista) sai **cinza, a mesma cor da pontuação**.
+
+`revisao_classes.aplicar_excecoes()` — o léxico versionado em
+`dados_lexico/classes-excecoes.json`. Cada regra é `{palavra, de, para,
+porque}`, e é o `de` (a classe que o analisador devolveu) que a torna
+**condicional**: sem ele, uma entrada pra "a" pintaria de preposição todo
+artigo "a" do capítulo.
+
+> **Começa vazio, de propósito.** Auditei o Mateus 2 inteiro procurando
+> entrada pra semear e não achei nenhuma que eu conseguisse defender: dos 25
+> casos de "mesma palavra, classes diferentes", quase todos eram ambiguidade
+> legítima (`es «los»` é pronome em *"los envió"*; `ko «가»` é partícula e
+> verbo). Semear com palpite seria a armadilha de sempre — regra que dispara
+> em conteúdo legítimo ensina a ignorar a regra. As primeiras entradas saem
+> das correções manuais reais, via `sugerir_excecoes()`.
+
+As três regras que já existiam (preposição de infinitivo, pronome no
+vocativo, partícula do inglês) ficaram em `classificacao.py`, não aqui:
+dependem do **contexto** — do que vem depois —, e o léxico só olha a palavra.
+
+#### 2. A lista de suspeitas (célula 5)
+
+Apontar onde olhar, em vez de pedir que alguém leia 3.300 peças. Três regras,
+calibradas contra o Mateus 2 inteiro decodificado do `.ass`:
+
+| regra | o que aponta | disparos |
+|---|---|---|
+| sem regra | o analisador devolveu etiqueta que o classificador não trata — a cor saiu de um chute (`upos` fora de `_UPOS_COM_REGRA`, ou o `outro` do Kiwi) | 0 neste capítulo |
+| classe instável | a mesma palavra recebeu outra classe no resto da legenda (minoria ≤2 contra maioria ≥3) | 25 |
+| classe rara | classe com até 3 ocorrências no idioma inteiro | 14 |
+| **total** | | **39 em 3.349 peças (1,2%)** |
+
+1,2% é o número que importa: dá pra ler em cinco minutos. Uma lista que
+aponta 30% das peças ninguém abre duas vezes.
+
+**Não é lista de erro.** Ambiguidade legítima entra junto: `pt «que» = artigo`
+em *"a que horas a estrela apareceu"* é DET pelo Universal Dependencies e o
+projeto pinta DET de artigo — está certo. O controle positivo é que a lista
+apontou os **dois erros que já conhecíamos** e que a auditoria anterior tinha
+achado à mão: `pt «Tu» = interjeicao` (vocativo) e `pt «a» = conjuncao`
+(preposição de infinitivo).
+
+Pra isso funcionar, `PecaColorida` ganhou `upos` — o rótulo cru do analisador
+(`PROPN`, `SCONJ`, `NNP`, `JKS`...). Não entra na cor. Serve pra distinguir
+**"o analisador errou"** de **"a regra mapeou errado"**, que se consertam em
+lugares diferentes — e é como se descobre a peça que caiu no `return
+"adverbio"` do fim de `classificar_palavra_stanza()`, hoje indistinguível de
+um advérbio de verdade.
+
+#### 3. A correção manual (células 5 e 6)
+
+Dois arquivos, com papéis separados de propósito:
+
+- **`<nome>_classes_revisar.html`** é pra **achar**. Nome de classe não é o
+  que se enxerga: o erro aparece quando "Herodes" sai preto no meio de nomes
+  próprios amarelos. A página mostra a legenda pintada com as cores de
+  verdade, os 5 idiomas empilhados como no vídeo, com as suspeitas
+  tracejadas em vermelho.
+- **`<nome>_classes_revisar.csv`** é pra **corrigir**. Uma linha por peça,
+  todos os idiomas, aberto no Sheets. Só a coluna `classe` deve mudar. O
+  arquivo é autossuficiente (leva tempo, ordem e `colado_anterior`), então a
+  volta reconstrói a classificação sem depender do JSON.
+
+`importar_csv()` **recusa** em vez de aceitar torto — classe inexistente,
+coluna apagada, bloco com buraco. O motivo é o mesmo de sempre: uma classe
+com erro de digitação viraria cinza no vídeo, do jeitinho de uma pontuação.
+
+#### Pra correção não morrer com o vídeo
+
+`sugerir_excecoes()` transforma as correções manuais em entradas prontas pro
+léxico — mas só as que **se repetiram**. Correção que aconteceu uma vez só
+costuma ser questão de contexto, e virar regra fixa espalharia o erro pelo
+resto da Bíblia.
+
+O léxico mora no **repositório**, não no Drive: o sincronizador copia
+`dados_lexico/` por cima, então editar a cópia do Drive perde na próxima
+sincronização.
+
+#### O que ficou de fora, e por quê
+
+Uma quarta regra de suspeita seria **nome próprio num idioma e não nos
+outros**, no mesmo bloco — possível agora que a âncora da grade alinhou os
+idiomas. Não entrou porque **não dá pra calibrar hoje**: o único `.ass`
+classificado que existe é o da distribuição antiga, em que os blocos ainda
+não correspondiam entre idiomas, e a regra dispararia por desalinhamento, não
+por erro de classe. Entra depois da próxima rodada, quando houver dado
+alinhado e classificado pra medir o falso positivo.
+
 ### Espaço fino entre morfemas coreanos
 
 Na mesma queima, as sílabas coreanas saíram espremidas. A causa é geométrica:

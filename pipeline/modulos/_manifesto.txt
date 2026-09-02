@@ -26,6 +26,7 @@ pixabay_seed_pipeline.py
 pixabay_urls.py
 qualidade.py
 renderizacao.py
+revisao_classes.py
 srt_utils.py
 tempos_cache.py
 trilha_pipeline.py
