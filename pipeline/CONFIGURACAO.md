@@ -1082,17 +1082,76 @@ porque}`, e é o `de` (a classe que o analisador devolveu) que a torna
 **condicional**: sem ele, uma entrada pra "a" pintaria de preposição todo
 artigo "a" do capítulo.
 
-> **Começa vazio, de propósito.** Auditei o Mateus 2 inteiro procurando
+> **Começou vazio, de propósito.** Auditei o Mateus 2 inteiro procurando
 > entrada pra semear e não achei nenhuma que eu conseguisse defender: dos 25
 > casos de "mesma palavra, classes diferentes", quase todos eram ambiguidade
 > legítima (`es «los»` é pronome em *"los envió"*; `ko «가»` é partícula e
 > verbo). Semear com palpite seria a armadilha de sempre — regra que dispara
 > em conteúdo legítimo ensina a ignorar a regra. As primeiras entradas saem
-> das correções manuais reais, via `sugerir_excecoes()`.
+> das correções manuais reais, via `sugerir_excecoes()` — e a primeira
+> (`fr lève-toi`) veio exatamente assim, de um defeito visto na tela.
 
 As três regras que já existiam (preposição de infinitivo, pronome no
 vocativo, partícula do inglês) ficaram em `classificacao.py`, não aqui:
 dependem do **contexto** — do que vem depois —, e o léxico só olha a palavra.
+
+#### 1b. As duas primeiras correções vieram de olhar a legenda queimada
+
+A Alana apontou dois defeitos assistindo o vídeo. Os dois se confirmaram, e um
+deles não era o que parecia.
+
+**«para que» saindo de duas cores.** Duas palavras que funcionam como UMA
+conjunção, e o analisador olha cada uma sozinha. Medido no Mateus 2:
+
+| | como saía |
+|---|---|
+| pt | `«para»=conjuncao «que»=conjuncao` ✅ |
+| es | `«para»=preposicao «que»=conjuncao` ❌ |
+| fr | `«afin»=adverbio «que»=conjuncao` ❌ |
+| pt | `«até»=preposicao «que»=conjuncao` ❌ |
+
+A mesma locução saía de cores diferentes conforme o idioma.
+`unificar_locucoes()` pinta as duas de conjunção — 11 correções no capítulo,
+e nenhuma peça fora dessas mudou. Mora em `revisao_classes.py`, não no
+léxico: precisa da sequência, e o léxico só olha uma palavra por vez.
+"por que" ficou fora de propósito (é interrogativo, não conjunção), e locução
+de três palavras ("de modo que", "jusqu'à ce que") também.
+
+**O clítico colado ao verbo.** Ela imaginou que "prostraram-**se**" tivesse o
+"se" pintado de verbo. É pior: **o "se" não tem peça nenhuma.** O Stanza
+devolve `prostraram-se` como UM token com duas palavras sintáticas dentro, o
+notebook usa o token (pra não exibir "em os dias" no lugar de "nos dias"), e
+a palavra inteira sai vermelha. São **13 casos só no português do Mateus 2**:
+`adorá-lo`, `perguntou-lhes`, `Disseram-lhe`, `avisem-me`, `alegraram-se`,
+`prostraram-se`, `ofereceram-lhe`, `Levanta-te`, `matá-lo`, `Ouve-se`,
+`retirou-se`.
+
+`separar_por_hifen()` reparte quando — e só quando — **o hífen já separa as
+duas na tela**:
+
+```
+separar_por_hifen("prostraram-se", 2)  -> ["prostraram-", "se"]
+separar_por_hifen("dá-lo-ei", 3)       -> ["dá-", "lo-", "ei"]
+separar_por_hifen("da", 2)             -> None   (contração: sem fronteira visível)
+separar_por_hifen("guarda-chuva", 1)   -> None   (uma palavra sintática só)
+```
+
+É a mesma regra de sempre — *o que aparece na tela é o que está escrito no
+SRT* — e ela **permite** este corte em vez de proibi-lo: o texto não muda uma
+letra, muda só onde a cor troca. A parte 2 vai com `colado_anterior=True`, o
+mesmo mecanismo do coreano.
+
+> O francês faz diferente sozinho: separa em dois tokens com o hífen na
+> frente (`Lève` + `-toi`). Fica assim mesmo — forçar uma convenção só mudaria
+> de lado um hífen que já está certo nos dois casos.
+
+**O caso que nenhuma das duas resolve** virou a primeira entrada do léxico. No
+bloco 23 o francês dá `«Lève»[verbo] + «-toi»[pronome]`; no bloco 38, a MESMA
+frase sai `«Lève-toi»` inteiro como **nome próprio** — amarelo, a cor que
+grita "isto é um nome". Não dá pra consertar pelo hífen (o Stanza não expandiu
+o token, então não há o que separar), e não é erro de mapeamento: é o
+analisador errando. Verbo é o menos errado, e é o que está em
+`classes-excecoes.json`.
 
 #### 2. A lista de suspeitas (célula 5)
 

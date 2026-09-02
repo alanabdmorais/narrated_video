@@ -117,6 +117,65 @@ def aplicar_excecoes(
     return saida, mudancas
 
 
+# ── Locução conjuntiva ────────────────────────────────────────────────────
+# "para que", "hasta que", "afin que": duas palavras que funcionam como UMA
+# conjunção. O analisador olha cada uma sozinha e devolve classes diferentes
+# -- no Mateus 2, `es «para»=preposicao «que»=conjuncao` e `fr «afin»=adverbio
+# «que»=conjuncao`, enquanto o português já dava conjunção nas duas. A mesma
+# locução saía de cores diferentes conforme o idioma.
+#
+# Só entram aqui as que SEMPRE formam locução com a segunda palavra. "por
+# que" ficou de fora de propósito: é interrogativo, não conjunção. Locução de
+# três palavras ("de modo que", "jusqu'à ce que") também não entrou -- o
+# casamento aqui é de duas.
+_LOCUCOES_CONJUNTIVAS: dict[str, set[tuple[str, str]]] = {
+    "pt": {("para", "que"), ("até", "que"), ("desde", "que"), ("sem", "que"),
+           ("antes", "que"), ("depois", "que"), ("ainda", "que"), ("assim", "que"),
+           ("logo", "que"), ("visto", "que"), ("dado", "que"), ("posto", "que"),
+           ("já", "que"), ("caso", "que"), ("salvo", "que")},
+    "es": {("para", "que"), ("hasta", "que"), ("sin", "que"), ("antes", "que"),
+           ("después", "que"), ("desde", "que"), ("así", "que"), ("puesto", "que"),
+           ("dado", "que"), ("ya", "que"), ("mientras", "que"), ("aun", "que")},
+    "fr": {("afin", "que"), ("pour", "que"), ("avant", "que"), ("après", "que"),
+           ("sans", "que"), ("bien", "que"), ("parce", "que"), ("depuis", "que"),
+           ("alors", "que"), ("tandis", "que"), ("pendant", "que"), ("dès", "que")},
+    "en": {("so", "that"), ("now", "that"), ("provided", "that"), ("given", "that"),
+           ("such", "that"), ("except", "that")},
+}
+
+
+def unificar_locucoes(blocos: list[dict], idioma: str) -> tuple[list[dict], list[str]]:
+    """Pinta as duas palavras de uma locução conjuntiva da mesma cor.
+
+    Precisa da sequência inteira, não da palavra sozinha -- por isso mora
+    aqui e não no léxico, que só olha uma palavra por vez. Pela mesma razão
+    não dá pra fazer no classificar_palavra_stanza sem passar a palavra
+    vizinha pra dentro dele.
+
+    Só age quando as duas peças estão no MESMO bloco: locução partida entre
+    dois blocos não aparece junta na tela, e pintar metade não ajuda ninguém.
+    """
+    pares = _LOCUCOES_CONJUNTIVAS.get(idioma, set())
+    if not pares:
+        return blocos, []
+
+    saida, mudancas = [], []
+    for i, bloco in enumerate(blocos, 1):
+        pecas = list(bloco.get("pecas", []))
+        for j in range(len(pecas) - 1):
+            a, b = pecas[j], pecas[j + 1]
+            if (_forma(a.texto), _forma(b.texto)) not in pares:
+                continue
+            for k, peca in ((j, a), (j + 1, b)):
+                if peca.classe != "conjuncao":
+                    pecas[k] = peca._replace(classe="conjuncao")
+                    mudancas.append(
+                        f"bloco {i}: «{peca.texto}» {peca.classe} → conjuncao "
+                        f"(locução «{a.texto} {b.texto}»)")
+        saida.append({**bloco, "pecas": pecas})
+    return saida, mudancas
+
+
 def corrigir_pontuacao(blocos: list[dict]) -> tuple[list[dict], list[str]]:
     """Invariante mecânica, não linguística: peça só de sinais é pontuação, e
     peça com letra ou dígito não é.

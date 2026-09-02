@@ -29,7 +29,14 @@
   "pt": [],
   "en": [],
   "es": [],
-  "fr": [],
+  "fr": [
+    {
+      "palavra": "lève-toi",
+      "de": "nome_proprio",
+      "para": "verbo",
+      "porque": "No Mateus 2 o Stanza analisa a MESMA frase de dois jeitos: no bloco 23 sai «Lève»[verbo] + «-toi»[pronome], certo, e no bloco 38 sai «Lève-toi» inteiro como nome próprio -- amarelo, a cor que grita 'isto é um nome'. Provavelmente porque começa a frase e vem com maiúscula. Não dá pra consertar pelo hífen (o Stanza não expandiu o token em duas palavras, então não há o que separar), e 'lève-toi' não é nome próprio em francês nenhum. Verbo é o menos errado: perde o roxo do 'toi', mas não inventa um nome."
+    }
+  ],
   "ko": [],
   "zh": []
 }

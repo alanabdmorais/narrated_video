@@ -48,6 +48,41 @@ _PRONOMES_QUE_VIRAM_VOCATIVO = {
 }
 
 
+# ═══════════════════════════════════════════════════════════════════════════
+# Clítico colado ao verbo por hífen
+# ══════════════════════════════════════════════════════════════════════════
+# "prostraram-se", "adorá-lo", "Levanta-te": o Stanza devolve UM token, com
+# duas palavras sintáticas dentro (o verbo e o pronome). O notebook usa o
+# token pra não exibir a forma subjacente ("em os dias" no lugar de "nos
+# dias") -- mas aqui a forma subjacente e a escrita são a MESMA coisa: o
+# hífen já separa as duas na tela. Sem separar, "prostraram-se" sai vermelho
+# inteiro e o pronome nunca ganha o roxo dele. São 13 casos só no Mateus 2.
+#
+# A contração NÃO entra aqui, e é por isso que a regra pede hífen: "da" é
+# de+a sem nenhuma fronteira visível, então tem que continuar sendo uma peça
+# só, com a cor da preposição.
+
+
+def separar_por_hifen(texto: str, n_palavras: int) -> list[str] | None:
+    """Reparte o texto de um token nas partes que o hífen já separa, uma por
+    palavra sintática. Devolve None quando não dá pra casar -- e aí quem chama
+    segue com a peça inteira, como antes.
+
+    O hífen fica no fim da parte anterior, que é onde ele está escrito:
+
+        separar_por_hifen("prostraram-se", 2)  -> ["prostraram-", "se"]
+        separar_por_hifen("dá-lo-ei", 3)       -> ["dá-", "lo-", "ei"]
+        separar_por_hifen("da", 2)             -> None   (contração)
+        separar_por_hifen("guarda-chuva", 1)   -> None   (uma palavra só)
+    """
+    if n_palavras < 2 or "-" not in texto:
+        return None
+    partes = texto.split("-")
+    if len(partes) != n_palavras or not all(p.strip() for p in partes):
+        return None
+    return [p + "-" for p in partes[:-1]] + [partes[-1]]
+
+
 def parse_feats(feats_str: str) -> dict[str, str]:
     if not feats_str or not isinstance(feats_str, str):
         return {}
