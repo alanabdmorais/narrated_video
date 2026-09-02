@@ -237,7 +237,8 @@ JORNADAS: tuple[Jornada, ...] = (
         titulo="Nível 1 · legenda única",
         quando="O vídeo mais simples que dá pra publicar — e o SRT que ele "
                "gera é pré-requisito de quase todo o resto.",
-        entrega="`<nome>_final[_img].mp4` + o SRT mestre `<nome>_whisper_<mestre>.srt`.",
+        entrega="`<nome>_final[_img].mp4` + a LEGENDA MESTRE `<nome>_mestre.srt`, "
+                "que é o contrato de segmentação dos níveis 2 e 3.",
         # Sem `depende_de` de propósito: o `generate` precisa só da NARRAÇÃO
         # (`<nome>_audio.wav`), que é a etapa 6 de qualquer notebook de vídeo
         # base -- não do vídeo base pronto. Pôr "base-padrao" aqui faria o mapa
@@ -248,18 +249,23 @@ JORNADAS: tuple[Jornada, ...] = (
                   nota="Já lista onde o Whisper discorda do roteiro do capítulo. "
                        "Vale baixar, corrigir e resubir com o mesmo nome — "
                        "Whisper sempre pede uma passada."),
-            Passo("caption-single-revisar", "as trocas a fazer no SRT, pra você aplicar",
-                  nota="OPCIONAL: toca o trecho do áudio de cada divergência. Só o "
-                       "áudio separa 'o Whisper errou' de 'o Dave leu diferente' — "
-                       "sem ouvir, vale a regra 'faz sentido em inglês? sim fica o "
-                       "Whisper, não vai pro roteiro'."),
+            Passo("caption-single-revisar",
+                  "as trocas a fazer no SRT + `<nome>_mestre.srt`",
+                  nota="Ouvir cada divergência é opcional (só o áudio separa 'o "
+                       "Whisper errou' de 'o Dave leu diferente'; sem ouvir, vale a "
+                       "regra 'faz sentido em inglês? sim fica o Whisper, não vai pro "
+                       "roteiro'). A ÚLTIMA célula não é: é ela que promove o SRT "
+                       "corrigido a `<nome>_mestre.srt`, e é esse arquivo que os "
+                       "níveis 2 e 3 seguem."),
             Passo("caption-single-burn", "`<nome>_final[_img].mp4`"),
         ),
-        armadilha="Os dois passos precisam de coisas diferentes: o `generate` "
+        armadilha="Os três passos precisam de coisas diferentes: o `generate` "
                   "precisa só da narração (etapa 6 de qualquer notebook de vídeo "
-                  "base), o `burn` precisa do vídeo base pronto. E é o `generate` "
-                  "que é pré-requisito dos níveis 2 e 3 — o `burn` não é "
-                  "pré-requisito de nada.",
+                  "base), o `burn` precisa do vídeo base pronto. Pros níveis 2 e 3 "
+                  "o pré-requisito é a PROMOÇÃO a mestre (última célula do "
+                  "`revisar`) — o `burn` não é pré-requisito de nada. Sem promover, "
+                  "eles caem no `<nome>_whisper_<mestre>.srt` avisando, que é onde a "
+                  "mestre morava antes de ter nome próprio.",
     ),
 
     Jornada(
@@ -271,8 +277,10 @@ JORNADAS: tuple[Jornada, ...] = (
                "automática — é de lá que sai o texto de cada idioma.",
         entrega="`<nome>_final_idiomas[_img].mp4` + um `<nome>_<lang>.srt` por idioma.",
         depende_de=("legenda-unica",),
-        custo="O `generate` usa IA (Mistral, com Groq de reserva) pra "
-              "redistribuir cada idioma nos blocos do mestre.",
+        custo="Nenhum: nem chave de API nem GPU. A repartição era por IA e hoje "
+              "é ancorada na GRADE de tempos das legendas do YouTube (as faixas "
+              "de um mesmo vídeo compartilham a mesma grade, o que dá uma âncora "
+              "exata entre idiomas), com repartição proporcional de reserva.",
         armadilha="O texto dos outros idiomas NÃO é traduzido aqui — é colhido "
                   "da dublagem automática e das legendas de um vídeo que já "
                   "está no YouTube (`URL_YOUTUBE`). Num capítulo inédito, você "
@@ -284,7 +292,9 @@ JORNADAS: tuple[Jornada, ...] = (
                   ou=("caption-multilang-zh-sources-gather",),
                   nota="Pede `URL_YOUTUBE` na Configuração. Duas fontes de texto "
                        "por idioma; você escolhe qual confia mais em "
-                       "`FONTE_TEXTO_IDIOMA`."),
+                       "`FONTE_TEXTO_IDIOMA` (o padrão é `yt`, e só ele TEM grade). "
+                       "MANTENHA o idioma mestre na lista: a legenda do YouTube "
+                       "dele é a grade que alinha todos os outros."),
             Passo("caption-multilang-generate", "`<nome>_<lang>.srt` por idioma",
                   ou=("caption-multilang-zh-generate",)),
             Passo("caption-multilang-burn", "`<nome>_final_idiomas[_img].mp4`",
@@ -300,23 +310,37 @@ JORNADAS: tuple[Jornada, ...] = (
         titulo="Nível 3 · legenda multicor, uma cor por classe gramatical",
         quando="O carro-chefe do canal: cada palavra pintada pela função que "
                "exerce na frase.",
-        entrega="`<nome>_final_multicolor[_img].mp4`, mais o `.ass` e a "
-                "classificação por idioma em JSON.",
+        entrega="`<nome>_final_multicolor[_img].mp4`, mais o `.ass`, a "
+                "classificação por idioma em JSON, a ANÁLISE BRUTA do "
+                "Stanza/Kiwi e o par de arquivos da revisão (HTML pra achar o "
+                "erro de cor, CSV pra corrigir).",
         depende_de=("multi-idioma",),
-        custo="Stanza (latinos) + Kiwi (coreano). O JSON de classificação fica "
-              "salvo: rodar de novo reaproveita em vez de reclassificar.",
+        custo="Stanza (latinos) + Kiwi (coreano), CPU. Só na PRIMEIRA vez: o "
+              "bruto do analisador fica salvo, e rodar de novo remapeia a partir "
+              "dele em segundos — inclusive aplicando regra de cor que mudou "
+              "desde então, sem apagar o que você corrigiu à mão.",
         passos=(
             Passo("caption-multicolor-generate",
-                  "`legendas_<nome>.ass` + `<nome>_classificacao_multicolor_<lang>.json`",
+                  "`legendas_<nome>.ass`, `<nome>_classificacao_multicolor_<lang>.json`, "
+                  "`<nome>_analise_bruta_<lang>.json` e `<nome>_classes_revisar.{html,csv}`",
                   ou=("caption-multicolor-zh-generate",),
-                  nota="A variante `-zh-` sai como `legendas_<nome>_zh.ass`."),
+                  nota="Quatro camadas dentro dele: bruto (a origem), mapeamento, "
+                       "central de correções automáticas "
+                       "(`dados_lexico/classes-correcoes.json`) e a sua correção "
+                       "manual pelo CSV. A célula 5 aponta ONDE olhar em vez de "
+                       "pedir que você leia milhares de peças. A variante `-zh-` "
+                       "sai como `legendas_<nome>_zh.ass`."),
             Passo("caption-multicolor-burn", "`<nome>_final_multicolor[_img].mp4`",
                   nota="UM notebook serve as duas variantes: ele lê o sufixo `_zh` "
                        "do nome do `.ass` que você enviar e grava a saída "
                        "correspondente. Por isso não existe `-zh-burn`."),
         ),
         armadilha="Precisa dos `<nome>_<lang>.srt` do nível 2 — a classificação "
-                  "roda em cima do texto já distribuído por idioma.",
+                  "roda em cima do texto já distribuído por idioma. Se a legenda "
+                  "mudar depois, o bruto e a classificação salvos são DESCARTADOS "
+                  "sozinhos (eles conferem o texto contra o SRT atual): sem isso o "
+                  "vídeo sairia exibindo as palavras da versão anterior, com o SRT "
+                  "novo parado ao lado.",
     ),
 
     # ── APOIO ────────────────────────────────────────────────────────────

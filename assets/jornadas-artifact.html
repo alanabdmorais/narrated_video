@@ -248,14 +248,14 @@ table.simples th{font-family:'IBM Plex Mono',monospace;font-size:11px;
         </div>
         <div class="j-corpo">
           <div class="linha"><div class="rot">quando</div><div class="val">O vídeo mais simples que dá pra publicar — e o SRT que ele gera é pré-requisito de quase todo o resto.</div></div>
-          <div class="linha"><div class="rot">entrega</div><div class="val">`&lt;nome&gt;_final[_img].mp4` + o SRT mestre `&lt;nome&gt;_whisper_&lt;mestre&gt;.srt`.</div></div>
+          <div class="linha"><div class="rot">entrega</div><div class="val">`&lt;nome&gt;_final[_img].mp4` + a LEGENDA MESTRE `&lt;nome&gt;_mestre.srt`, que é o contrato de segmentação dos níveis 2 e 3.</div></div>
 
           <ol class="passos">
 <li><div><div class="passo-nb"><code>caption-single-generate</code></div><div class="passo-produz">→ `&lt;nome&gt;_whisper_&lt;mestre&gt;.srt`</div><div class="passo-nota">Já lista onde o Whisper discorda do roteiro do capítulo. Vale baixar, corrigir e resubir com o mesmo nome — Whisper sempre pede uma passada.</div></div></li>
-<li><div><div class="passo-nb"><code>caption-single-revisar</code></div><div class="passo-produz">→ as trocas a fazer no SRT, pra você aplicar</div><div class="passo-nota">OPCIONAL: toca o trecho do áudio de cada divergência. Só o áudio separa &#x27;o Whisper errou&#x27; de &#x27;o Dave leu diferente&#x27; — sem ouvir, vale a regra &#x27;faz sentido em inglês? sim fica o Whisper, não vai pro roteiro&#x27;.</div></div></li>
+<li><div><div class="passo-nb"><code>caption-single-revisar</code></div><div class="passo-produz">→ as trocas a fazer no SRT + `&lt;nome&gt;_mestre.srt`</div><div class="passo-nota">Ouvir cada divergência é opcional (só o áudio separa &#x27;o Whisper errou&#x27; de &#x27;o Dave leu diferente&#x27;; sem ouvir, vale a regra &#x27;faz sentido em inglês? sim fica o Whisper, não vai pro roteiro&#x27;). A ÚLTIMA célula não é: é ela que promove o SRT corrigido a `&lt;nome&gt;_mestre.srt`, e é esse arquivo que os níveis 2 e 3 seguem.</div></div></li>
 <li><div><div class="passo-nb"><code>caption-single-burn</code></div><div class="passo-produz">→ `&lt;nome&gt;_final[_img].mp4`</div></div></li>
           </ol>
-<div class="armadilha">⚠️ Os dois passos precisam de coisas diferentes: o `generate` precisa só da narração (etapa 6 de qualquer notebook de vídeo base), o `burn` precisa do vídeo base pronto. E é o `generate` que é pré-requisito dos níveis 2 e 3 — o `burn` não é pré-requisito de nada.</div>
+<div class="armadilha">⚠️ Os três passos precisam de coisas diferentes: o `generate` precisa só da narração (etapa 6 de qualquer notebook de vídeo base), o `burn` precisa do vídeo base pronto. Pros níveis 2 e 3 o pré-requisito é a PROMOÇÃO a mestre (última célula do `revisar`) — o `burn` não é pré-requisito de nada. Sem promover, eles caem no `&lt;nome&gt;_whisper_&lt;mestre&gt;.srt` avisando, que é onde a mestre morava antes de ter nome próprio.</div>
         </div>
       </article>
       <article class="j" data-tipo="vídeo">
@@ -266,9 +266,9 @@ table.simples th{font-family:'IBM Plex Mono',monospace;font-size:11px;
         <div class="j-corpo">
           <div class="linha"><div class="rot">quando</div><div class="val">O vídeo poliglota simples: uma linha por idioma, empilhadas, inglês no topo. Exige um vídeo NO YOUTUBE com dublagem automática — é de lá que sai o texto de cada idioma.</div></div>
           <div class="linha"><div class="rot">entrega</div><div class="val">`&lt;nome&gt;_final_idiomas[_img].mp4` + um `&lt;nome&gt;_&lt;lang&gt;.srt` por idioma.</div></div>
-<div class="linha"><div class="rot">depende de</div><div class="val deps"><span class="dep">legenda-unica</span></div></div><div class="linha"><div class="rot">custo</div><div class="val">O `generate` usa IA (Mistral, com Groq de reserva) pra redistribuir cada idioma nos blocos do mestre.</div></div>
+<div class="linha"><div class="rot">depende de</div><div class="val deps"><span class="dep">legenda-unica</span></div></div><div class="linha"><div class="rot">custo</div><div class="val">Nenhum: nem chave de API nem GPU. A repartição era por IA e hoje é ancorada na GRADE de tempos das legendas do YouTube (as faixas de um mesmo vídeo compartilham a mesma grade, o que dá uma âncora exata entre idiomas), com repartição proporcional de reserva.</div></div>
           <ol class="passos">
-<li><div><div class="passo-nb"><code>caption-multilang-sources-gather</code><br>ou <code>caption-multilang-zh-sources-gather</code></div><div class="passo-produz">→ `&lt;nome&gt;_yt_&lt;lang&gt;.srt`, `&lt;nome&gt;_audio_&lt;lang&gt;.wav`, `&lt;nome&gt;_whisper_&lt;lang&gt;.srt`</div><div class="passo-nota">Pede `URL_YOUTUBE` na Configuração. Duas fontes de texto por idioma; você escolhe qual confia mais em `FONTE_TEXTO_IDIOMA`.</div></div></li>
+<li><div><div class="passo-nb"><code>caption-multilang-sources-gather</code><br>ou <code>caption-multilang-zh-sources-gather</code></div><div class="passo-produz">→ `&lt;nome&gt;_yt_&lt;lang&gt;.srt`, `&lt;nome&gt;_audio_&lt;lang&gt;.wav`, `&lt;nome&gt;_whisper_&lt;lang&gt;.srt`</div><div class="passo-nota">Pede `URL_YOUTUBE` na Configuração. Duas fontes de texto por idioma; você escolhe qual confia mais em `FONTE_TEXTO_IDIOMA` (o padrão é `yt`, e só ele TEM grade). MANTENHA o idioma mestre na lista: a legenda do YouTube dele é a grade que alinha todos os outros.</div></div></li>
 <li><div><div class="passo-nb"><code>caption-multilang-generate</code><br>ou <code>caption-multilang-zh-generate</code></div><div class="passo-produz">→ `&lt;nome&gt;_&lt;lang&gt;.srt` por idioma</div></div></li>
 <li><div><div class="passo-nb"><code>caption-multilang-burn</code><br>ou <code>caption-multilang-zh-burn</code></div><div class="passo-produz">→ `&lt;nome&gt;_final_idiomas[_img].mp4`</div><div class="passo-nota">A variante `-zh-` grava com sufixo `_zh`, então as duas versões convivem na mesma pasta.</div></div></li>
           </ol>
@@ -282,13 +282,13 @@ table.simples th{font-family:'IBM Plex Mono',monospace;font-size:11px;
         </div>
         <div class="j-corpo">
           <div class="linha"><div class="rot">quando</div><div class="val">O carro-chefe do canal: cada palavra pintada pela função que exerce na frase.</div></div>
-          <div class="linha"><div class="rot">entrega</div><div class="val">`&lt;nome&gt;_final_multicolor[_img].mp4`, mais o `.ass` e a classificação por idioma em JSON.</div></div>
-<div class="linha"><div class="rot">depende de</div><div class="val deps"><span class="dep">multi-idioma</span></div></div><div class="linha"><div class="rot">custo</div><div class="val">Stanza (latinos) + Kiwi (coreano). O JSON de classificação fica salvo: rodar de novo reaproveita em vez de reclassificar.</div></div>
+          <div class="linha"><div class="rot">entrega</div><div class="val">`&lt;nome&gt;_final_multicolor[_img].mp4`, mais o `.ass`, a classificação por idioma em JSON, a ANÁLISE BRUTA do Stanza/Kiwi e o par de arquivos da revisão (HTML pra achar o erro de cor, CSV pra corrigir).</div></div>
+<div class="linha"><div class="rot">depende de</div><div class="val deps"><span class="dep">multi-idioma</span></div></div><div class="linha"><div class="rot">custo</div><div class="val">Stanza (latinos) + Kiwi (coreano), CPU. Só na PRIMEIRA vez: o bruto do analisador fica salvo, e rodar de novo remapeia a partir dele em segundos — inclusive aplicando regra de cor que mudou desde então, sem apagar o que você corrigiu à mão.</div></div>
           <ol class="passos">
-<li><div><div class="passo-nb"><code>caption-multicolor-generate</code><br>ou <code>caption-multicolor-zh-generate</code></div><div class="passo-produz">→ `legendas_&lt;nome&gt;.ass` + `&lt;nome&gt;_classificacao_multicolor_&lt;lang&gt;.json`</div><div class="passo-nota">A variante `-zh-` sai como `legendas_&lt;nome&gt;_zh.ass`.</div></div></li>
+<li><div><div class="passo-nb"><code>caption-multicolor-generate</code><br>ou <code>caption-multicolor-zh-generate</code></div><div class="passo-produz">→ `legendas_&lt;nome&gt;.ass`, `&lt;nome&gt;_classificacao_multicolor_&lt;lang&gt;.json`, `&lt;nome&gt;_analise_bruta_&lt;lang&gt;.json` e `&lt;nome&gt;_classes_revisar.{html,csv}`</div><div class="passo-nota">Quatro camadas dentro dele: bruto (a origem), mapeamento, central de correções automáticas (`dados_lexico/classes-correcoes.json`) e a sua correção manual pelo CSV. A célula 5 aponta ONDE olhar em vez de pedir que você leia milhares de peças. A variante `-zh-` sai como `legendas_&lt;nome&gt;_zh.ass`.</div></div></li>
 <li><div><div class="passo-nb"><code>caption-multicolor-burn</code></div><div class="passo-produz">→ `&lt;nome&gt;_final_multicolor[_img].mp4`</div><div class="passo-nota">UM notebook serve as duas variantes: ele lê o sufixo `_zh` do nome do `.ass` que você enviar e grava a saída correspondente. Por isso não existe `-zh-burn`.</div></div></li>
           </ol>
-<div class="armadilha">⚠️ Precisa dos `&lt;nome&gt;_&lt;lang&gt;.srt` do nível 2 — a classificação roda em cima do texto já distribuído por idioma.</div>
+<div class="armadilha">⚠️ Precisa dos `&lt;nome&gt;_&lt;lang&gt;.srt` do nível 2 — a classificação roda em cima do texto já distribuído por idioma. Se a legenda mudar depois, o bruto e a classificação salvos são DESCARTADOS sozinhos (eles conferem o texto contra o SRT atual): sem isso o vídeo sairia exibindo as palavras da versão anterior, com o SRT novo parado ao lado.</div>
         </div>
       </article>
       <article class="j" data-tipo="apoio">

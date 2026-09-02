@@ -183,15 +183,15 @@ flowchart LR
 
 **Tipo** vídeo · **Quando** O vídeo mais simples que dá pra publicar — e o SRT que ele gera é pré-requisito de quase todo o resto.
 
-**Entrega** `<nome>_final[_img].mp4` + o SRT mestre `<nome>_whisper_<mestre>.srt`.
+**Entrega** `<nome>_final[_img].mp4` + a LEGENDA MESTRE `<nome>_mestre.srt`, que é o contrato de segmentação dos níveis 2 e 3.
 
 | # | Notebook | Produz |
 |---|---|---|
 | 1 | `caption-single-generate`<br>Já lista onde o Whisper discorda do roteiro do capítulo. Vale baixar, corrigir e resubir com o mesmo nome — Whisper sempre pede uma passada. | `<nome>_whisper_<mestre>.srt` |
-| 2 | `caption-single-revisar`<br>OPCIONAL: toca o trecho do áudio de cada divergência. Só o áudio separa 'o Whisper errou' de 'o Dave leu diferente' — sem ouvir, vale a regra 'faz sentido em inglês? sim fica o Whisper, não vai pro roteiro'. | as trocas a fazer no SRT, pra você aplicar |
+| 2 | `caption-single-revisar`<br>Ouvir cada divergência é opcional (só o áudio separa 'o Whisper errou' de 'o Dave leu diferente'; sem ouvir, vale a regra 'faz sentido em inglês? sim fica o Whisper, não vai pro roteiro'). A ÚLTIMA célula não é: é ela que promove o SRT corrigido a `<nome>_mestre.srt`, e é esse arquivo que os níveis 2 e 3 seguem. | as trocas a fazer no SRT + `<nome>_mestre.srt` |
 | 3 | `caption-single-burn` | `<nome>_final[_img].mp4` |
 
-> ⚠️ Os dois passos precisam de coisas diferentes: o `generate` precisa só da narração (etapa 6 de qualquer notebook de vídeo base), o `burn` precisa do vídeo base pronto. E é o `generate` que é pré-requisito dos níveis 2 e 3 — o `burn` não é pré-requisito de nada.
+> ⚠️ Os três passos precisam de coisas diferentes: o `generate` precisa só da narração (etapa 6 de qualquer notebook de vídeo base), o `burn` precisa do vídeo base pronto. Pros níveis 2 e 3 o pré-requisito é a PROMOÇÃO a mestre (última célula do `revisar`) — o `burn` não é pré-requisito de nada. Sem promover, eles caem no `<nome>_whisper_<mestre>.srt` avisando, que é onde a mestre morava antes de ter nome próprio.
 
 ### `multi-idioma` — Nível 2 · legendas multi-idioma, uma cor por idioma
 
@@ -201,11 +201,11 @@ flowchart LR
 
 **Depende de** `legenda-unica`
 
-**Custo** O `generate` usa IA (Mistral, com Groq de reserva) pra redistribuir cada idioma nos blocos do mestre.
+**Custo** Nenhum: nem chave de API nem GPU. A repartição era por IA e hoje é ancorada na GRADE de tempos das legendas do YouTube (as faixas de um mesmo vídeo compartilham a mesma grade, o que dá uma âncora exata entre idiomas), com repartição proporcional de reserva.
 
 | # | Notebook | Produz |
 |---|---|---|
-| 1 | `caption-multilang-sources-gather`<br>ou `caption-multilang-zh-sources-gather`<br>Pede `URL_YOUTUBE` na Configuração. Duas fontes de texto por idioma; você escolhe qual confia mais em `FONTE_TEXTO_IDIOMA`. | `<nome>_yt_<lang>.srt`, `<nome>_audio_<lang>.wav`, `<nome>_whisper_<lang>.srt` |
+| 1 | `caption-multilang-sources-gather`<br>ou `caption-multilang-zh-sources-gather`<br>Pede `URL_YOUTUBE` na Configuração. Duas fontes de texto por idioma; você escolhe qual confia mais em `FONTE_TEXTO_IDIOMA` (o padrão é `yt`, e só ele TEM grade). MANTENHA o idioma mestre na lista: a legenda do YouTube dele é a grade que alinha todos os outros. | `<nome>_yt_<lang>.srt`, `<nome>_audio_<lang>.wav`, `<nome>_whisper_<lang>.srt` |
 | 2 | `caption-multilang-generate`<br>ou `caption-multilang-zh-generate` | `<nome>_<lang>.srt` por idioma |
 | 3 | `caption-multilang-burn`<br>ou `caption-multilang-zh-burn`<br>A variante `-zh-` grava com sufixo `_zh`, então as duas versões convivem na mesma pasta. | `<nome>_final_idiomas[_img].mp4` |
 
@@ -215,18 +215,18 @@ flowchart LR
 
 **Tipo** vídeo · **Quando** O carro-chefe do canal: cada palavra pintada pela função que exerce na frase.
 
-**Entrega** `<nome>_final_multicolor[_img].mp4`, mais o `.ass` e a classificação por idioma em JSON.
+**Entrega** `<nome>_final_multicolor[_img].mp4`, mais o `.ass`, a classificação por idioma em JSON, a ANÁLISE BRUTA do Stanza/Kiwi e o par de arquivos da revisão (HTML pra achar o erro de cor, CSV pra corrigir).
 
 **Depende de** `multi-idioma`
 
-**Custo** Stanza (latinos) + Kiwi (coreano). O JSON de classificação fica salvo: rodar de novo reaproveita em vez de reclassificar.
+**Custo** Stanza (latinos) + Kiwi (coreano), CPU. Só na PRIMEIRA vez: o bruto do analisador fica salvo, e rodar de novo remapeia a partir dele em segundos — inclusive aplicando regra de cor que mudou desde então, sem apagar o que você corrigiu à mão.
 
 | # | Notebook | Produz |
 |---|---|---|
-| 1 | `caption-multicolor-generate`<br>ou `caption-multicolor-zh-generate`<br>A variante `-zh-` sai como `legendas_<nome>_zh.ass`. | `legendas_<nome>.ass` + `<nome>_classificacao_multicolor_<lang>.json` |
+| 1 | `caption-multicolor-generate`<br>ou `caption-multicolor-zh-generate`<br>Quatro camadas dentro dele: bruto (a origem), mapeamento, central de correções automáticas (`dados_lexico/classes-correcoes.json`) e a sua correção manual pelo CSV. A célula 5 aponta ONDE olhar em vez de pedir que você leia milhares de peças. A variante `-zh-` sai como `legendas_<nome>_zh.ass`. | `legendas_<nome>.ass`, `<nome>_classificacao_multicolor_<lang>.json`, `<nome>_analise_bruta_<lang>.json` e `<nome>_classes_revisar.{html,csv}` |
 | 2 | `caption-multicolor-burn`<br>UM notebook serve as duas variantes: ele lê o sufixo `_zh` do nome do `.ass` que você enviar e grava a saída correspondente. Por isso não existe `-zh-burn`. | `<nome>_final_multicolor[_img].mp4` |
 
-> ⚠️ Precisa dos `<nome>_<lang>.srt` do nível 2 — a classificação roda em cima do texto já distribuído por idioma.
+> ⚠️ Precisa dos `<nome>_<lang>.srt` do nível 2 — a classificação roda em cima do texto já distribuído por idioma. Se a legenda mudar depois, o bruto e a classificação salvos são DESCARTADOS sozinhos (eles conferem o texto contra o SRT atual): sem isso o vídeo sairia exibindo as palavras da versão anterior, com o SRT novo parado ao lado.
 
 ### `compilacao` — Compilação de versículos sortidos
 
