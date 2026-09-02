@@ -19,34 +19,22 @@ _EN_AUXILIARES_DO = {"do", "does", "did"}
 _EN_PART_AUXILIARES = {"to", "'s"}
 
 # ═══════════════════════════════════════════════════════════════════════════
-# Preposição que introduz infinitivo, e que o Stanza rotula como conjunção
+# Onde ficam as EXCEÇÕES
 # ══════════════════════════════════════════════════════════════════════════
-# "Ao verem a estrela", "passou a viver numa cidade": o Stanza olha a FUNÇÃO
-# (a palavra abre uma oração) e devolve SCONJ. Pela classe, porém, é
-# preposição -- e é assim que a legenda tem que pintar, porque a cor é por
-# classe, não por função sintática.
+# Aqui em baixo só mora o MAPEAMENTO BASE: o que a etiqueta do analisador
+# significa. "PROPN é nome próprio", "ADP é preposição", "AUX com lema modal
+# em inglês é modal".
 #
-# Só vale quando o que vem depois é infinitivo. "Vou ao mercado" não entra
-# aqui: ali o Stanza já devolve ADP e nada precisa ser corrigido.
-_PREP_ANTES_DE_INFINITIVO = {
-    "pt": {"a", "ao", "aos", "à", "às"},
-    "es": {"a", "al"},
-    "fr": {"à", "au", "aux", "de", "du", "des"},
-}
-
-# ═══════════════════════════════════════════════════════════════════════════
-# Pronome no vocativo, que o Stanza rotula como interjeição
-# ══════════════════════════════════════════════════════════════════════════
-# "Tu, Belém, terra de Judá": chamar alguém faz o Stanza ler a palavra como
-# interjeição. Defensável pela função, errado pela classe -- "Tu" é pronome
-# em qualquer análise de classe de palavra.
-_PRONOMES_QUE_VIRAM_VOCATIVO = {
-    "pt": {"tu", "vós", "você", "vocês", "senhor", "senhora"},
-    "es": {"tú", "vosotros", "usted", "ustedes"},
-    "fr": {"tu", "toi", "vous"},
-    "en": {"thou", "ye", "you"},
-}
-
+# Onde a etiqueta ENGANA -- "Ao verem" vem como conjunção mas pela classe é
+# preposição, "Tu, Belém" vem como interjeição mas é pronome, "para que" são
+# duas palavras que formam uma conjunção só -- é caso pra central de
+# correções automáticas, em dados_lexico/classes-correcoes.json, aplicada por
+# revisao_classes.aplicar_correcoes().
+#
+# A divisão não é arbitrária: exceção precisa ver o CONTEXTO (a palavra
+# vizinha, os traços dela), e uma função que recebe uma palavra por vez não
+# tem como. Enquanto elas moravam aqui, cada uma exigia mais um parâmetro de
+# contexto na assinatura. Na central, contexto é um campo do JSON.
 
 # ═══════════════════════════════════════════════════════════════════════════
 # Clítico colado ao verbo por hífen
@@ -95,18 +83,14 @@ def parse_feats(feats_str: str) -> dict[str, str]:
 
 
 def classificar_palavra_stanza(palavra: str, lema: str, upos: str, xpos: str,
-                                 feats_str: str, idioma: str,
-                                 upos_seguinte: str | None = None,
-                                 feats_seguinte: str = "") -> str:
-    """Classe simplificada pra uma palavra analisada pelo Stanza.
+                                 feats_str: str, idioma: str) -> str:
+    """Mapeamento BASE: o que a etiqueta do Stanza significa, pra uma palavra.
 
-    `upos_seguinte`/`feats_seguinte` são a análise da PRÓXIMA palavra, e são
-    opcionais: só duas regras precisam delas (ver
-    _PREP_ANTES_DE_INFINITIVO). Sem elas a função se comporta como antes.
+    Não conhece contexto e não trata exceção — isso é da central de correções
+    (ver o bloco "Onde ficam as EXCEÇÕES" acima).
     """
     feats = parse_feats(feats_str)
     lema_lower = (lema or "").lower()
-    forma_lower = (palavra or "").strip().lower()
 
     # ── Inglês: modal / auxiliar (checa antes do resto) ───────────────────
     if idioma == "en":
@@ -164,11 +148,6 @@ def classificar_palavra_stanza(palavra: str, lema: str, upos: str, xpos: str,
 
     # ── Conjunção ─────────────────────────────────────────────────────────
     if upos in ("CCONJ", "SCONJ"):
-        # ...a não ser que seja preposição introduzindo infinitivo.
-        if forma_lower in _PREP_ANTES_DE_INFINITIVO.get(idioma, ()):
-            seguinte = parse_feats(feats_seguinte)
-            if upos_seguinte in ("VERB", "AUX") and seguinte.get("VerbForm") == "Inf":
-                return "preposicao"
         return "conjuncao"
 
     # ── Advérbio ──────────────────────────────────────────────────────────
@@ -181,9 +160,6 @@ def classificar_palavra_stanza(palavra: str, lema: str, upos: str, xpos: str,
 
     # ── Interjeição ───────────────────────────────────────────────────────
     if upos == "INTJ":
-        # ...a não ser que seja pronome sendo usado pra chamar alguém.
-        if forma_lower in _PRONOMES_QUE_VIRAM_VOCATIVO.get(idioma, ()):
-            return "pronome"
         return "interjeicao"
 
     # ── Pontuação ─────────────────────────────────────────────────────────

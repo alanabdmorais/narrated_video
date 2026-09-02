@@ -1068,7 +1068,55 @@ O Stanza e o Kiwi erram, e o modo de errar é o pior possível: sai uma cor
 plausível, nada falha, e o defeito aparece assistindo o vídeo pronto. Três
 camadas agora, em ordem de quanto poupam de trabalho humano.
 
-#### 1. Correção automática (célula 4)
+#### 0. As quatro camadas, e por que elas são separadas
+
+```
+BRUTO            o que o analisador disse   →  <nome>_analise_bruta_<lang>.json
+  ↓
+MAPEAMENTO       o que a etiqueta significa →  classificacao.py
+  ↓
+CENTRAL          onde a etiqueta engana     →  dados_lexico/classes-correcoes.json
+  ↓
+CORREÇÃO MANUAL  o que só a pessoa sabe     →  a coluna `classe` do CSV
+  ↓  .ass
+```
+
+Antes disto, as quatro estavam misturadas num arquivo só (a classificação
+salva), e a consequência era concreta: **mudar uma regra de cor exigia rodar o
+Stanza de novo** — baixar modelo, esperar, gastar sessão de Colab. Em dois dias
+a regra mudou quatro vezes. Pior: o reaproveitamento era cego, conferia só se
+o TEXTO ainda batia com o SRT, então uma regra nova simplesmente não se
+aplicava ao que já estava salvo, em silêncio.
+
+**O bruto é barato.** Medido no Mateus 2: o CSV com lema, upos e traços dos 5
+idiomas dá **140 KB** — menos que os **438 KB** da classificação já mapeada que
+o projeto salvava. Ao lado de um `.wav` de 42 MB, é ruído.
+
+**O bruto é no nível do TOKEN**, com as palavras sintáticas dentro — não no
+nível da peça já cortada. A diferença importa: a separação do clítico
+(`prostraram-se` → `prostraram-` + `se`) só é possível porque o token carrega
+as duas palavras. Um bruto no nível da peça deixaria de fora exatamente as
+mudanças de tokenização.
+
+**O bruto é cache, não verdade:** está preso à versão do analisador que o
+gerou, e o arquivo carimba qual (`analisador`, `versao_analisador`,
+`gerado_em`).
+
+##### O carimbo que faz a correção manual sobreviver
+
+`PecaColorida` ganhou `classe_automatica`: a classe que as REGRAS produziram.
+Onde ela difere de `classe`, a diferença é humana.
+
+É só por causa dela que `remapear()` pode refazer tudo com regra nova sem
+apagar correção manual. E quando o remapeamento muda o próprio corte das peças
+(foi o que a separação do clítico fez), o casamento é por texto, via `difflib`
+— e a correção que não achou destino é **reportada**, nunca descartada calada.
+
+Uma peça salva antes deste carimbo tem `classe_automatica` vazio: aí não dá
+pra saber o que nela foi corrigido à mão, e o remapeamento avisa isso em vez
+de fingir que sabe.
+
+#### 1. A central de correções automáticas (célula 4)
 
 `revisao_classes.corrigir_pontuacao()` — invariante **mecânica**, não
 linguística: peça só de sinais é pontuação, peça com letra não é. No Mateus 2
@@ -1076,19 +1124,55 @@ não corrige nada (as 3.349 peças já respeitam) — é guarda, não conserto.
 Existe porque o erro aqui é invisível: a classe `outro` do Kiwi (tag
 imprevista) sai **cinza, a mesma cor da pontuação**.
 
-`revisao_classes.aplicar_excecoes()` — o léxico versionado em
-`dados_lexico/classes-excecoes.json`. Cada regra é `{palavra, de, para,
-porque}`, e é o `de` (a classe que o analisador devolveu) que a torna
-**condicional**: sem ele, uma entrada pra "a" pintaria de preposição todo
-artigo "a" do capítulo.
+`revisao_classes.aplicar_correcoes()` — todas as regras num formato só, em
+`dados_lexico/classes-correcoes.json`. Uma regra é `{id, idiomas, quando,
+entao, porque}`, e o `quando` enxerga **contexto**: `palavra`, `lema`, `upos`,
+`classe`, `feats`, mais os aninhados `seguinte` e `anterior`.
 
-> **Começou vazio, de propósito.** Auditei o Mateus 2 inteiro procurando
+```json
+{"id": "preposicao-de-infinitivo",
+ "idiomas": ["pt", "es", "fr"],
+ "quando": {"palavra": ["a", "ao", "à"], "classe": ["conjuncao"],
+            "seguinte": {"upos": ["VERB", "AUX"], "feats": {"VerbForm": "Inf"}}},
+ "entao": {"classe": "preposicao"},
+ "porque": "..."}
+```
+
+Antes, essas regras estavam em **três lugares**: dentro de
+`classificar_palavra_stanza` (preposição de infinitivo, pronome no vocativo),
+em Python solto no `revisao_classes` (locução conjuntiva) e num léxico à parte.
+Cada uma que morava dentro do classificador exigia mais um parâmetro de
+contexto na assinatura da função — `upos_seguinte`, `feats_seguinte`. Na
+central, contexto é um campo do JSON, e a assinatura voltou a ser
+`(palavra, lema, upos, xpos, feats, idioma)`.
+
+A divisão de trabalho ficou nítida e é fácil de explicar:
+
+| | responde | onde |
+|---|---|---|
+| mapeamento base | o que a etiqueta **significa** | `classificacao.py` |
+| central | onde a etiqueta **engana** | `classes-correcoes.json` |
+
+O `AUX` modal do inglês e o `PART` do chinês ficaram no mapeamento base: são a
+leitura pretendida daquela etiqueta naquela língua, não uma correção.
+
+**Regra malformada é recusada na LEITURA**, não na hora de aplicar. Campo
+escrito errado seria silencioso: a regra simplesmente nunca casaria, e ninguém
+descobriria que a correção parou de acontecer. O `porque` é obrigatório —
+regra sem motivo ninguém ousa apagar depois, e a central vira entulho.
+
+A migração foi provada equivalente: rodando as frases de teste contra a versão
+anterior do classificador (tirada do git), o mapeamento base + central dá
+exatamente as mesmas classes, inclusive nos negativos ("passou a fome"
+continua conjunção).
+
+> **A central começou vazia, de propósito.** Auditei o Mateus 2 inteiro procurando
 > entrada pra semear e não achei nenhuma que eu conseguisse defender: dos 25
 > casos de "mesma palavra, classes diferentes", quase todos eram ambiguidade
 > legítima (`es «los»` é pronome em *"los envió"*; `ko «가»` é partícula e
 > verbo). Semear com palpite seria a armadilha de sempre — regra que dispara
 > em conteúdo legítimo ensina a ignorar a regra. As primeiras entradas saem
-> das correções manuais reais, via `sugerir_excecoes()` — e a primeira
+> das correções manuais reais, via `sugerir_regras()` — e a primeira
 > (`fr lève-toi`) veio exatamente assim, de um defeito visto na tela.
 
 As três regras que já existiam (preposição de infinitivo, pronome no
@@ -1151,7 +1235,7 @@ frase sai `«Lève-toi»` inteiro como **nome próprio** — amarelo, a cor que
 grita "isto é um nome". Não dá pra consertar pelo hífen (o Stanza não expandiu
 o token, então não há o que separar), e não é erro de mapeamento: é o
 analisador errando. Verbo é o menos errado, e é o que está em
-`classes-excecoes.json`.
+`classes-correcoes.json`.
 
 #### 2. A lista de suspeitas (célula 5)
 
@@ -1202,7 +1286,7 @@ com erro de digitação viraria cinza no vídeo, do jeitinho de uma pontuação.
 
 #### Pra correção não morrer com o vídeo
 
-`sugerir_excecoes()` transforma as correções manuais em entradas prontas pro
+`sugerir_regras()` transforma as correções manuais em entradas prontas pro
 léxico — mas só as que **se repetiram**. Correção que aconteceu uma vez só
 costuma ser questão de contexto, e virar regra fixa espalharia o erro pelo
 resto da Bíblia.

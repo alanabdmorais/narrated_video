@@ -36,15 +36,34 @@ class PecaColorida(NamedTuple):
     `colado_anterior=True` = sem espaço antes desse pedaço (só pro coreano,
     pedaços 2+ da mesma palavra escrita).
 
-    `upos` é o rótulo CRU do analisador (Stanza: PROPN, ADP, SCONJ...; Kiwi:
-    NNP, JKS, EF...). Não entra na cor -- existe pra revisão poder distinguir
-    "o analisador errou" de "a regra mapeou errado", que pedem conserto em
-    lugares diferentes. Opcional: fica "" em classificação salva antes disto.
+    `upos`, `lema` e `feats` são a análise CRUA (Stanza: PROPN, ADP, SCONJ...
+    e "VerbForm=Inf|Number=Sing"; Kiwi: NNP, JKS, EF...). Não entram na cor.
+    Servem a duas coisas:
+
+      - a revisão distingue "o analisador errou" de "a regra mapeou errado",
+        que se consertam em lugares diferentes;
+      - a central de correções (revisao_classes) casa as regras contra eles,
+        e é o que deixa a regra ver o CONTEXTO: "a" vira preposição quando o
+        que vem depois é VERB com VerbForm=Inf.
+
+    Vêm do bruto (analise.py) e ficam repetidos aqui de propósito: com eles a
+    classificação salva basta pra reaplicar as regras, sem precisar abrir o
+    arquivo do bruto. Custam uns 30% do JSON, que já era o menor arquivo da
+    pasta. Opcionais: ficam "" em classificação salva antes disto.
+
+    `classe_automatica` é a classe que as REGRAS produziram. Quando ela
+    difere de `classe`, a diferença é humana: alguém trocou na revisão. É só
+    por causa dela que dá pra refazer a classificação com regra nova sem
+    apagar correção manual -- antes disto, o arquivo não sabia distinguir uma
+    coisa da outra, e por isso o reaproveitamento tinha que ser cego.
     """
     texto: str
     classe: str
     colado_anterior: bool = False
     upos: str = ""
+    lema: str = ""
+    feats: str = ""
+    classe_automatica: str = ""
 
 
 _ASS_HEADER = """[Script Info]
@@ -190,7 +209,9 @@ def salvar_classificacao_multicolor(blocos: list[dict], caminho_saida: Path | st
             "fim_ms": bloco["fim_ms"],
             "pecas": [
                 {"texto": p.texto, "classe": p.classe,
-                 "colado_anterior": p.colado_anterior, "upos": p.upos}
+                 "colado_anterior": p.colado_anterior, "upos": p.upos,
+                 "lema": p.lema, "feats": p.feats,
+                 "classe_automatica": p.classe_automatica}
                 for p in bloco.get("pecas", [])
             ],
         }
@@ -240,7 +261,8 @@ def carregar_classificacao_multicolor(caminho: Path | str) -> list[dict]:
             "fim_ms": bloco["fim_ms"],
             "pecas": [
                 PecaColorida(p["texto"], p["classe"], p.get("colado_anterior", False),
-                             p.get("upos", ""))
+                             p.get("upos", ""), p.get("lema", ""), p.get("feats", ""),
+                             p.get("classe_automatica", ""))
                 for p in bloco.get("pecas", [])
             ],
         }

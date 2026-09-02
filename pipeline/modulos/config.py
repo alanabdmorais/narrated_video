@@ -552,6 +552,15 @@ class PipelineConfig:
         rodar o Stanza/Kiwi de novo pra esse idioma."""
         return f"{self.NOME_ORACAO}_classificacao_multicolor_{lang}.json"
 
+    def nome_analise_bruta(self, lang: str) -> str:
+        """A análise CRUA do Stanza/Kiwi desse idioma — token com as palavras
+        sintáticas dentro, com lema, upos e traços (ver analise.py).
+
+        É a origem: com ela, mudar uma regra de cor vira remapear em segundos,
+        em vez de rodar o analisador inteiro de novo. É cache de uma versão
+        específica do analisador, e o arquivo carimba qual."""
+        return f"{self.NOME_ORACAO}_analise_bruta_{lang}.json"
+
     def nome_revisao_classes(self) -> str:
         """CSV com TODAS as peças de TODOS os idiomas da legenda multicor --
         uma linha por peça, pra abrir no Sheets, corrigir a coluna `classe` e

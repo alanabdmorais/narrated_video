@@ -1,6 +1,7 @@
 # Lista dos módulos do repositório, para o setup dos notebooks conferir
 # o que chegou no Drive. Gerado por nomenclatura.gerar_manifesto().
 ambiente.py
+analise.py
 audio_narracao.py
 biblia_livros.py
 biblia_texto.py

@@ -25,18 +25,36 @@ contra isso, em ordem de quanto poupam de trabalho humano:
 from __future__ import annotations
 
 import csv
+import difflib
 import html
 import json
 import re
 from pathlib import Path
 from typing import Iterable, NamedTuple, Optional
 
-from cores import CORES_HTML, cor_html, cor_texto, nome_cor
+from classificacao import parse_feats
+from cores import (CORES_HTML, MAPA_CLASSES_FINAS, cor_html, cor_texto,
+                   nome_cor)
 from renderizacao import PecaColorida
 
-CAMINHO_LEXICO_PADRAO = Path(__file__).parent.parent / "dados_lexico" / "classes-excecoes.json"
+# As 20 oficiais MAIS as finas do coreano. O Kiwi devolve "substantivo_proprio"
+# e "particula_sujeito", e é isso que fica guardado na peça -- quem traduz pra
+# oficial é o cores._resolver_classe(), na hora de escolher a cor. Sem as duas
+# famílias aqui, o importar_csv recusaria TODA linha do coreano.
+CLASSES_VALIDAS: frozenset[str] = frozenset(CORES_HTML) | frozenset(MAPA_CLASSES_FINAS)
 
-CLASSES_VALIDAS: frozenset[str] = frozenset(CORES_HTML)
+
+def _forma(texto: str) -> str:
+    """A palavra como as regras a comparam: sem espaço em volta, sem caixa."""
+    return (texto or "").strip().lower()
+
+
+def _oficial(classe: str) -> str:
+    """A classe como o espectador a vê -- é ela que as suspeitas comparam.
+    "terminacao_final_neutra" e "terminacao_final_imperativa" saem da mesma
+    cor, então tratá-las como classes diferentes inventaria divergência onde
+    a tela não mostra nenhuma."""
+    return MAPA_CLASSES_FINAS.get(classe, classe)
 
 # UPOS que o classificar_palavra_stanza trata com regra própria. O que não
 # está aqui cai no `return "adverbio"` do fim -- que é um chute, não uma
@@ -57,121 +75,144 @@ _CLASSE_SEM_REGRA_KO = "outro"
 # 1. Correção automática
 # ══════════════════════════════════════════════════════════════════════════
 
-def carregar_lexico(caminho: Path | str | None = None) -> dict[str, list[dict]]:
-    """Lê o léxico de exceções versionado. Ausente = dicionário vazio: o
-    léxico é opcional por construção, e um projeto novo começa sem nenhum."""
-    caminho = Path(caminho or CAMINHO_LEXICO_PADRAO)
+CAMINHO_CENTRAL_PADRAO = Path(__file__).parent.parent / "dados_lexico" / "classes-correcoes.json"
+
+FORMATO_CENTRAL = 1
+
+
+class ErroDeRegra(Exception):
+    """A central tem uma regra que não dá pra executar — com o motivo."""
+
+
+def carregar_central(caminho: Path | str | None = None) -> list[dict]:
+    """Lê a central de correções automáticas.
+
+    Ausente = lista vazia: a central é opcional por construção, e um projeto
+    novo começa sem regra nenhuma. Formato desconhecido, ao contrário, LEVANTA
+    -- ler pela metade sairia numa legenda errada, calada.
+    """
+    caminho = Path(caminho or CAMINHO_CENTRAL_PADRAO)
     if not caminho.exists():
-        return {}
+        return []
     bruto = json.loads(caminho.read_text(encoding="utf-8"))
-    return {k: v for k, v in bruto.items() if not k.startswith("_")}
+    formato = bruto.get("formato")
+    if formato != FORMATO_CENTRAL:
+        raise ErroDeRegra(f"{caminho.name} está no formato {formato!r}, e este "
+                          f"módulo lê o {FORMATO_CENTRAL}.")
+    regras = bruto.get("regras", [])
+    for i, r in enumerate(regras, 1):
+        conferir_regra(r, f"regra {i} ({r.get('id', 'sem id')})")
+    return regras
 
 
-def _forma(texto: str) -> str:
-    return (texto or "").strip().lower()
+_CAMPOS_QUANDO = {"palavra", "lema", "upos", "classe", "feats", "seguinte", "anterior"}
+_CAMPOS_ENTAO  = {"classe", "seguinte_classe", "anterior_classe"}
 
 
-def aplicar_excecoes(
+def conferir_regra(regra: dict, onde: str) -> None:
+    """Recusa regra malformada na LEITURA, não na hora de aplicar. Regra com
+    campo escrito errado seria silenciosa: ela simplesmente nunca casaria, e
+    ninguém descobre que a correção parou de acontecer."""
+    if "quando" not in regra or "entao" not in regra:
+        raise ErroDeRegra(f"{onde}: falta 'quando' ou 'entao'")
+    def conferir_condicao(cond, caminho_):
+        sobra = set(cond) - _CAMPOS_QUANDO
+        if sobra:
+            raise ErroDeRegra(f"{onde}: campo desconhecido em {caminho_}: "
+                              f"{', '.join(sorted(sobra))}. Válidos: "
+                              f"{', '.join(sorted(_CAMPOS_QUANDO))}")
+        for vizinho in ("seguinte", "anterior"):
+            if vizinho in cond:
+                conferir_condicao(cond[vizinho], f"{caminho_}.{vizinho}")
+    conferir_condicao(regra["quando"], "quando")
+    sobra = set(regra["entao"]) - _CAMPOS_ENTAO
+    if sobra:
+        raise ErroDeRegra(f"{onde}: campo desconhecido em 'entao': "
+                          f"{', '.join(sorted(sobra))}")
+    for campo, valor in regra["entao"].items():
+        if valor not in CLASSES_VALIDAS:
+            raise ErroDeRegra(f"{onde}: 'entao.{campo}' pede a classe '{valor}', "
+                              f"que não existe")
+    if not regra.get("porque"):
+        raise ErroDeRegra(f"{onde}: falta o 'porque'. Regra sem motivo ninguém "
+                          f"ousa apagar depois, e a central vira entulho.")
+
+
+def _casa(peca, cond: dict) -> bool:
+    """A peça satisfaz esta condição? Peça inexistente (borda do bloco) nunca
+    casa -- 'não existe' não é 'qualquer coisa'."""
+    if peca is None:
+        return False
+    if "palavra" in cond and _forma(peca.texto) not in {_forma(x) for x in cond["palavra"]}:
+        return False
+    if "lema" in cond and _forma(peca.lema) not in {_forma(x) for x in cond["lema"]}:
+        return False
+    if "upos" in cond and peca.upos not in cond["upos"]:
+        return False
+    if "classe" in cond and _oficial(peca.classe) not in cond["classe"]:
+        return False
+    if "feats" in cond:
+        traços = parse_feats(peca.feats)
+        for chave, valor in cond["feats"].items():
+            if traços.get(chave) != valor:
+                return False
+    return True
+
+
+def _regra_casa(regra: dict, pecas: list, i: int) -> bool:
+    quando = regra["quando"]
+    propria = {k: v for k, v in quando.items() if k not in ("seguinte", "anterior")}
+    if not _casa(pecas[i], propria):
+        return False
+    if "seguinte" in quando:
+        if not _casa(pecas[i + 1] if i + 1 < len(pecas) else None, quando["seguinte"]):
+            return False
+    if "anterior" in quando:
+        if not _casa(pecas[i - 1] if i > 0 else None, quando["anterior"]):
+            return False
+    return True
+
+
+def aplicar_correcoes(
     blocos: list[dict],
     idioma: str,
-    lexico: Optional[dict[str, list[dict]]] = None,
+    regras: Optional[list[dict]] = None,
 ) -> tuple[list[dict], list[str]]:
-    """Aplica o léxico de exceções às peças já classificadas.
+    """Aplica a central de correções automáticas a um idioma.
 
-    Devolve (blocos, mudancas) -- `mudancas` sempre lista o que mudou, porque
-    correção automática silenciosa é a mesma armadilha que o erro silencioso
-    que ela conserta.
+    Devolve (blocos, mudancas) -- `mudancas` sempre lista o que mudou e por
+    qual regra, porque correção automática silenciosa é a mesma armadilha que
+    o erro silencioso que ela conserta.
 
-    Cada regra é {palavra, de, para, porque}. O `de` é a classe que o
-    analisador devolveu, e é ele que torna a regra CONDICIONAL: sem ele, uma
-    entrada pra "a" pintaria de preposição todo artigo "a" do capítulo.
+    Ordem: a primeira regra que casa vence, e cada peça é decidida uma vez.
+    As regras não atravessam fronteira de bloco: o contexto que vale é o que
+    aparece junto na tela.
     """
-    regras = (lexico if lexico is not None else carregar_lexico()).get(idioma, [])
-    if not regras:
-        return blocos, []
-
-    por_palavra: dict[str, list[dict]] = {}
-    for r in regras:
-        por_palavra.setdefault(_forma(r["palavra"]), []).append(r)
-
-    saida, mudancas = [], []
-    for i, bloco in enumerate(blocos, 1):
-        pecas = []
-        for peca in bloco.get("pecas", []):
-            nova = peca
-            for r in por_palavra.get(_forma(peca.texto), ()):
-                de = r.get("de")
-                if de and de != peca.classe:
-                    continue
-                if r["para"] not in CLASSES_VALIDAS:
-                    mudancas.append(f"bloco {i}: regra de «{peca.texto}» pede a classe "
-                                    f"'{r['para']}', que não existe — ignorada")
-                    continue
-                if r["para"] != peca.classe:
-                    nova = peca._replace(classe=r["para"])
-                    mudancas.append(f"bloco {i}: «{peca.texto}» {peca.classe} → {r['para']}"
-                                    + (f"  ({r['porque']})" if r.get("porque") else ""))
-                break
-            pecas.append(nova)
-        saida.append({**bloco, "pecas": pecas})
-    return saida, mudancas
-
-
-# ── Locução conjuntiva ────────────────────────────────────────────────────
-# "para que", "hasta que", "afin que": duas palavras que funcionam como UMA
-# conjunção. O analisador olha cada uma sozinha e devolve classes diferentes
-# -- no Mateus 2, `es «para»=preposicao «que»=conjuncao` e `fr «afin»=adverbio
-# «que»=conjuncao`, enquanto o português já dava conjunção nas duas. A mesma
-# locução saía de cores diferentes conforme o idioma.
-#
-# Só entram aqui as que SEMPRE formam locução com a segunda palavra. "por
-# que" ficou de fora de propósito: é interrogativo, não conjunção. Locução de
-# três palavras ("de modo que", "jusqu'à ce que") também não entrou -- o
-# casamento aqui é de duas.
-_LOCUCOES_CONJUNTIVAS: dict[str, set[tuple[str, str]]] = {
-    "pt": {("para", "que"), ("até", "que"), ("desde", "que"), ("sem", "que"),
-           ("antes", "que"), ("depois", "que"), ("ainda", "que"), ("assim", "que"),
-           ("logo", "que"), ("visto", "que"), ("dado", "que"), ("posto", "que"),
-           ("já", "que"), ("caso", "que"), ("salvo", "que")},
-    "es": {("para", "que"), ("hasta", "que"), ("sin", "que"), ("antes", "que"),
-           ("después", "que"), ("desde", "que"), ("así", "que"), ("puesto", "que"),
-           ("dado", "que"), ("ya", "que"), ("mientras", "que"), ("aun", "que")},
-    "fr": {("afin", "que"), ("pour", "que"), ("avant", "que"), ("après", "que"),
-           ("sans", "que"), ("bien", "que"), ("parce", "que"), ("depuis", "que"),
-           ("alors", "que"), ("tandis", "que"), ("pendant", "que"), ("dès", "que")},
-    "en": {("so", "that"), ("now", "that"), ("provided", "that"), ("given", "that"),
-           ("such", "that"), ("except", "that")},
-}
-
-
-def unificar_locucoes(blocos: list[dict], idioma: str) -> tuple[list[dict], list[str]]:
-    """Pinta as duas palavras de uma locução conjuntiva da mesma cor.
-
-    Precisa da sequência inteira, não da palavra sozinha -- por isso mora
-    aqui e não no léxico, que só olha uma palavra por vez. Pela mesma razão
-    não dá pra fazer no classificar_palavra_stanza sem passar a palavra
-    vizinha pra dentro dele.
-
-    Só age quando as duas peças estão no MESMO bloco: locução partida entre
-    dois blocos não aparece junta na tela, e pintar metade não ajuda ninguém.
-    """
-    pares = _LOCUCOES_CONJUNTIVAS.get(idioma, set())
-    if not pares:
+    if regras is None:
+        regras = carregar_central()
+    doidioma = [r for r in regras if idioma in r.get("idiomas", [])]
+    if not doidioma:
         return blocos, []
 
     saida, mudancas = [], []
-    for i, bloco in enumerate(blocos, 1):
+    for n, bloco in enumerate(blocos, 1):
         pecas = list(bloco.get("pecas", []))
-        for j in range(len(pecas) - 1):
-            a, b = pecas[j], pecas[j + 1]
-            if (_forma(a.texto), _forma(b.texto)) not in pares:
-                continue
-            for k, peca in ((j, a), (j + 1, b)):
-                if peca.classe != "conjuncao":
-                    pecas[k] = peca._replace(classe="conjuncao")
-                    mudancas.append(
-                        f"bloco {i}: «{peca.texto}» {peca.classe} → conjuncao "
-                        f"(locução «{a.texto} {b.texto}»)")
+        for i in range(len(pecas)):
+            for regra in doidioma:
+                if not _regra_casa(regra, pecas, i):
+                    continue
+                alvos = [(i, regra["entao"].get("classe")),
+                         (i + 1, regra["entao"].get("seguinte_classe")),
+                         (i - 1, regra["entao"].get("anterior_classe"))]
+                for k, nova in alvos:
+                    if nova is None or not (0 <= k < len(pecas)):
+                        continue
+                    if pecas[k].classe != nova:
+                        mudancas.append(
+                            f"bloco {n}: «{pecas[k].texto}» {pecas[k].classe} → {nova}"
+                            f"   [{regra.get('id', 'sem id')}]")
+                        pecas[k] = pecas[k]._replace(classe=nova)
+                break
         saida.append({**bloco, "pecas": pecas})
     return saida, mudancas
 
@@ -260,7 +301,7 @@ def _suspeitas_do_idioma(idioma: str, blocos: list[dict]) -> list[Suspeita]:
     # ── (b) a mesma palavra recebeu classes diferentes ──────────────────
     por_palavra: dict[str, Counter] = defaultdict(Counter)
     for _, _, p in todas:
-        por_palavra[_forma(p.texto)][p.classe] += 1
+        por_palavra[_forma(p.texto)][_oficial(p.classe)] += 1
     minoritarias: dict[str, set[str]] = {}
     for palavra, cont in por_palavra.items():
         if len(cont) < 2:
@@ -273,20 +314,21 @@ def _suspeitas_do_idioma(idioma: str, blocos: list[dict]) -> list[Suspeita]:
             minoritarias[palavra] = fora
     for i, j, p in todas:
         classes_raras = minoritarias.get(_forma(p.texto), ())
-        if p.classe in classes_raras:
+        if _oficial(p.classe) in classes_raras:
             maioria = por_palavra[_forma(p.texto)].most_common(1)[0]
             achados.append(Suspeita(idioma, i, j, p.texto, p.classe,
-                                    f"aqui é '{p.classe}', mas nas outras {maioria[1]} vezes "
+                                    f"aqui é '{_oficial(p.classe)}', mas nas outras {maioria[1]} vezes "
                                     f"desta legenda é '{maioria[0]}'"))
 
     # ── (c) classe rara neste idioma ────────────────────────────────────
-    cont_classe = Counter(p.classe for _, _, p in todas)
+    cont_classe = Counter(_oficial(p.classe) for _, _, p in todas)
     raras = {cl for cl, q in cont_classe.items() if q <= _RARA_MAXIMA}
     ja_apontado = {(s.bloco, s.ordem) for s in achados}
     for i, j, p in todas:
-        if p.classe in raras and (i, j) not in ja_apontado:
+        if _oficial(p.classe) in raras and (i, j) not in ja_apontado:
             achados.append(Suspeita(idioma, i, j, p.texto, p.classe,
-                                    f"'{p.classe}' aparece só {cont_classe[p.classe]}× "
+                                    f"'{_oficial(p.classe)}' aparece só "
+                                    f"{cont_classe[_oficial(p.classe)]}× "
                                     f"em todo o {idioma.upper()} — classe rara é fácil de "
                                     f"sair errada sem ninguém notar"))
 
@@ -298,7 +340,8 @@ def _suspeitas_do_idioma(idioma: str, blocos: list[dict]) -> list[Suspeita]:
 # ══════════════════════════════════════════════════════════════════════════
 
 _COLUNAS = ["idioma", "bloco", "ordem", "palavra", "classe",
-            "cor", "suspeita", "upos", "colado_anterior", "inicio_ms", "fim_ms"]
+            "cor", "manual", "suspeita", "upos", "colado_anterior",
+            "inicio_ms", "fim_ms"]
 
 
 def exportar_csv(
@@ -329,6 +372,10 @@ def exportar_csv(
                     w.writerow([
                         idioma, i, j, p.texto, p.classe,
                         nome_cor(p.classe),
+                        # já mexido à mão numa revisão anterior: é o que a
+                        # diferença entre classe e classe_automatica marca
+                        "sim" if (p.classe_automatica
+                                  and p.classe != p.classe_automatica) else "",
                         " / ".join(motivo_de.get((idioma, i, j), ())),
                         p.upos, int(p.colado_anterior),
                         bloco["inicio_ms"], bloco["fim_ms"],
@@ -400,6 +447,60 @@ def importar_csv(caminho: Path | str) -> tuple[dict[str, list[dict]], list[str]]
     return saida, avisos
 
 
+def aplicar_csv(
+    blocos_por_idioma: dict[str, list[dict]],
+    caminho: Path | str,
+) -> tuple[dict[str, list[dict]], list[dict]]:
+    """Passa a coluna `classe` do CSV corrigido pras peças que estão na
+    memória, e devolve (blocos, mudancas).
+
+    Por que não usar o CSV inteiro: ele não carrega `lema`, `feats` nem
+    `classe_automatica` -- de propósito, pra planilha ter só o que se deve
+    editar. Reconstruir a partir dele perderia justamente o que as regras
+    leem e o carimbo que distingue correção da mão. Aqui só a CLASSE atravessa.
+
+    Recusa quando as peças do CSV não são as mesmas da memória: linha
+    apagada, palavra reescrita, idioma faltando. Melhor parar do que casar
+    classe com a palavra errada.
+    """
+    do_csv, _ = importar_csv(caminho)
+
+    faltando = [i for i in blocos_por_idioma if i not in do_csv]
+    if faltando:
+        raise ErroDeRevisao(f"o CSV não tem estes idiomas: {', '.join(faltando)}. "
+                            f"Envie o arquivo inteiro, não uma aba filtrada.")
+
+    saida, mudancas = {}, []
+    for idioma, blocos in blocos_por_idioma.items():
+        novos_blocos = do_csv[idioma]
+        if len(novos_blocos) != len(blocos):
+            raise ErroDeRevisao(f"{idioma}: o CSV tem {len(novos_blocos)} blocos e a "
+                                f"classificação tem {len(blocos)}")
+        lista = []
+        for i, (bloco, do_arquivo) in enumerate(zip(blocos, novos_blocos), 1):
+            pecas, do_csv_pecas = bloco.get("pecas", []), do_arquivo.get("pecas", [])
+            if len(pecas) != len(do_csv_pecas):
+                raise ErroDeRevisao(f"{idioma} bloco {i}: o CSV tem "
+                                    f"{len(do_csv_pecas)} peças e a classificação "
+                                    f"tem {len(pecas)} — alguma linha foi apagada?")
+            novas = []
+            for peca, do_arq in zip(pecas, do_csv_pecas):
+                if _forma(peca.texto) != _forma(do_arq.texto):
+                    raise ErroDeRevisao(
+                        f"{idioma} bloco {i}: o CSV diz «{do_arq.texto}» onde a "
+                        f"classificação tem «{peca.texto}». Só a coluna `classe` "
+                        f"pode ser editada.")
+                if do_arq.classe != peca.classe:
+                    mudancas.append({"idioma": idioma, "bloco": i,
+                                     "palavra": peca.texto,
+                                     "de": peca.classe, "para": do_arq.classe})
+                    peca = peca._replace(classe=do_arq.classe)
+                novas.append(peca)
+            lista.append({**bloco, "pecas": novas})
+        saida[idioma] = lista
+    return saida, mudancas
+
+
 def diferencas(antes: dict[str, list[dict]], depois: dict[str, list[dict]]) -> list[dict]:
     """O que a correção manual mudou — uma lista de
     {idioma, bloco, palavra, de, para}. Serve pro relatório e pro
@@ -421,27 +522,35 @@ def diferencas(antes: dict[str, list[dict]], depois: dict[str, list[dict]]) -> l
     return mudancas
 
 
-def sugerir_excecoes(mudancas: list[dict]) -> str:
-    """Transforma as correções manuais em entradas prontas pro léxico.
+def sugerir_regras(mudancas: list[dict]) -> str:
+    """Transforma as correções manuais em regras prontas pra central.
 
-    Só sugere a correção que se repetiu (mesma palavra, mesmo de→para, mais de
-    uma vez): correção que aconteceu UMA vez pode ser questão de contexto, e
-    virar regra fixa espalharia o erro pelo resto da Bíblia.
+    Só sugere a correção que se repetiu (mesma palavra, mesmo de→para, mais
+    de uma vez): correção que aconteceu UMA vez pode ser questão de contexto,
+    e virar regra fixa espalharia o erro pelo resto da Bíblia.
+
+    Sai no formato da central, com o `porque` por preencher -- de propósito.
+    A central recusa regra sem motivo na leitura, então a sugestão não entra
+    versionada sem alguém escrever por que ela existe.
     """
     from collections import Counter
     contagem = Counter((m["idioma"], _forma(m["palavra"]), m["de"], m["para"])
                        for m in mudancas)
-    por_idioma: dict[str, list[dict]] = {}
+    regras = []
     for (idioma, palavra, de, para), q in sorted(contagem.items()):
         if q < 2:
             continue
-        por_idioma.setdefault(idioma, []).append({
-            "palavra": palavra, "de": de, "para": para,
-            "porque": f"corrigido à mão {q}× — PREENCHA o porquê antes de versionar",
+        regras.append({
+            "id": f"{idioma}-{re.sub(r'[^a-z0-9]+', '-', palavra).strip('-') or 'palavra'}-{para}",
+            "idiomas": [idioma],
+            "quando": {"palavra": [palavra], "classe": [de]},
+            "entao": {"classe": para},
+            "porque": f"CORRIGIDO À MÃO {q}× no vídeo — escreva aqui POR QUE o "
+                      f"analisador erra, senão a central recusa esta regra na leitura.",
         })
-    if not por_idioma:
+    if not regras:
         return ""
-    return json.dumps(por_idioma, ensure_ascii=False, indent=2)
+    return json.dumps(regras, ensure_ascii=False, indent=2)
 
 
 _PAGINA = """<!doctype html>
@@ -558,3 +667,90 @@ def pagina_revisao(
                                       legenda=legenda, corpo="".join(corpo)),
                        encoding="utf-8")
     return caminho
+
+
+# ══════════════════════════════════════════════════════════════════════════
+# 4. Refazer do bruto sem apagar a correção manual
+# ══════════════════════════════════════════════════════════════════════════
+
+def remapear(
+    blocos_salvos: Optional[list[dict]],
+    blocos_brutos: list,
+    idioma: str,
+    analisador: str,
+    regras: Optional[list[dict]] = None,
+) -> tuple[list[dict], list[str]]:
+    """Refaz a classificação a partir do BRUTO com as regras de hoje,
+    preservando o que foi corrigido à mão.
+
+    É o que o bruto salvo compra: mudar uma regra de cor deixa de exigir
+    rodar o Stanza/Kiwi de novo. E é seguro porque a peça guarda
+    `classe_automatica` -- onde ela difere de `classe`, a diferença é humana
+    e é mantida.
+
+    `blocos_salvos` pode ser None (nunca houve classificação): aí é só
+    mapear. Devolve (blocos, relatorio).
+    """
+    from analise import construir_pecas
+
+    novos = [
+        {"inicio_ms": b.inicio_ms, "fim_ms": b.fim_ms,
+         "pecas": construir_pecas(b, idioma, analisador)}
+        for b in blocos_brutos
+    ]
+    novos, mudancas_regra = aplicar_correcoes(novos, idioma, regras)
+    novos = [
+        {**b, "pecas": [p._replace(classe_automatica=p.classe) for p in b["pecas"]]}
+        for b in novos
+    ]
+    relatorio = [f"{len(mudancas_regra)} correção(ões) da central"]
+
+    if not blocos_salvos:
+        return novos, relatorio
+
+    sem_carimbo = sum(1 for b in blocos_salvos for p in b.get("pecas", [])
+                      if not p.classe_automatica)
+    if sem_carimbo:
+        relatorio.append(
+            f"⚠️  {sem_carimbo} peça(s) salvas são anteriores ao carimbo "
+            f"`classe_automatica`: não dá pra saber o que nelas foi corrigido à "
+            f"mão, então valem as regras de hoje. Confira a revisão antes de queimar.")
+
+    mantidas, perdidas = 0, []
+    for i, bloco_novo in enumerate(novos):
+        if i >= len(blocos_salvos):
+            break
+        salvas = blocos_salvos[i].get("pecas", [])
+        # só as peças que a mão mexeu interessam
+        corrigidas = {j: p for j, p in enumerate(salvas)
+                      if p.classe_automatica and p.classe != p.classe_automatica}
+        if not corrigidas:
+            continue
+        pecas = list(bloco_novo["pecas"])
+        # o remapeamento pode ter mudado o CORTE das peças (foi o que a
+        # separação do clítico fez), então casa por texto em vez de por posição
+        sm = difflib.SequenceMatcher(
+            None, [_forma(p.texto) for p in salvas],
+            [_forma(p.texto) for p in pecas], autojunk=False)
+        mapa = {}
+        for tag, i1, i2, j1, j2 in sm.get_opcodes():
+            if tag == "equal":
+                for k in range(i2 - i1):
+                    mapa[i1 + k] = j1 + k
+        for j, peca_salva in corrigidas.items():
+            destino = mapa.get(j)
+            if destino is None:
+                perdidas.append(f"bloco {i + 1}: «{peca_salva.texto}» "
+                                f"({peca_salva.classe_automatica} → {peca_salva.classe})")
+                continue
+            pecas[destino] = pecas[destino]._replace(classe=peca_salva.classe)
+            mantidas += 1
+        novos[i] = {**bloco_novo, "pecas": pecas}
+
+    relatorio.append(f"{mantidas} correção(ões) manual(is) preservada(s)")
+    if perdidas:
+        relatorio.append(
+            f"⚠️  {len(perdidas)} correção(ões) manual(is) NÃO puderam ser "
+            f"reaproveitadas (a peça mudou de forma no remapeamento):")
+        relatorio += [f"      {x}" for x in perdidas]
+    return novos, relatorio

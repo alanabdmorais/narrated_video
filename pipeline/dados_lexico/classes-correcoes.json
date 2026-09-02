@@ -1,0 +1,254 @@
+{
+  "formato": 1,
+  "_leia-me": [
+    "CENTRAL DE CORREÇÕES AUTOMÁTICAS da legenda multicor.",
+    "",
+    "Aplicada DEPOIS do mapeamento base (classificacao.py: o que a etiqueta do",
+    "analisador significa) e ANTES da correção manual. Quem executa é",
+    "revisao_classes.aplicar_correcoes().",
+    "",
+    "A divisão de trabalho: o mapeamento base olha UMA palavra e não conhece",
+    "contexto. Aqui é onde a etiqueta ENGANA -- e reconhecer isso quase sempre",
+    "exige olhar a palavra vizinha. Enquanto essas regras moravam em Python,",
+    "cada uma exigia mais um parâmetro de contexto na assinatura da função.",
+    "Aqui, contexto é um campo.",
+    "",
+    "FORMATO de uma regra:",
+    "  id        nome curto, aparece no relatório de mudanças",
+    "  idiomas   em quais vale",
+    "  quando    a condição. Campos: palavra, lema, upos, classe, feats,",
+    "            e os aninhados 'seguinte' e 'anterior' (mesmos campos).",
+    "            Listas casam por OU; campos diferentes casam por E.",
+    "            'feats' é {chave: valor}, ex {\"VerbForm\": \"Inf\"}.",
+    "            Peça inexistente (borda do bloco) NUNCA casa.",
+    "  entao     classe (da própria peça), seguinte_classe, anterior_classe",
+    "  porque    obrigatório. Regra sem motivo ninguém ousa apagar depois,",
+    "            e a central vira entulho.",
+    "",
+    "A primeira regra que casa vence, e cada peça é decidida uma vez. Nenhuma",
+    "regra atravessa fronteira de bloco: o contexto que vale é o que aparece",
+    "junto na tela.",
+    "",
+    "Regra malformada é recusada na LEITURA, não na hora de aplicar -- campo",
+    "escrito errado seria silencioso, a regra simplesmente nunca casaria."
+  ],
+  "regras": [
+    {
+      "id": "preposicao-de-infinitivo",
+      "idiomas": [
+        "pt",
+        "es",
+        "fr"
+      ],
+      "quando": {
+        "palavra": [
+          "a",
+          "ao",
+          "aos",
+          "à",
+          "às",
+          "al",
+          "au",
+          "aux",
+          "de",
+          "du",
+          "des"
+        ],
+        "classe": [
+          "conjuncao"
+        ],
+        "seguinte": {
+          "upos": [
+            "VERB",
+            "AUX"
+          ],
+          "feats": {
+            "VerbForm": "Inf"
+          }
+        }
+      },
+      "entao": {
+        "classe": "preposicao"
+      },
+      "porque": "Em 'Ao verem a estrela' e 'passou a viver', o Stanza olha a FUNÇÃO (a palavra abre uma oração) e devolve SCONJ. Pela classe é preposição, e é assim que a legenda tem que pintar, porque a cor é por classe e não por função sintática. Só vale antes de infinitivo: 'Vou ao mercado' já vem como ADP e não passa por aqui."
+    },
+    {
+      "id": "pronome-no-vocativo",
+      "idiomas": [
+        "pt",
+        "es",
+        "fr",
+        "en"
+      ],
+      "quando": {
+        "upos": [
+          "INTJ"
+        ],
+        "palavra": [
+          "tu",
+          "vós",
+          "você",
+          "vocês",
+          "senhor",
+          "senhora",
+          "tú",
+          "vosotros",
+          "usted",
+          "ustedes",
+          "toi",
+          "vous",
+          "thou",
+          "ye",
+          "you"
+        ]
+      },
+      "entao": {
+        "classe": "pronome"
+      },
+      "porque": "Em 'Tu, Belém, terra de Judá', chamar alguém faz o Stanza ler a palavra como interjeição. Defensável pela função, errado pela classe: 'Tu' é pronome em qualquer análise de classe de palavra."
+    },
+    {
+      "id": "locucao-conjuntiva-pt",
+      "idiomas": [
+        "pt"
+      ],
+      "quando": {
+        "palavra": [
+          "para",
+          "até",
+          "desde",
+          "sem",
+          "antes",
+          "depois",
+          "ainda",
+          "assim",
+          "logo",
+          "visto",
+          "dado",
+          "posto",
+          "já",
+          "caso",
+          "salvo"
+        ],
+        "seguinte": {
+          "palavra": [
+            "que"
+          ]
+        }
+      },
+      "entao": {
+        "classe": "conjuncao",
+        "seguinte_classe": "conjuncao"
+      },
+      "porque": "'para que', 'até que', 'depois que': duas palavras que funcionam como UMA conjunção. O analisador olha cada uma sozinha e dá classes diferentes, então a mesma locução saía de duas cores. 'por que' ficou de fora de propósito: é interrogativo, não conjunção."
+    },
+    {
+      "id": "locucao-conjuntiva-es",
+      "idiomas": [
+        "es"
+      ],
+      "quando": {
+        "palavra": [
+          "para",
+          "hasta",
+          "sin",
+          "antes",
+          "después",
+          "desde",
+          "así",
+          "puesto",
+          "dado",
+          "ya",
+          "mientras",
+          "aun"
+        ],
+        "seguinte": {
+          "palavra": [
+            "que"
+          ]
+        }
+      },
+      "entao": {
+        "classe": "conjuncao",
+        "seguinte_classe": "conjuncao"
+      },
+      "porque": "Mesma coisa do português. No Mateus 2 o espanhol dava 'para'=preposição + 'que'=conjunção enquanto o português já dava conjunção nas duas — a MESMA locução, de cores diferentes conforme o idioma."
+    },
+    {
+      "id": "locucao-conjuntiva-fr",
+      "idiomas": [
+        "fr"
+      ],
+      "quando": {
+        "palavra": [
+          "afin",
+          "pour",
+          "avant",
+          "après",
+          "sans",
+          "bien",
+          "parce",
+          "depuis",
+          "alors",
+          "tandis",
+          "pendant",
+          "dès"
+        ],
+        "seguinte": {
+          "palavra": [
+            "que"
+          ]
+        }
+      },
+      "entao": {
+        "classe": "conjuncao",
+        "seguinte_classe": "conjuncao"
+      },
+      "porque": "Mesma coisa. No Mateus 2 o francês dava 'afin'=advérbio + 'que'=conjunção. Locução de três palavras ('jusqu'à ce que') não entra: o casamento aqui é de duas."
+    },
+    {
+      "id": "locucao-conjuntiva-en",
+      "idiomas": [
+        "en"
+      ],
+      "quando": {
+        "palavra": [
+          "so",
+          "now",
+          "provided",
+          "given",
+          "such",
+          "except"
+        ],
+        "seguinte": {
+          "palavra": [
+            "that"
+          ]
+        }
+      },
+      "entao": {
+        "classe": "conjuncao",
+        "seguinte_classe": "conjuncao"
+      },
+      "porque": "Mesma coisa. No Mateus 2 o inglês já acertava ('so that' saiu conjunção nas duas), então esta regra é preventiva — mantém as quatro línguas com o mesmo tratamento."
+    },
+    {
+      "id": "fr-leve-toi-nao-e-nome",
+      "idiomas": [
+        "fr"
+      ],
+      "quando": {
+        "palavra": [
+          "lève-toi"
+        ],
+        "classe": [
+          "nome_proprio"
+        ]
+      },
+      "entao": {
+        "classe": "verbo"
+      },
+      "porque": "No Mateus 2 o Stanza analisa a MESMA frase de dois jeitos: no bloco 23 sai «Lève»[verbo] + «-toi»[pronome], certo, e no bloco 38 sai «Lève-toi» inteiro como nome próprio — amarelo, a cor que grita 'isto é um nome'. Provavelmente porque começa a frase, com maiúscula. Não dá pra consertar pelo hífen (o Stanza não expandiu o token em duas palavras, então não há o que separar). Verbo é o menos errado: perde o roxo do 'toi', mas não inventa um nome."
+    }
+  ]
+}
