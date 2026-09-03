@@ -593,6 +593,7 @@ class PipelineConfig:
         rodar o Stanza/Kiwi de novo pra esse idioma."""
         return f"{self.NOME_ORACAO}_classificacao_multicolor_{lang}.json"
 
+    @property
     def nome_camadas(self) -> str:
         """Declaração das camadas opcionais deste vídeo (siglas, indicador de
         versículo, título) — ver camadas.py.
@@ -603,6 +604,7 @@ class PipelineConfig:
         que ninguém ia usar."""
         return f"{self.NOME_ORACAO}_camadas.json"
 
+    @property
     def nome_srt_titulo(self) -> str:
         """SRT do TÍTULO do trecho — a legenda fixa dinâmica do canto superior
         direito, em inglês ("The Massacre of the Innocents"), que muda a cada
@@ -622,12 +624,14 @@ class PipelineConfig:
         específica do analisador, e o arquivo carimba qual."""
         return f"{self.NOME_ORACAO}_analise_bruta_{lang}.json"
 
+    @property
     def nome_revisao_classes(self) -> str:
         """CSV com TODAS as peças de TODOS os idiomas da legenda multicor --
         uma linha por peça, pra abrir no Sheets, corrigir a coluna `classe` e
         subir de volta antes de gerar o .ass (ver revisao_classes.py)."""
         return f"{self.NOME_ORACAO}_classes_revisar.csv"
 
+    @property
     def nome_pagina_revisao_classes(self) -> str:
         """Página HTML com a legenda multicor pintada com as cores de verdade,
         pra achar o erro de classe sem precisar assistir o vídeo."""
