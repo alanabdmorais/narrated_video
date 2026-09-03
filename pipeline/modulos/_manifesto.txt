@@ -5,6 +5,7 @@ analise.py
 audio_narracao.py
 biblia_livros.py
 biblia_texto.py
+camadas.py
 caption_pipeline.py
 checkpoint.py
 classificacao.py

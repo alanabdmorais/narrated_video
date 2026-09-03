@@ -593,6 +593,16 @@ class PipelineConfig:
         rodar o Stanza/Kiwi de novo pra esse idioma."""
         return f"{self.NOME_ORACAO}_classificacao_multicolor_{lang}.json"
 
+    def nome_camadas(self) -> str:
+        """Declaração das camadas opcionais deste vídeo (siglas, indicador de
+        versículo, título) — ver camadas.py.
+
+        Mora junto do vídeo e não na configuração de cada notebook porque a
+        decisão é do VÍDEO, não de quem está rodando: declarar num notebook e
+        esquecer no outro dava vídeo sem a camada, ou notebook gerando arquivo
+        que ninguém ia usar."""
+        return f"{self.NOME_ORACAO}_camadas.json"
+
     def nome_srt_titulo(self) -> str:
         """SRT do TÍTULO do trecho — a legenda fixa dinâmica do canto superior
         direito, em inglês ("The Massacre of the Innocents"), que muda a cada
