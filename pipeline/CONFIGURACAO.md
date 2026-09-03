@@ -1353,6 +1353,70 @@ não correspondiam entre idiomas, e a regra dispararia por desalinhamento, não
 por erro de classe. Entra depois da próxima rodada, quando houver dado
 alinhado e classificado pra medir o falso positivo.
 
+### Margem lateral, siglas de idioma, e uma linha que saía da tela
+
+As siglas (PT/EN/ES/FR/KO/ZH) ficam na **margem esquerda**, na altura de cada
+linha — não acima dela. A razão é da Alana e é boa: sigla é informação de
+**consulta**, você olha uma vez e sabe qual linha é a sua; no meio do texto ela
+disputaria atenção com a leitura a cada bloco.
+
+Pra isso a legenda precisa não ocupar aquele espaço, e aí a medição mudou o
+desenho da solução.
+
+#### O que a régua mostrou
+
+Medi as 215 linhas do Mateus 2 com a métrica real do Arial. Mediana 795px numa
+tela de 1280 — mas **o francês do bloco 31 dá 1403px**. Ele **não cabe na tela
+hoje**: vai de ponta a ponta e a última palavra encosta na borda. Renderizei
+pra confirmar, não deduzi.
+
+Ou seja: a margem não criou o problema, ela **revelou** um que já existia.
+
+| margem (dos 2 lados) | largura útil | linhas que não cabem | encolhimento |
+|---|---|---|---|
+| 0px | 1280 | 1/215 | pior 91% |
+| 60px | 1160 | 15/215 | mediano 97% |
+| **70px** | **1140** | **17/215** | **mediano 95%, pior 81%** |
+| 120px | 1040 | 34/215 | mediano 91% |
+
+70px é o escolhido: a sigla ("EN" em negrito, fonte 20, recuada 18px) ocupa
+~51px e sobra folga, e só 8% das linhas encolhem — a mediana delas, 5%, que
+não se percebe.
+
+#### Encolher em vez de quebrar
+
+O ASS não tem "encolher pra caber", então a conta é feita antes de escrever o
+arquivo (`largura_texto`, com uma tabela de avanço do Arial embutida —
+conferida contra as 215 linhas, **erro máximo 0,019%**). Linha que não cabe sai
+com `\fscx`/`\fscy`.
+
+A alternativa seria quebrar em duas linhas, e ela sai cara: 80px separam um
+idioma do outro, e uma segunda linha comeria essa folga. Encolher 5% é
+invisível; empurrar a pilha inteira, não.
+
+A **borda encolhe junto** (`\bord` × escala). Sem isso a linha reduzida sai com
+caixas proporcionalmente mais gordas que as das outras — o `\fscx` encolhe os
+glifos, não o contorno.
+
+#### O defeito que quase foi pro ar
+
+Fazendo isto, esbarrei num erro meu do commit do espaço fino (`668734d`):
+`_linha_colorida_ass()` usava `espaco_colado` **sem recebê-lo** — nem
+parâmetro, nem global.
+
+Ficou escondido porque o Python não avalia o ramo do `if` quando a condição é
+falsa, e a condição é `peca.colado_anterior` — que **só é verdadeira em
+coreano**. Nos quatro idiomas latinos, zero peças coladas; no coreano, 401 de
+771. O `.ass` que estava no Drive foi gerado 33 minutos ANTES desse commit,
+então nada nunca exercitou a linha.
+
+A próxima rodada da legenda multicor teria estourado `NameError` no primeiro
+bloco do KO.
+
+> Cobertura por idioma não é cobertura. Quatro dos cinco idiomas passavam por
+> ali sem nunca tocar no caminho quebrado, e o único que tocava era o que
+> ninguém tinha rodado desde a mudança.
+
 ### Espaço fino entre morfemas coreanos
 
 Na mesma queima, as sílabas coreanas saíram espremidas. A causa é geométrica:
