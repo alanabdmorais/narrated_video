@@ -228,8 +228,8 @@ class GroqClient:
         innocent ones".
 
         Devolve "" quando a IA não responde: quem chama decide o que fazer, e
-        o padrão (ver match_pipeline.titulo_em) é ficar com o português em vez
-        de gravar lixo na planilha.
+        o padrão (ver match_pipeline.resolver_titulos) é deixar o título como
+        faltando, pra tradução manual, em vez de gravar lixo na planilha.
         """
         destino = self._NOMES_IDIOMA_TITULO.get(idioma)
         if not destino:

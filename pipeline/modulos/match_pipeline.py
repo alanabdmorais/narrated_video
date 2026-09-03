@@ -32,6 +32,7 @@ import json
 import re
 import time
 import unicodedata
+from typing import NamedTuple
 
 
 def carregar_lexico_biblico(caminho_titulos, caminho_eventos):
@@ -609,10 +610,10 @@ def garantir_aba_versiculo_tags(spreadsheet, nome_aba="versiculo_tags"):
 COLUNAS_EVENTO_TAGS = ["livro_pt", "capitulo_ini", "capitulo_fim", "evento_id", "titulo", "tags", "tags_semelhantes",
                         "tags_clima", "tags_clima_semelhantes"]
 # `titulo` é o português, que veio do léxico. `titulo_en/ko/zh` começam
-# vazios e enchem AOS POUCOS: quem precisa do título num idioma chama
-# titulo_em(), que traduz o que falta e GRAVA de volta aqui. Assim o custo de
-# tradução é pago uma vez por título, não uma vez por vídeo -- e a planilha
-# fica editável, pra corrigir uma tradução ruim à mão.
+# vazios e enchem AOS POUCOS, À MÃO: é a tradução conferida que vai pra tela.
+# resolver_titulos() lê daqui e LISTA o que falta (com o endereço da célula);
+# só nos modos "sugerir"/"gravar" a IA entra, e só o "gravar" escreve aqui.
+# Assim o custo de tradução é pago uma vez por título, não uma vez por vídeo.
 COLUNAS_TITULO_TAGS = ["livro_pt", "capitulo", "versiculo_ini", "versiculo_fim", "titulo_id", "titulo", "tags", "tags_semelhantes",
                         "tags_clima", "tags_clima_semelhantes",
                         "titulo_en", "titulo_ko", "titulo_zh"]
@@ -737,7 +738,7 @@ def sincronizar_evento_titulo_tags(aba_evento_tags, aba_titulo_tags, eventos_bib
             chave_id, titulo.get("titulo", ""),
             ", ".join(titulo.get("tags", [])), ", ".join(titulo.get("tags_semelhantes", [])),
             "", "",   # tags_clima/tags_clima_semelhantes -- preenchidas depois via IA
-            "", "", "",  # titulo_en/ko/zh -- preenchidos sob demanda por titulo_em()
+            "", "", "",  # titulo_en/ko/zh -- preenchidos à mão (ou por resolver_titulos)
         ])
     if linhas_titulo:
         aba_titulo_tags.append_rows(linhas_titulo, value_input_option="USER_ENTERED")
@@ -1063,54 +1064,136 @@ def gerar_sugestoes_match(versiculos_texto, biblioteca, lista_tags_biblia,
 
 
 # ── Título do trecho, no idioma pedido ───────────────────────────────────────
+#
+# A regra é TRADUÇÃO MANUAL PRIMEIRO. O que aparece na tela vem da planilha,
+# onde a tradução foi conferida por gente -- nunca de uma sugestão que a IA
+# acabou de inventar e ninguém leu. Título de trecho bíblico é nome
+# consagrado ("The Massacre of the Innocents"), não frase avulsa: a IA erra
+# esse registro com frequência, e o erro fica queimado no vídeo.
+#
+# Por isso o pipeline SEMPRE olha a planilha primeiro, e o que falta ele
+# SINALIZA -- com o endereço da célula, pra preencher e seguir. Os modos:
+#
+#   "manual"   (padrão) não chama IA nenhuma. Lista o que falta e segue sem
+#              esses trechos.
+#   "sugerir"  chama a IA e MOSTRA a sugestão junto do endereço da célula,
+#              sem gravar. Você confere, cola o que aprovar, roda de novo.
+#              A sugestão NÃO vai pra tela: não foi conferida ainda.
+#   "gravar"   chama a IA, grava na planilha e usa. É o comportamento antigo;
+#              serve pra encher rápido um capítulo que você vai revisar depois.
+#
+# Em todos eles a planilha é a fonte da verdade, e a tradução é paga UMA VEZ
+# por título -- não uma vez por vídeo.
 
 IDIOMAS_TITULO = ("en", "ko", "zh")
 
+MODOS_TITULO = ("manual", "sugerir", "gravar")
 
-def titulo_em(aba_titulo_tags, titulo_id, idioma, traduzir=None):
-    """Título daquele trecho no idioma pedido — traduzindo e GRAVANDO na
-    planilha quando ainda não existe lá.
 
-    Devolve (titulo, origem), com origem em {"planilha", "traduzido",
-    "portugues", "nao_achei"}. A origem volta junto porque quem chama precisa
-    saber se aquilo é revisado ou recém-inventado por uma IA.
+class TituloFaltando(NamedTuple):
+    """Um (título, idioma) que a planilha ainda não tem."""
+    titulo_id: str
+    idioma: str
+    linha: int          # linha na planilha (1 é o cabeçalho)
+    celula: str         # ex: "K12" -- pra colar direto, sem contar coluna
+    titulo_pt: str
+    sugestao: str = ""  # só no modo "sugerir"
 
-        traduzir(titulo_pt, idioma) -> str   opcional. Sem ele, título que
-                                             falta NÃO é traduzido: devolve o
-                                             português com origem="portugues".
 
-    A gravação é o ponto: o custo de tradução é pago UMA VEZ por título, e não
-    a cada vídeo. A planilha enche sozinha conforme os capítulos vão saindo, e
-    fica editável -- tradução ruim se corrige à mão, e ninguém precisa mexer em
-    código pra isso.
+class Titulos(NamedTuple):
+    """O resultado do levantamento.
+
+    `texto` só tem o que está NA PLANILHA (ou acabou de ser gravado lá): é o
+    que pode ir pra tela. Sugestão não conferida fica em `faltando`, junto do
+    endereço da célula.
     """
-    if idioma not in IDIOMAS_TITULO:
+    texto: dict          # (titulo_id, idioma) -> str
+    origem: dict         # (titulo_id, idioma) -> "planilha" | "gravado"
+    faltando: list       # list[TituloFaltando]
+    nao_achei: list      # titulo_id que nem linha tem na planilha
+
+
+def _letra_coluna_titulo(idioma: str) -> str:
+    coluna = f"titulo_{idioma}"
+    if coluna not in COLUNAS_TITULO_TAGS:
         raise ValueError(f"idioma '{idioma}' não tem coluna na aba de títulos "
                          f"(tem: {', '.join(IDIOMAS_TITULO)})")
-    coluna = f"titulo_{idioma}"
+    return _col_letra(COLUNAS_TITULO_TAGS.index(coluna) + 1)
+
+
+def resolver_titulos(aba_titulo_tags, titulo_ids, modo="manual", traduzir=None,
+                     idiomas=IDIOMAS_TITULO) -> Titulos:
+    """Levanta os títulos desses trechos nesses idiomas -> Titulos.
+
+    Lê a planilha UMA vez, não uma vez por (título, idioma) -- eram 3N
+    leituras da aba inteira pra um capítulo de N trechos.
+
+    `traduzir(titulo_pt, idioma) -> str` só é chamado nos modos "sugerir" e
+    "gravar". Sem ele, os dois se comportam como "manual" (e quem chama vê
+    isso pelas sugestões vazias) -- é de propósito: falta de chave de IA nunca
+    deve virar título faltando em silêncio.
+    """
+    if modo not in MODOS_TITULO:
+        raise ValueError(f"modo '{modo}' não existe (tem: {', '.join(MODOS_TITULO)})")
+    for idioma in idiomas:
+        _letra_coluna_titulo(idioma)   # valida antes de gastar leitura
+
     registros = aba_titulo_tags.get_all_records()
-
-    alvo = None
+    por_id = {}
     for numero, linha in enumerate(registros, start=2):   # 1 é o cabeçalho
-        if str(linha.get("titulo_id", "")).strip() == str(titulo_id).strip():
-            alvo = (numero, linha)
-            break
-    if alvo is None:
-        return "", "nao_achei"
+        chave = str(linha.get("titulo_id", "")).strip()
+        if chave and chave not in por_id:
+            por_id[chave] = (numero, linha)
 
-    numero, linha = alvo
-    ja_tem = str(linha.get(coluna, "")).strip()
-    if ja_tem:
-        return ja_tem, "planilha"
+    texto, origem, faltando, nao_achei = {}, {}, [], []
+    for titulo_id in titulo_ids:
+        chave = str(titulo_id).strip()
+        if chave not in por_id:
+            nao_achei.append(chave)
+            continue
+        numero, linha = por_id[chave]
+        em_portugues = str(linha.get("titulo", "")).strip()
 
-    em_portugues = str(linha.get("titulo", "")).strip()
-    if not em_portugues or traduzir is None:
-        return em_portugues, "portugues"
+        for idioma in idiomas:
+            ja_tem = str(linha.get(f"titulo_{idioma}", "")).strip()
+            if ja_tem:
+                texto[(chave, idioma)] = ja_tem
+                origem[(chave, idioma)] = "planilha"
+                continue
 
-    traduzido = (traduzir(em_portugues, idioma) or "").strip()
-    if not traduzido:
-        return em_portugues, "portugues"
+            celula = f"{_letra_coluna_titulo(idioma)}{numero}"
+            sugestao = ""
+            if modo in ("sugerir", "gravar") and traduzir is not None and em_portugues:
+                sugestao = (traduzir(em_portugues, idioma) or "").strip()
 
-    letra = _col_letra(COLUNAS_TITULO_TAGS.index(coluna) + 1)
-    aba_titulo_tags.update(values=[[traduzido]], range_name=f"{letra}{numero}")
-    return traduzido, "traduzido"
+            if modo == "gravar" and sugestao:
+                aba_titulo_tags.update(values=[[sugestao]], range_name=celula)
+                texto[(chave, idioma)] = sugestao
+                origem[(chave, idioma)] = "gravado"
+                continue
+
+            faltando.append(TituloFaltando(chave, idioma, numero, celula,
+                                           em_portugues, sugestao))
+
+    return Titulos(texto, origem, faltando, nao_achei)
+
+
+def relatorio_faltando(faltando, idioma_da_tela="en") -> str:
+    """As linhas que a pessoa lê pra saber o que preencher.
+
+    Endereço da célula na frente, porque o trabalho é COLAR na planilha --
+    "falta o título tal" sem dizer onde manda procurar.
+    """
+    if not faltando:
+        return ""
+    linhas = []
+    for idioma in dict.fromkeys(f.idioma for f in faltando):
+        do_idioma = [f for f in faltando if f.idioma == idioma]
+        na_tela = " (é o que vai na TELA)" if idioma == idioma_da_tela else ""
+        linhas.append(f"📝 {len(do_idioma)} sem '{idioma}'{na_tela}:")
+        for f in do_idioma:
+            linhas.append(f"     {f.celula:>5}  {f.titulo_id:<14} {f.titulo_pt}")
+            if f.sugestao:
+                linhas.append(f"            sugestão da IA: {f.sugestao}")
+    linhas.append("   Preencha essas células na aba titulo_tags e rode esta célula de novo.")
+    return "\n".join(linhas)
