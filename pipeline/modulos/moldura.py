@@ -236,3 +236,74 @@ def gerar_fundo_liso(caminho: Path | str, cor: str = "#F2EEE6",
          "-frames:v", "1", "-update", "1", str(caminho)],
         check=True)
     return caminho
+
+
+# ── A cor do texto dos cantos ───────────────────────────────────────────────
+# O indicador de versículo e o título são brancos com contorno preto: feitos
+# pra ficar EM CIMA DA CENA, que é escura e variada. Na versão em miniatura o
+# fundo deles passa a ser a imagem mestre, que costuma ser clara -- e aí
+# branco com contorno preto vira letra oca, legível a duras penas e feia.
+#
+# Em vez de uma opção pra marcar (e esquecer), o tom sai MEDIDO da própria
+# imagem mestre, e só das faixas onde esse texto de fato cai.
+
+# ASS usa &H00BBGGRR -- ao contrário do HTML.
+CORES_CANTO: dict[str, tuple[str, str]] = {
+    #        texto            contorno
+    "escuro": ("&H00FFFFFF", "&H00000000"),   # branco com contorno preto
+    "claro":  ("&H002B2B2B", "&H00F0F0F0"),   # quase-preto com contorno claro
+}
+
+# Onde o texto de canto cai, em fração da tela: (x0, y0, x1, y1). A faixa de
+# cima cobre o indicador de versículo (esquerda) e o título (direita); a de
+# baixo, o crédito da imagem.
+FAIXAS_DE_CANTO = ((0.0, 0.0, 1.0, 0.10), (0.0, 0.90, 0.35, 1.0))
+
+LIMIAR_CLARO = 0.55   # luminância média acima disso = fundo claro
+
+
+def tom_do_fundo(imagem: Path | str,
+                 faixas: tuple = FAIXAS_DE_CANTO) -> tuple[str, float]:
+    """('claro'|'escuro', luminância 0..1) das faixas onde o texto de canto cai.
+
+    Mede só essas faixas, não a imagem inteira: uma imagem mestre escura no
+    meio e clara nas beiradas decidiria errado pela média geral -- e é
+    justamente nas beiradas que o texto está.
+    """
+    imagem = Path(imagem)
+    if not imagem.exists():
+        raise ErroDeMoldura(f"imagem mestre não encontrada: {imagem}")
+
+    recortes = []
+    for x0, y0, x1, y1 in faixas:
+        recortes.append(
+            f"crop=iw*{x1 - x0:.4f}:ih*{y1 - y0:.4f}:iw*{x0:.4f}:ih*{y0:.4f},"
+            f"scale=1:1")
+    filtro = ";".join(f"[0:v]{r}[f{n}]" for n, r in enumerate(recortes))
+    filtro += ";" + "".join(f"[f{n}]" for n in range(len(recortes)))
+    filtro += f"hstack=inputs={len(recortes)}[fim]" if len(recortes) > 1 else "null[fim]"
+
+    saida = subprocess.run(
+        ["ffmpeg", "-v", "error", "-i", str(imagem), "-filter_complex", filtro,
+         "-map", "[fim]", "-f", "rawvideo", "-pix_fmt", "rgb24", "-"],
+        capture_output=True, check=True).stdout
+    if not saida:
+        raise ErroDeMoldura(f"não consegui ler os pixels de {imagem.name}")
+
+    # luminância perceptual (Rec. 709), média dos recortes
+    valores = [(0.2126 * saida[i] + 0.7152 * saida[i + 1] + 0.0722 * saida[i + 2]) / 255
+               for i in range(0, len(saida) - 2, 3)]
+    media = sum(valores) / len(valores)
+    return ("claro" if media > LIMIAR_CLARO else "escuro"), media
+
+
+def cores_de_canto(imagem_mestre: Optional[Path | str]) -> tuple[str, str, str, float]:
+    """(cor_texto, cor_contorno, tom, luminância) pro texto dos cantos.
+
+    Sem imagem mestre (versão de tela cheia), devolve o par de sempre -- o
+    fundo ali é a cena, e o branco com contorno preto é o certo.
+    """
+    if imagem_mestre is None:
+        return (*CORES_CANTO["escuro"], "escuro", 0.0)
+    tom, luminancia = tom_do_fundo(imagem_mestre)
+    return (*CORES_CANTO[tom], tom, luminancia)

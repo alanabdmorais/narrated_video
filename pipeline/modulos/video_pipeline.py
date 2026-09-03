@@ -58,6 +58,7 @@ from ffmpeg_utils import (
 )
 import audio_narracao
 from models import Clipe
+from srt_utils import legendas_de_creditos, salvar_srt
 # A regra de link do Pixabay mora num módulo só -- ela já valia aqui e no
 # semeador, e ia virar um terceiro lugar. Ver pixabay_urls.py.
 from pixabay_urls import (
@@ -1059,12 +1060,51 @@ class VideoPipeline:
             logger.warning("Trilha não encontrada — vídeo base sem música de fundo")
 
         self._drive.upload(video_base, self._cfg.pasta_assets_videos, "video/mp4")
+        self._salvar_creditos(clipes)
         logger.info("✅ Vídeo base: %s (%.2f MB)", video_base.name, video_base.stat().st_size / 1_048_576)
         self._cp.salvar("video_base_criado", {
             "arquivo": str(video_base),
             "duracao_audio": round(obter_duracao(audio_path), 1),
         })
         return video_base
+
+    def _salvar_creditos(self, clipes: list[Clipe]) -> Optional[Path]:
+        """Grava o SRT do crédito da imagem — um bloco por clipe, no tempo dele.
+
+        Só a versão em MINIATURA usa: nela o clipe entra encolhido e o crédito
+        queimado dentro dele fica de 6px, ilegível. O arquivo sai daqui porque
+        é aqui que se sabe qual clipe é de quem e quanto cada um dura -- os
+        notebooks de queima só recebem o mp4 já concatenado, onde essa
+        informação não existe mais.
+
+        As durações são MEDIDAS nos arquivos prontos, não somadas de
+        DURACAO_CLIPE: clipe curto demais pro corte pedido sai com a duração
+        que tinha, e uma soma teórica iria escorregando do vídeo real, com o
+        crédito atrasando mais a cada clipe.
+
+        Falhar aqui não derruba o vídeo base, que é o que importa nesta fase.
+        """
+        try:
+            em_ordem = sorted(clipes, key=lambda c: c.indice)
+            arquivos = [Path(c.arquivo_pronto) for c in em_ordem if c.arquivo_pronto]
+            if len(arquivos) != len(em_ordem):
+                logger.warning("   ⚠️  %d clipe(s) sem arquivo pronto — créditos não gerados",
+                               len(em_ordem) - len(arquivos))
+                return None
+            duracoes = [obter_duracao(a) for a in arquivos]
+            legendas = legendas_de_creditos([c.autor for c in em_ordem], duracoes)
+            if not legendas:
+                logger.warning("   ⚠️  Nenhum clipe com autor — créditos não gerados")
+                return None
+            destino = Path(self._cfg.nome_srt_creditos)
+            salvar_srt(legendas, destino)
+            self._drive.upload(destino, self._cfg.pasta_oracao, "text/plain")
+            logger.info("   🏷️  Créditos da imagem: %s (%d bloco(s) para %d clipe(s))",
+                        destino.name, len(legendas), len(em_ordem))
+            return destino
+        except Exception as exc:
+            logger.warning("   ⚠️  Créditos da imagem não gerados: %s", exc)
+            return None
 
     def _resolver_trilha_sonora(self) -> Optional[Path]:
         """

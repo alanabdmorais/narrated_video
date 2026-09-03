@@ -907,6 +907,9 @@ def gerar_ass_versiculo(
     italico: int = 0,
     negrito: int = 1,
     tamanho_fonte: Optional[int] = None,
+    cor_texto: str = "&H00FFFFFF",
+    cor_contorno: str = "&H00000000",
+    margem_direita: int = 20,
 ) -> Path:
     """
     Gera o .ass de uma legenda FIXA DINÂMICA — texto pequeno, ancorado num
@@ -920,8 +923,24 @@ def gerar_ass_versiculo(
         alinhamento=7 (canto superior ESQUERDO)  livro:versículo, "Matt/마/太 2:4"
         alinhamento=9 (canto superior DIREITO)   título do trecho, em inglês
 
-    Os dois no alto porque a pilha de idiomas ocupa do meio pra cima e o
-    rodapé é onde os controles do YouTube aparecem.
+        alinhamento=1 (canto inferior ESQUERDO)  crédito da imagem, na versão
+                                                em miniatura
+
+    Os dois primeiros no alto porque a pilha de idiomas ocupa do meio pra cima
+    e o rodapé é onde os controles do YouTube aparecem. O crédito é a exceção:
+    na versão em miniatura ele fica embaixo, à esquerda da foto -- ali não tem
+    nada pra ler, então os controles do YouTube passando por cima não custam.
+
+    `cor_texto`/`cor_contorno` no formato ASS (&H00BBGGRR). O padrão -- branco
+    com contorno preto -- é feito pra texto EM CIMA DA CENA. Na versão em
+    miniatura o fundo é a imagem mestre, que costuma ser clara, e aí branco
+    com contorno vira letra oca: ver moldura.cores_de_canto().
+
+    `margem_direita` é onde a linha QUEBRA. Interessa ao crédito da versão em
+    miniatura: ele fica à esquerda da foto, e um nome de autor comprido
+    atravessaria por cima dela -- a camada do crédito é desenhada depois. Com
+    a margem no lugar certo, o nome comprido quebra em duas linhas (que sobem,
+    porque a âncora é embaixo) em vez de invadir a imagem.
     """
     if caminho_saida is None:
         caminho_saida = Path(f"versiculo_{config.NOME_ORACAO}.ass")
@@ -938,7 +957,7 @@ ScaledBorderAndShadow: yes
 
 [V4+ Styles]
 Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
-Style: Versiculo,{config.FONTE_CJK},{tamanho_fonte or config.TAMANHO_FONTE_VERSICULO},&H00FFFFFF,&H000000FF,&H00000000,&H90000000,{negrito},{italico},0,0,100,100,0,0,1,{config.CONTORNO_VERSICULO},0,{alinhamento},20,20,20,1
+Style: Versiculo,{config.FONTE_CJK},{tamanho_fonte or config.TAMANHO_FONTE_VERSICULO},{cor_texto},&H000000FF,{cor_contorno},&H90000000,{negrito},{italico},0,0,100,100,0,0,1,{config.CONTORNO_VERSICULO},0,{alinhamento},20,{margem_direita},20,1
 
 [Events]
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text

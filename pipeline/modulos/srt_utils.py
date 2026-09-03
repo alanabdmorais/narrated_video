@@ -692,6 +692,47 @@ def escolher_legenda_mestre(
         f"({', '.join(legados)}) no Drive.")
 
 
+def legendas_de_creditos(
+    autores: list[str],
+    duracoes_seg: list[float],
+    prefixo: str = "Imagem: ",
+) -> list[Legenda]:
+    """SRT do crédito da imagem — um bloco por clipe, no tempo dele.
+
+    Existe por causa da versão em MINIATURA. Na versão de tela cheia o crédito
+    já vem queimado dentro do próprio clipe, em corpo 16; encolhido pra dentro
+    de uma miniatura de 37% ele vira uma marca de 6px que ninguém lê. Aqui o
+    crédito sai do clipe e vira uma camada do QUADRO, em tamanho normal, no
+    canto inferior esquerdo -- onde a miniatura não chega.
+
+    Clipes seguidos do MESMO autor viram um bloco só: a mesma linha piscando
+    a cada troca de clipe chama mais atenção que o crédito merece.
+
+    Clipe sem autor não vira bloco vazio -- vira ausência de crédito naquele
+    trecho, que é a verdade.
+    """
+    if len(autores) != len(duracoes_seg):
+        raise ValueError(f"{len(autores)} autor(es) para {len(duracoes_seg)} "
+                         f"duração(ões) — a lista tem que ser a mesma")
+
+    legendas: list[Legenda] = []
+    inicio_ms = 0
+    for autor, duracao in zip(autores, duracoes_seg):
+        fim_ms = inicio_ms + int(round(duracao * 1000))
+        nome = (autor or "").strip()
+        if nome:
+            if legendas and legendas[-1].texto == f"{prefixo}{nome}" \
+                    and legendas[-1].fim_ms == inicio_ms:
+                legendas[-1].fim_ms = fim_ms          # mesmo autor, segue o bloco
+            else:
+                legendas.append(Legenda(id=len(legendas) + 1, inicio_ms=inicio_ms,
+                                        fim_ms=fim_ms, texto=f"{prefixo}{nome}"))
+        inicio_ms = fim_ms
+    for n, leg in enumerate(legendas, start=1):
+        leg.id = n
+    return legendas
+
+
 def gerar_legendas_titulo(
     faixas: list[tuple[int, int, str]],
     tempos_versiculo: dict[int, int],

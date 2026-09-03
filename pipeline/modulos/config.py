@@ -608,6 +608,15 @@ class PipelineConfig:
         return f"{self.NOME_ORACAO}_classificacao_multicolor_{lang}.json"
 
     @property
+    def nome_srt_creditos(self) -> str:
+        """SRT do crédito da imagem — um bloco por clipe, no tempo dele.
+
+        Sai do video-base-*.ipynb, que é quem sabe qual clipe é de quem e
+        quanto cada um dura. Só a versão em MINIATURA usa: na de tela cheia o
+        crédito já vem queimado dentro do clipe."""
+        return f"{self.NOME_ORACAO}_creditos.srt"
+
+    @property
     def nome_imagem_mestre(self) -> str:
         """Imagem de fundo da versão em MINIATURA, específica DESTE vídeo.
 
