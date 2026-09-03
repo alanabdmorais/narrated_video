@@ -96,6 +96,10 @@ class PipelineConfig:
 
     # ── Assets externos ───────────────────────────────────────────────────────
     NOME_ARQUIVO_LOGO:   str = "globo_cruz_logo.png"
+    # Imagem mestre do canal (fundo da versão em miniatura), compartilhada
+    # entre vídeos -- mora em assets/marca, ao lado do logo. Um vídeo pode ter
+    # a sua própria (ver nome_imagem_mestre), que tem preferência.
+    NOME_IMAGEM_MESTRE_PADRAO: str = "imagem_mestre.png"
     NOME_ARQUIVO_MUSICA: str = (
         "Calmo créditos Shattered Paths - Aakash Gandhi(Youtube Audio Library).mp3"
     )
@@ -280,6 +284,14 @@ class PipelineConfig:
     # idiomas intacto. Vazio (padrão) = nomes de sempre, nada muda.
     SUFIXO_VARIANTE_IDIOMAS: str = ""
 
+    # ── Sufixo de variante de LAYOUT ──────────────────────────────────────────
+    # Outro eixo, independente do de idiomas: a MESMA seleção de idiomas pode
+    # sair com a cena ocupando a tela (padrão) ou encolhida numa miniatura
+    # abaixo da legenda, sobre uma imagem mestre limpa (ver moldura.py). Os
+    # dois vídeos convivem na pasta -- "_mini" no nome de quem é miniatura.
+    # Vazio (padrão) = nomes de sempre.
+    SUFIXO_VARIANTE_LAYOUT: str = ""
+
     @property
     def NOME_VIDEO_FINAL(self) -> str:
         """Vídeo final com legenda única (1 faixa simples) — Single Subtitle."""
@@ -290,7 +302,8 @@ class PipelineConfig:
         """Vídeo final com legendas multi-idioma empilhadas — Language Subtitles.
         Nome diferente de NOME_VIDEO_FINAL de propósito: os dois vídeos podem
         coexistir na mesma pasta sem um sobrescrever o outro."""
-        return f"{self.NOME_ORACAO}_final_idiomas{self._sufixo_modo}{self.SUFIXO_VARIANTE_IDIOMAS}.mp4"
+        return (f"{self.NOME_ORACAO}_final_idiomas{self._sufixo_modo}"
+                f"{self.SUFIXO_VARIANTE_IDIOMAS}{self.SUFIXO_VARIANTE_LAYOUT}.mp4")
 
     @property
     def NOME_VIDEO_FINAL_CLASSIFICACAO(self) -> str:
@@ -314,7 +327,8 @@ class PipelineConfig:
         dos outros níveis (antes era _com_legenda_colorida; vídeos já
         gerados antes dessa mudança, ex: 40_Matt_02, têm o arquivo real no
         Drive com o nome antigo -- renomeie manualmente)."""
-        return f"{self.NOME_ORACAO}_final_multicolor{self._sufixo_modo}{self.SUFIXO_VARIANTE_IDIOMAS}.mp4"
+        return (f"{self.NOME_ORACAO}_final_multicolor{self._sufixo_modo}"
+                f"{self.SUFIXO_VARIANTE_IDIOMAS}{self.SUFIXO_VARIANTE_LAYOUT}.mp4")
 
     @property
     def NOME_SRT_PT_WHISPER(self) -> str:
@@ -592,6 +606,17 @@ class PipelineConfig:
         existir no Drive quando o notebook rodar, ele é usado no lugar de
         rodar o Stanza/Kiwi de novo pra esse idioma."""
         return f"{self.NOME_ORACAO}_classificacao_multicolor_{lang}.json"
+
+    @property
+    def nome_imagem_mestre(self) -> str:
+        """Imagem de fundo da versão em MINIATURA, específica DESTE vídeo.
+
+        Fica na pasta do vídeo. Quando não existe, a queima cai na imagem
+        mestre compartilhada do canal (NOME_IMAGEM_MESTRE_PADRAO, em
+        assets/marca) e, se nem essa existir, num fundo de cor lisa gerado na
+        hora -- pra dar pra rodar a variante antes de a imagem definitiva
+        estar escolhida."""
+        return f"{self.NOME_ORACAO}_imagem_mestre.png"
 
     @property
     def nome_camadas(self) -> str:

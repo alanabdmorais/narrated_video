@@ -23,6 +23,7 @@ jornadas.py
 language_captions_pipeline.py
 match_pipeline.py
 models.py
+moldura.py
 nomenclatura.py
 pixabay_seed_pipeline.py
 pixabay_urls.py

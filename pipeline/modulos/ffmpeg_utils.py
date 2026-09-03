@@ -31,7 +31,7 @@ from typing import Optional
 
 from config import PipelineConfig
 from models import Legenda
-from constants import CORES_HTML, TEXTO_PRETO, SIGLAS_IDIOMAS
+from constants import CORES_HTML, TEXTO_PRETO, SIGLAS_IDIOMAS, LARGURA_TELA, ALTURA_TELA
 
 logger = logging.getLogger(__name__)
 
@@ -962,6 +962,10 @@ def queimar_legendas_ass(
     video_entrada: Path | str,
     ass_path:      Path | str | list[Path | str],
     saida:         Path | str,
+    imagem_mestre: Optional[Path | str] = None,
+    miniatura:     Optional[tuple[int, int, int, int]] = None,
+    borda_miniatura: int = 0,
+    cor_borda:     str = "0x2B2B2B",
 ) -> Path:
     """
     Queima um (ou mais) arquivo(s) ASS no vídeo, encadeados no mesmo filtro
@@ -970,26 +974,82 @@ def queimar_legendas_ass(
 
     Aceita um único caminho (compatibilidade com chamadas antigas) ou uma
     lista de caminhos, aplicados na ordem dada.
+
+    ── Variante MINIATURA ──────────────────────────────────────────────────
+    Com `imagem_mestre` e `miniatura=(x, y, largura, altura)`, o vídeo das
+    cenas para de ser o fundo: a imagem mestre passa a ocupar a tela e as
+    cenas entram encolhidas naquele retângulo, abaixo da legenda (a caixa sai
+    de moldura.caixa_miniatura, derivada das posições das linhas). Serve pra
+    foto e legenda pararem de disputar o mesmo pixel.
+
+    Tudo no MESMO passe: fundo + miniatura + camadas de legenda. Compor num
+    passe e queimar noutro custaria uma recodificação inteira e mais uma
+    geração de perda.
+
+    O áudio continua vindo do vídeo das cenas, copiado sem recodificar.
     """
     saida = Path(saida)
     caminhos = ass_path if isinstance(ass_path, (list, tuple)) else [ass_path]
     # O caminho do .ass precisa de barras normais no FFmpeg (mesmo no Windows/Colab)
     ass_strs = [str(Path(p).resolve()).replace("\\", "/") for p in caminhos]
-    filtro = ",".join(f"ass={s}" for s in ass_strs)
+    filtro_ass = ",".join(f"ass={s}" for s in ass_strs)
 
     encoder, args_qualidade = _detectar_encoder_video()
 
-    _run(
-        ["ffmpeg", "-y",
-         "-i", str(video_entrada),
-         "-vf", filtro,
-         "-c:a", "copy",
-         "-c:v", encoder, *args_qualidade,
-         str(saida)],
-        "queimar_ass",
-    )
+    if (imagem_mestre is None) != (miniatura is None):
+        raise ValueError(
+            "imagem_mestre e miniatura andam juntas: uma imagem de fundo sem "
+            "caixa esconderia o vídeo inteiro, e uma caixa sem fundo deixaria "
+            "o resto da tela em preto.")
+
+    if imagem_mestre is None:
+        cmd = ["ffmpeg", "-y",
+               "-i", str(video_entrada),
+               "-vf", filtro_ass,
+               "-c:a", "copy",
+               "-c:v", encoder, *args_qualidade,
+               str(saida)]
+    else:
+        if not Path(imagem_mestre).exists():
+            raise FileNotFoundError(f"imagem mestre não encontrada: {imagem_mestre}")
+        x, y, largura, altura = miniatura
+        b = max(0, int(borda_miniatura))
+        interna_l, interna_a = largura - 2 * b, altura - 2 * b
+        if interna_l <= 0 or interna_a <= 0:
+            raise ValueError(f"borda de {b}px não cabe numa miniatura {largura}x{altura}")
+
+        # A imagem mestre PREENCHE a tela (amplia e corta o que sobra), mesma
+        # regra do fundo de imagem em imagem_para_clipe: tarja preta na
+        # lateral de um fundo é o avesso do que se quer.
+        encolher = (f"scale={interna_l}:{interna_a}:force_original_aspect_ratio=increase,"
+                    f"crop={interna_l}:{interna_a}")
+        if b:
+            encolher += f",pad={largura}:{altura}:{b}:{b}:color={cor_borda}"
+
+        filtro = (
+            f"[1:v]scale={LARGURA_TELA}:{ALTURA_TELA}:force_original_aspect_ratio=increase,"
+            f"crop={LARGURA_TELA}:{ALTURA_TELA},setsar=1[fundo];"
+            f"[0:v]{encolher},setsar=1[mini];"
+            f"[fundo][mini]overlay={x}:{y}:shortest=1[composto];"
+            f"[composto]{filtro_ass}[saida]"
+        )
+        cmd = ["ffmpeg", "-y",
+               "-i", str(video_entrada),
+               "-loop", "1", "-i", str(imagem_mestre),
+               "-filter_complex", filtro,
+               "-map", "[saida]", "-map", "0:a?",
+               "-c:a", "copy",
+               "-c:v", encoder, *args_qualidade,
+               str(saida)]
+        # Sem `-shortest`: quem termina o vídeo é o `shortest=1` do overlay,
+        # no fim das cenas. Medido: com `-shortest` no encoder, o libx264 em
+        # preset "medium" entrega 98 dos 100 quadros -- 80ms a menos de vídeo
+        # que de áudio, sem aviso nenhum. Some o fim da última palavra.
+
+    _run(cmd, "queimar_ass")
     logger.info(
-        "queimar_legendas_ass: %s → %s (%d camada(s), encoder=%s)",
+        "queimar_legendas_ass: %s → %s (%d camada(s), encoder=%s%s)",
         Path(video_entrada).name, saida.name, len(caminhos), encoder,
+        f", miniatura {miniatura[2]}x{miniatura[3]}" if miniatura else "",
     )
     return saida
