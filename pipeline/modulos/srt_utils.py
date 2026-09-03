@@ -690,3 +690,37 @@ def escolher_legenda_mestre(
     return nome_oficial, (
         f"não achei nem '{nome_oficial}' nem nenhum dos antigos "
         f"({', '.join(legados)}) no Drive.")
+
+
+def gerar_legendas_titulo(
+    faixas: list[tuple[int, int, str]],
+    tempos_versiculo: dict[int, int],
+    fim_video_ms: int,
+) -> list[Legenda]:
+    """SRT do título do trecho — um bloco por FAIXA de versículos.
+
+        faixas: [(versiculo_ini, versiculo_fim, texto), ...]
+
+    Irmã de gerar_legendas_versiculo(), com uma diferença que importa: o
+    indicador de versículo muda a cada versículo e cobre o capítulo inteiro;
+    o título muda a cada TRECHO (Mateus 2 tem quatro) e pode ter buraco --
+    versículo que não está em faixa nenhuma fica sem título na tela, em vez
+    de herdar o do trecho anterior.
+
+    Faixa cujo primeiro versículo não tem tempo é PULADA, não chutada: sem o
+    tempo, o título entraria na hora errada e ficaria contando outra história
+    junto com a narração.
+    """
+    legendas: list[Legenda] = []
+    for v_ini, v_fim, texto in sorted(faixas):
+        if not texto.strip() or v_ini not in tempos_versiculo:
+            continue
+        inicio = tempos_versiculo[v_ini]
+        # o fim é onde o versículo SEGUINTE ao último da faixa começa
+        seguintes = [v for v in sorted(tempos_versiculo) if v > v_fim]
+        fim = tempos_versiculo[seguintes[0]] if seguintes else fim_video_ms
+        if fim <= inicio:
+            continue
+        legendas.append(Legenda(id=len(legendas) + 1, inicio_ms=inicio,
+                                fim_ms=fim, texto=texto.strip()))
+    return legendas

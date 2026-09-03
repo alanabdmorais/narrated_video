@@ -291,3 +291,37 @@ def comparar(texto_a: str, texto_b: str, contexto: int = 6) -> Comparacao:
             ))
             posicoes.append(i1)
     return Comparacao(len(a), len(b), iguais, diferencas, posicoes)
+
+
+# ── Abreviação do livro, na língua da própria tradução ───────────────────────
+
+_TOC = re.compile(r"^\\(toc[123])\s+(.+)$")
+
+
+def extrair_siglas_usfm(conteudo: str) -> tuple[str, dict[str, str]]:
+    """Lê o cabeçalho de um arquivo USFM -> (código_do_livro, {toc1, toc2, toc3}).
+
+    O USFM traz o nome do livro NA LÍNGUA DA TRADUÇÃO em três tamanhos:
+
+        \\toc1  nome longo      ("마태복음", "馬太福音")
+        \\toc2  nome curto
+        \\toc3  ABREVIAÇÃO      ("마", "太")
+
+    É daqui que as siglas de livro em coreano e chinês devem sair, e não da
+    memória de ninguém: elas aparecem em TODO vídeo daquele livro, e uma
+    errada é um erro visível que ninguém revisa duas vezes. Vem do mesmo
+    arquivo de onde vem o texto, então a sigla é a da própria tradução.
+
+    Devolve o código USFM cru (MAT, GEN...) porque nem todo arquivo do zip é
+    um dos 66 -- quem chama decide o que fazer com deuterocanônico.
+    """
+    m = re.search(r"^\\id\s+(\w+)", conteudo, re.M)
+    codigo = m.group(1).upper() if m else ""
+    tocs: dict[str, str] = {}
+    for linha in conteudo.splitlines():
+        m_toc = _TOC.match(linha.strip())
+        if m_toc:
+            tocs.setdefault(m_toc.group(1), _limpar(m_toc.group(2)))
+        if linha.startswith("\\c "):
+            break        # passou do cabeçalho
+    return codigo, tocs

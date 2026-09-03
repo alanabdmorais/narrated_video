@@ -30,6 +30,7 @@ import logging
 from pathlib import Path
 from typing import Optional
 
+import biblia_livros as bl
 from checkpoint import Checkpoint
 from config import PipelineConfig
 from drive_utils import DriveClient
@@ -434,7 +435,23 @@ class LanguageCaptionsPipeline:
             )
 
         fim_video_ms = legendas_mestre[-1].fim_ms
-        abreviacoes = list(self._cfg.ABREVIACOES_LIVRO.values())
+        livro, _cap = bl.de_nome_projeto(self._cfg.NOME_ORACAO)
+        abreviacoes, faltando = bl.abreviacoes(
+            livro.sigla, self._cfg.IDIOMAS_INDICADOR_VERSICULO,
+            override=self._cfg.ABREVIACOES_LIVRO)
+        if faltando:
+            logger.warning(
+                "   ⚠️  Sem abreviação de '%s' em %s — esse(s) idioma(s) somem do "
+                "indicador. Encha a tabela rodando o passo de siglas do "
+                "biblia-texto-baixar.ipynb com o USFM da tradução, ou ponha em "
+                "ABREVIACOES_LIVRO. (Preferir sumir a inventar: a sigla aparece "
+                "em todo vídeo do livro.)",
+                livro.sigla, "/".join(faltando))
+        if not abreviacoes:
+            raise PipelineError(
+                f"Nenhuma abreviação de '{livro.sigla}' em "
+                f"{self._cfg.IDIOMAS_INDICADOR_VERSICULO} — o indicador sairia só "
+                f"com o número do capítulo.")
         legendas_versiculo = gerar_legendas_versiculo(tempos, self._cfg.CAPITULO, abreviacoes, fim_video_ms)
 
         destino = Path(self._cfg.nome_srt_versiculo_multilingue)

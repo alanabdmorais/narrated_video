@@ -903,12 +903,25 @@ def gerar_ass_versiculo(
     legendas_versiculo: list[Legenda],
     config: PipelineConfig,
     caminho_saida: Optional[Path | str] = None,
+    alinhamento: int = 7,
+    italico: int = 0,
+    negrito: int = 1,
+    tamanho_fonte: Optional[int] = None,
 ) -> Path:
     """
-    Gera o .ass do indicador de livro:versículo — texto pequeno, fixo no
-    canto superior esquerdo (ex: "Matt/Mt/마 2:4"), mudando só o número do
-    versículo. Camada separada das legendas de idioma (meio da tela) —
-    pensada para ser queimada junto via queimar_legendas_ass(video, [ass1, ass2], saida).
+    Gera o .ass de uma legenda FIXA DINÂMICA — texto pequeno, ancorado num
+    canto, mudando de conteúdo conforme a narração avança. Camada separada
+    das legendas de idioma (meio da tela), pensada pra ser queimada junto via
+    queimar_legendas_ass(video, [ass1, ass2, ...], saida): é um passe de
+    codificação só, então cada camada extra é de graça.
+
+    Serve os dois usos que o projeto tem hoje, que diferem só na âncora:
+
+        alinhamento=7 (canto superior ESQUERDO)  livro:versículo, "Matt/마/太 2:4"
+        alinhamento=9 (canto superior DIREITO)   título do trecho, em inglês
+
+    Os dois no alto porque a pilha de idiomas ocupa do meio pra cima e o
+    rodapé é onde os controles do YouTube aparecem.
     """
     if caminho_saida is None:
         caminho_saida = Path(f"versiculo_{config.NOME_ORACAO}.ass")
@@ -925,7 +938,7 @@ ScaledBorderAndShadow: yes
 
 [V4+ Styles]
 Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
-Style: Versiculo,{config.FONTE_CJK},{config.TAMANHO_FONTE_VERSICULO},&H00FFFFFF,&H000000FF,&H00000000,&H90000000,1,0,0,0,100,100,0,0,1,{config.CONTORNO_VERSICULO},0,7,20,20,20,1
+Style: Versiculo,{config.FONTE_CJK},{tamanho_fonte or config.TAMANHO_FONTE_VERSICULO},&H00FFFFFF,&H000000FF,&H00000000,&H90000000,{negrito},{italico},0,0,100,100,0,0,1,{config.CONTORNO_VERSICULO},0,{alinhamento},20,20,20,1
 
 [Events]
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text

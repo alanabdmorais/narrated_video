@@ -608,8 +608,14 @@ def garantir_aba_versiculo_tags(spreadsheet, nome_aba="versiculo_tags"):
 
 COLUNAS_EVENTO_TAGS = ["livro_pt", "capitulo_ini", "capitulo_fim", "evento_id", "titulo", "tags", "tags_semelhantes",
                         "tags_clima", "tags_clima_semelhantes"]
+# `titulo` é o português, que veio do léxico. `titulo_en/ko/zh` começam
+# vazios e enchem AOS POUCOS: quem precisa do título num idioma chama
+# titulo_em(), que traduz o que falta e GRAVA de volta aqui. Assim o custo de
+# tradução é pago uma vez por título, não uma vez por vídeo -- e a planilha
+# fica editável, pra corrigir uma tradução ruim à mão.
 COLUNAS_TITULO_TAGS = ["livro_pt", "capitulo", "versiculo_ini", "versiculo_fim", "titulo_id", "titulo", "tags", "tags_semelhantes",
-                        "tags_clima", "tags_clima_semelhantes"]
+                        "tags_clima", "tags_clima_semelhantes",
+                        "titulo_en", "titulo_ko", "titulo_zh"]
 
 
 def garantir_aba_evento_tags(spreadsheet, nome_aba="evento_tags"):
@@ -730,7 +736,8 @@ def sincronizar_evento_titulo_tags(aba_evento_tags, aba_titulo_tags, eventos_bib
             titulo.get("livro", ""), titulo.get("capitulo", ""), titulo.get("vIni", ""), titulo.get("vFim", ""),
             chave_id, titulo.get("titulo", ""),
             ", ".join(titulo.get("tags", [])), ", ".join(titulo.get("tags_semelhantes", [])),
-            "", "",  # tags_clima/tags_clima_semelhantes -- preenchidas depois via IA
+            "", "",   # tags_clima/tags_clima_semelhantes -- preenchidas depois via IA
+            "", "", "",  # titulo_en/ko/zh -- preenchidos sob demanda por titulo_em()
         ])
     if linhas_titulo:
         aba_titulo_tags.append_rows(linhas_titulo, value_input_option="USER_ENTERED")
@@ -1053,3 +1060,57 @@ def gerar_sugestoes_match(versiculos_texto, biblioteca, lista_tags_biblia,
               f"+ {contagem_fonte['lexico']} via léxico (grátis) + {contagem_fonte['ia']} via IA")
 
     return resultados
+
+
+# ── Título do trecho, no idioma pedido ───────────────────────────────────────
+
+IDIOMAS_TITULO = ("en", "ko", "zh")
+
+
+def titulo_em(aba_titulo_tags, titulo_id, idioma, traduzir=None):
+    """Título daquele trecho no idioma pedido — traduzindo e GRAVANDO na
+    planilha quando ainda não existe lá.
+
+    Devolve (titulo, origem), com origem em {"planilha", "traduzido",
+    "portugues", "nao_achei"}. A origem volta junto porque quem chama precisa
+    saber se aquilo é revisado ou recém-inventado por uma IA.
+
+        traduzir(titulo_pt, idioma) -> str   opcional. Sem ele, título que
+                                             falta NÃO é traduzido: devolve o
+                                             português com origem="portugues".
+
+    A gravação é o ponto: o custo de tradução é pago UMA VEZ por título, e não
+    a cada vídeo. A planilha enche sozinha conforme os capítulos vão saindo, e
+    fica editável -- tradução ruim se corrige à mão, e ninguém precisa mexer em
+    código pra isso.
+    """
+    if idioma not in IDIOMAS_TITULO:
+        raise ValueError(f"idioma '{idioma}' não tem coluna na aba de títulos "
+                         f"(tem: {', '.join(IDIOMAS_TITULO)})")
+    coluna = f"titulo_{idioma}"
+    registros = aba_titulo_tags.get_all_records()
+
+    alvo = None
+    for numero, linha in enumerate(registros, start=2):   # 1 é o cabeçalho
+        if str(linha.get("titulo_id", "")).strip() == str(titulo_id).strip():
+            alvo = (numero, linha)
+            break
+    if alvo is None:
+        return "", "nao_achei"
+
+    numero, linha = alvo
+    ja_tem = str(linha.get(coluna, "")).strip()
+    if ja_tem:
+        return ja_tem, "planilha"
+
+    em_portugues = str(linha.get("titulo", "")).strip()
+    if not em_portugues or traduzir is None:
+        return em_portugues, "portugues"
+
+    traduzido = (traduzir(em_portugues, idioma) or "").strip()
+    if not traduzido:
+        return em_portugues, "portugues"
+
+    letra = _col_letra(COLUNAS_TITULO_TAGS.index(coluna) + 1)
+    aba_titulo_tags.update(values=[[traduzido]], range_name=f"{letra}{numero}")
+    return traduzido, "traduzido"

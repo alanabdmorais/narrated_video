@@ -1353,6 +1353,71 @@ não correspondiam entre idiomas, e a regra dispararia por desalinhamento, não
 por erro de classe. Entra depois da próxima rodada, quando houver dado
 alinhado e classificado pra medir o falso positivo.
 
+### As duas legendas fixas dinâmicas dos cantos
+
+```
+Matt/마/太 2:16                      The Massacre of the Innocents
+ (versículo, esquerda)                      (título, direita)
+```
+
+Ambas mudam sozinhas conforme a narração avança, ancoradas no alto porque a
+pilha de idiomas ocupa do meio pra cima e o rodapé é onde os controles do
+YouTube aparecem. São camadas `.ass` separadas, queimadas no MESMO passe de
+codificação (`queimar_legendas_ass` aceita uma lista), então **cada camada
+extra é de graça**.
+
+#### O indicador de versículo, agora também no multicor
+
+Existia nos níveis 1 e 2 e faltava no 3 — que é o carro-chefe. Ligado por
+`INCLUIR_VERSICULO` no `caption-multicolor-burn.ipynb`.
+
+**Em inglês, coreano e chinês** (`config.IDIOMAS_INDICADOR_VERSICULO`), não em
+todos os da tela: pt/es/fr abreviam Mateus igual ("Mt"), e "Matt/Mt/Mt/Mt/마/太
+2:4" é comprido sem informar mais que "Matt/마/太 2:4". Um por sistema de
+escrita. Abreviação repetida entra uma vez só.
+
+#### As siglas de livro vêm do USFM, não da memória
+
+`dados_lexico/siglas-livros.json`, versionado, com os 66 livros. A abreviação
+coreana e a chinesa saem do **`\toc3` do próprio USFM** — o marcador que traz
+o nome do livro na língua da tradução, no mesmo arquivo de onde vem o texto.
+Um passo novo do `biblia-texto-baixar.ipynb` extrai e preenche.
+
+> **Por que não digitar as 66 de cada língua.** A sigla aparece em TODO vídeo
+> daquele livro, e uma errada é um erro visível que ninguém revisa duas vezes.
+> Sigla vazia **some da tela e avisa**; nunca vira a do inglês em silêncio.
+> Hoje só Mateus tem ko/zh — "마" já estava em uso e saiu no vídeo queimado, e
+> "太" é a do 和合本 pro mesmo livro.
+
+`ABREVIACOES_LIVRO` na configuração do vídeo continua vencendo, pra corrigir um
+livro sem esperar o USFM inteiro.
+
+`nome_pt` e `prefixo_titulo` do mesmo arquivo também são **derivados, não
+digitados**: as duas sequências (cânone e `titulos-biblicos.json`) foram
+alinhadas pela **contagem de capítulos** de cada livro, que é dado. Bateu 65 de
+66 — Filemom não tem título de seção na fonte, e fica vazio.
+
+#### O título: em inglês na tela, os outros na descrição
+
+A planilha `titulo_tags` ganhou `titulo_en`, `titulo_ko` e `titulo_zh` (o
+cabeçalho migra sozinho). Elas começam vazias e **enchem aos poucos**:
+`titulo_em()` procura o idioma pedido, e se não achar **traduz e GRAVA de
+volta**.
+
+O ponto é esse: o custo de tradução é pago **uma vez por título**, não uma vez
+por vídeo. A planilha enche conforme os capítulos vão saindo, e fica editável —
+tradução ruim se corrige à mão, sem tocar em código.
+
+`titulo_em()` devolve `(titulo, origem)`, com origem em `planilha`,
+`traduzido`, `portugues` ou `nao_achei` — quem chama precisa saber se aquilo é
+revisado ou recém-inventado por uma IA. **Título que ficou em português é
+PULADO na tela**, não exibido: português num vídeo poliglota privilegia uma
+língua, que é justamente o que a legenda multi-idioma existe pra não fazer.
+
+Sai da última célula do `match-scene-verse.ipynb`, e não dos notebooks de
+queima, porque é lá que estão as duas coisas de que ele precisa: a planilha e a
+legenda mestre. Os notebooks de queima só consomem o `<nome>_titulo.srt`.
+
 ### Margem lateral, siglas de idioma, e uma linha que saía da tela
 
 As siglas (PT/EN/ES/FR/KO/ZH) ficam na **margem esquerda**, na altura de cada

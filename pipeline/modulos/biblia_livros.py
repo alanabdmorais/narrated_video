@@ -37,6 +37,10 @@ se esperava encontrar.
 """
 from __future__ import annotations
 
+import json
+from pathlib import Path
+from typing import Iterable, Optional
+
 import re
 from dataclasses import dataclass
 
@@ -380,3 +384,61 @@ def indexar_por_chave(stems) -> tuple[dict[tuple[int, int], str], list[str], dic
         indice[chave] = stem
 
     return indice, sorted(ignorados), colisoes
+
+
+# ── Abreviação por idioma (indicador de livro:versículo no vídeo) ────────────
+
+CAMINHO_SIGLAS = Path(__file__).parent.parent / "dados_lexico" / "siglas-livros.json"
+
+_FORMATO_SIGLAS = 1
+
+
+def carregar_siglas(caminho: Path | str | None = None) -> dict[str, dict[str, str]]:
+    """{sigla_osis: {idioma: abreviação}} — a tabela versionada.
+
+    Ausente = dicionário vazio (o pipeline cai na sigla OSIS avisando).
+    Formato desconhecido LEVANTA: ler pela metade poria abreviação errada na
+    tela de todo vídeo daquele livro.
+    """
+    caminho = Path(caminho or CAMINHO_SIGLAS)
+    if not caminho.exists():
+        return {}
+    bruto = json.loads(caminho.read_text(encoding="utf-8"))
+    if bruto.get("formato") != _FORMATO_SIGLAS:
+        raise ValueError(f"{caminho.name} está no formato {bruto.get('formato')!r}, "
+                         f"e este módulo lê o {_FORMATO_SIGLAS}.")
+    return bruto.get("siglas", {})
+
+
+def abreviacoes(
+    sigla_osis: str,
+    idiomas: Iterable[str],
+    override: Optional[dict[str, str]] = None,
+    tabela: Optional[dict[str, dict[str, str]]] = None,
+) -> tuple[list[str], list[str]]:
+    """Abreviações do livro nos idiomas pedidos -> (abreviações, faltando).
+
+    Ordem de prioridade: `override` (o ABREVIACOES_LIVRO do vídeo, pra
+    corrigir um caso sem esperar o resto) e depois a tabela versionada.
+
+    Idioma sem abreviação NÃO inventa nem repete a do inglês em silêncio: sai
+    da lista e entra em `faltando`, pra quem chama avisar. Some da tela aquele
+    idioma naquele livro -- que é visível e conserta-se -- em vez de aparecer
+    uma sigla errada, que ninguém revisa duas vezes.
+
+    Duplicata é removida mantendo a primeira ocorrência: pt/es/fr usam "Mt",
+    e "Mt/Mt/Mt 2:4" não ajuda ninguém.
+    """
+    override = override or {}
+    tabela = carregar_siglas() if tabela is None else tabela
+    do_livro = tabela.get(sigla_osis, {})
+
+    achadas: list[str] = []
+    faltando: list[str] = []
+    for idioma in idiomas:
+        valor = (override.get(idioma) or do_livro.get(idioma) or "").strip()
+        if not valor:
+            faltando.append(idioma)
+        elif valor not in achadas:
+            achadas.append(valor)
+    return achadas, faltando

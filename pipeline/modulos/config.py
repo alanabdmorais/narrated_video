@@ -488,9 +488,17 @@ class PipelineConfig:
     # Abreviações por idioma, na ordem em que devem aparecer combinadas
     # (duplicatas — ex: pt/es/fr usando a mesma abreviação — são removidas
     # automaticamente, mantendo a primeira ocorrência).
-    ABREVIACOES_LIVRO: dict[str, str] = field(default_factory=lambda: {
-        "en": "Matt", "pt": "Mt", "es": "Mt", "fr": "Mt", "ko": "마",
-    })
+    # Só um OVERRIDE: a fonte normal é a tabela versionada
+    # dados_lexico/siglas-livros.json, alimentada pelo \toc3 do USFM de cada
+    # tradução (ver biblia_livros.abreviacoes). Preencha aqui pra corrigir um
+    # livro sem esperar o USFM inteiro.
+    ABREVIACOES_LIVRO: dict[str, str] = field(default_factory=dict)
+
+    # Quais idiomas aparecem no indicador de livro:versículo do canto. NÃO são
+    # todos os da tela de propósito: pt/es/fr abreviam Mateus igual ("Mt"), e
+    # "Matt/Mt/Mt/Mt/마/太 2:4" é comprido sem informar mais que
+    # "Matt/마/太 2:4" -- um por sistema de escrita.
+    IDIOMAS_INDICADOR_VERSICULO: tuple[str, ...] = ("en", "ko", "zh")
     TAMANHO_FONTE_VERSICULO: int = 26
     CONTORNO_VERSICULO:      int = 2
 
@@ -584,6 +592,16 @@ class PipelineConfig:
         existir no Drive quando o notebook rodar, ele é usado no lugar de
         rodar o Stanza/Kiwi de novo pra esse idioma."""
         return f"{self.NOME_ORACAO}_classificacao_multicolor_{lang}.json"
+
+    def nome_srt_titulo(self) -> str:
+        """SRT do TÍTULO do trecho — a legenda fixa dinâmica do canto superior
+        direito, em inglês ("The Massacre of the Innocents"), que muda a cada
+        faixa de versículos.
+
+        Sai do match-scene-verse.ipynb, que é quem tem a planilha (onde os
+        títulos traduzidos moram e são gravados) e a legenda mestre (de onde
+        vêm os tempos). Os notebooks de queima só consomem."""
+        return f"{self.NOME_ORACAO}_titulo.srt"
 
     def nome_analise_bruta(self, lang: str) -> str:
         """A análise CRUA do Stanza/Kiwi desse idioma — token com as palavras

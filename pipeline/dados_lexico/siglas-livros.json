@@ -1,0 +1,492 @@
+{
+ "formato": 1,
+ "_leia-me": [
+  "Abreviação de cada livro por idioma, pro indicador de livro:versículo",
+  "que fica fixo no canto do vídeo (ex: 'Matt/마/太 2:16').",
+  "",
+  "COMO ENCHER: rode o biblia-texto-baixar.ipynb apontando pro USFM da",
+  "tradução coreana ou chinesa. Ele lê o \\toc3 de cada livro -- a",
+  "abreviação DA PRÓPRIA TRADUÇÃO -- e grava aqui.",
+  "",
+  "Por que não preencher de memória: a sigla aparece em TODO vídeo",
+  "daquele livro, e uma errada é um erro visível que ninguém revisa duas",
+  "vezes. Vazio é honesto; errado não.",
+  "",
+  "Sigla vazia faz o pipeline AVISAR e cair na do inglês -- some da tela",
+  "aquele idioma naquele livro, mas nada sai errado calado.",
+  "",
+  "ABREVIACOES_LIVRO na configuração do vídeo continua vencendo: serve",
+  "pra corrigir um livro sem esperar o USFM inteiro.",
+  "",
+  "nome_pt / prefixo_titulo: como o livro aparece na aba titulo_tags da",
+  "planilha (coluna livro_pt) e como começa o titulo_id ('mt2.1-12').",
+  "DERIVADOS do titulos-biblicos.json, não digitados: as duas sequências",
+  "foram alinhadas pela CONTAGEM DE CAPÍTULOS de cada livro, que é dado e",
+  "não palpite. Bateu 65 de 66 -- Filemom não tem título de seção na fonte",
+  "(1 capítulo só), e fica vazio."
+ ],
+ "siglas": {
+  "Gen": {
+   "en": "Gen",
+   "ko": "",
+   "zh": "",
+   "nome_pt": "Gênesis",
+   "prefixo_titulo": "gn"
+  },
+  "Exod": {
+   "en": "Exod",
+   "ko": "",
+   "zh": "",
+   "nome_pt": "Êxodo",
+   "prefixo_titulo": "êx"
+  },
+  "Lev": {
+   "en": "Lev",
+   "ko": "",
+   "zh": "",
+   "nome_pt": "Levítico",
+   "prefixo_titulo": "lv"
+  },
+  "Num": {
+   "en": "Num",
+   "ko": "",
+   "zh": "",
+   "nome_pt": "Números",
+   "prefixo_titulo": "nm"
+  },
+  "Deut": {
+   "en": "Deut",
+   "ko": "",
+   "zh": "",
+   "nome_pt": "Deuteronômio",
+   "prefixo_titulo": "dt"
+  },
+  "Josh": {
+   "en": "Josh",
+   "ko": "",
+   "zh": "",
+   "nome_pt": "Josué",
+   "prefixo_titulo": "js"
+  },
+  "Judg": {
+   "en": "Judg",
+   "ko": "",
+   "zh": "",
+   "nome_pt": "Juízes",
+   "prefixo_titulo": "jz"
+  },
+  "Ruth": {
+   "en": "Ruth",
+   "ko": "",
+   "zh": "",
+   "nome_pt": "Rute",
+   "prefixo_titulo": "rt"
+  },
+  "1Sam": {
+   "en": "1Sam",
+   "ko": "",
+   "zh": "",
+   "nome_pt": "1 Samuel",
+   "prefixo_titulo": "1sm"
+  },
+  "2Sam": {
+   "en": "2Sam",
+   "ko": "",
+   "zh": "",
+   "nome_pt": "2 Samuel",
+   "prefixo_titulo": "2sm"
+  },
+  "1Kgs": {
+   "en": "1Kgs",
+   "ko": "",
+   "zh": "",
+   "nome_pt": "1 Reis",
+   "prefixo_titulo": "1rs"
+  },
+  "2Kgs": {
+   "en": "2Kgs",
+   "ko": "",
+   "zh": "",
+   "nome_pt": "2 Reis",
+   "prefixo_titulo": "2rs"
+  },
+  "1Chr": {
+   "en": "1Chr",
+   "ko": "",
+   "zh": "",
+   "nome_pt": "1 Crônicas",
+   "prefixo_titulo": "1cr"
+  },
+  "2Chr": {
+   "en": "2Chr",
+   "ko": "",
+   "zh": "",
+   "nome_pt": "2 Crônicas",
+   "prefixo_titulo": "2cr"
+  },
+  "Ezra": {
+   "en": "Ezra",
+   "ko": "",
+   "zh": "",
+   "nome_pt": "Esdras",
+   "prefixo_titulo": "ed"
+  },
+  "Neh": {
+   "en": "Neh",
+   "ko": "",
+   "zh": "",
+   "nome_pt": "Neemias",
+   "prefixo_titulo": "ne"
+  },
+  "Esth": {
+   "en": "Esth",
+   "ko": "",
+   "zh": "",
+   "nome_pt": "Ester",
+   "prefixo_titulo": "et"
+  },
+  "Job": {
+   "en": "Job",
+   "ko": "",
+   "zh": "",
+   "nome_pt": "Jó",
+   "prefixo_titulo": "jó"
+  },
+  "Ps": {
+   "en": "Ps",
+   "ko": "",
+   "zh": "",
+   "nome_pt": "Salmos",
+   "prefixo_titulo": "sl"
+  },
+  "Prov": {
+   "en": "Prov",
+   "ko": "",
+   "zh": "",
+   "nome_pt": "Provérbios",
+   "prefixo_titulo": "pv"
+  },
+  "Eccl": {
+   "en": "Eccl",
+   "ko": "",
+   "zh": "",
+   "nome_pt": "Eclesiastes",
+   "prefixo_titulo": "ec"
+  },
+  "Song": {
+   "en": "Song",
+   "ko": "",
+   "zh": "",
+   "nome_pt": "Cântico",
+   "prefixo_titulo": "ct"
+  },
+  "Isa": {
+   "en": "Isa",
+   "ko": "",
+   "zh": "",
+   "nome_pt": "Isaías",
+   "prefixo_titulo": "is"
+  },
+  "Jer": {
+   "en": "Jer",
+   "ko": "",
+   "zh": "",
+   "nome_pt": "Jeremias",
+   "prefixo_titulo": "jr"
+  },
+  "Lam": {
+   "en": "Lam",
+   "ko": "",
+   "zh": "",
+   "nome_pt": "Lamentações",
+   "prefixo_titulo": "lm"
+  },
+  "Ezek": {
+   "en": "Ezek",
+   "ko": "",
+   "zh": "",
+   "nome_pt": "Ezequiel",
+   "prefixo_titulo": "ez"
+  },
+  "Dan": {
+   "en": "Dan",
+   "ko": "",
+   "zh": "",
+   "nome_pt": "Daniel",
+   "prefixo_titulo": "dn"
+  },
+  "Hos": {
+   "en": "Hos",
+   "ko": "",
+   "zh": "",
+   "nome_pt": "Oseias",
+   "prefixo_titulo": "os"
+  },
+  "Joel": {
+   "en": "Joel",
+   "ko": "",
+   "zh": "",
+   "nome_pt": "Joel",
+   "prefixo_titulo": "jl"
+  },
+  "Amos": {
+   "en": "Amos",
+   "ko": "",
+   "zh": "",
+   "nome_pt": "Amós",
+   "prefixo_titulo": "am"
+  },
+  "Obad": {
+   "en": "Obad",
+   "ko": "",
+   "zh": "",
+   "nome_pt": "Obadias",
+   "prefixo_titulo": "ob"
+  },
+  "Jonah": {
+   "en": "Jonah",
+   "ko": "",
+   "zh": "",
+   "nome_pt": "Jonas",
+   "prefixo_titulo": "jn"
+  },
+  "Mic": {
+   "en": "Mic",
+   "ko": "",
+   "zh": "",
+   "nome_pt": "Miqueias",
+   "prefixo_titulo": "mq"
+  },
+  "Nah": {
+   "en": "Nah",
+   "ko": "",
+   "zh": "",
+   "nome_pt": "Naum",
+   "prefixo_titulo": "na"
+  },
+  "Hab": {
+   "en": "Hab",
+   "ko": "",
+   "zh": "",
+   "nome_pt": "Habacuque",
+   "prefixo_titulo": "hc"
+  },
+  "Zeph": {
+   "en": "Zeph",
+   "ko": "",
+   "zh": "",
+   "nome_pt": "Sofonias",
+   "prefixo_titulo": "sf"
+  },
+  "Hag": {
+   "en": "Hag",
+   "ko": "",
+   "zh": "",
+   "nome_pt": "Ageu",
+   "prefixo_titulo": "ag"
+  },
+  "Zech": {
+   "en": "Zech",
+   "ko": "",
+   "zh": "",
+   "nome_pt": "Zacarias",
+   "prefixo_titulo": "zc"
+  },
+  "Mal": {
+   "en": "Mal",
+   "ko": "",
+   "zh": "",
+   "nome_pt": "Malaquias",
+   "prefixo_titulo": "ml"
+  },
+  "Matt": {
+   "en": "Matt",
+   "ko": "마",
+   "zh": "太",
+   "nome_pt": "Mateus",
+   "prefixo_titulo": "mt"
+  },
+  "Mark": {
+   "en": "Mark",
+   "ko": "",
+   "zh": "",
+   "nome_pt": "Marcos",
+   "prefixo_titulo": "mc"
+  },
+  "Luke": {
+   "en": "Luke",
+   "ko": "",
+   "zh": "",
+   "nome_pt": "Lucas",
+   "prefixo_titulo": "lc"
+  },
+  "John": {
+   "en": "John",
+   "ko": "",
+   "zh": "",
+   "nome_pt": "João",
+   "prefixo_titulo": "jo"
+  },
+  "Acts": {
+   "en": "Acts",
+   "ko": "",
+   "zh": "",
+   "nome_pt": "Atos",
+   "prefixo_titulo": "at"
+  },
+  "Rom": {
+   "en": "Rom",
+   "ko": "",
+   "zh": "",
+   "nome_pt": "Romanos",
+   "prefixo_titulo": "rm"
+  },
+  "1Cor": {
+   "en": "1Cor",
+   "ko": "",
+   "zh": "",
+   "nome_pt": "1 Coríntios",
+   "prefixo_titulo": "1co"
+  },
+  "2Cor": {
+   "en": "2Cor",
+   "ko": "",
+   "zh": "",
+   "nome_pt": "2 Coríntios",
+   "prefixo_titulo": "2co"
+  },
+  "Gal": {
+   "en": "Gal",
+   "ko": "",
+   "zh": "",
+   "nome_pt": "Gálatas",
+   "prefixo_titulo": "gl"
+  },
+  "Eph": {
+   "en": "Eph",
+   "ko": "",
+   "zh": "",
+   "nome_pt": "Efésios",
+   "prefixo_titulo": "ef"
+  },
+  "Phil": {
+   "en": "Phil",
+   "ko": "",
+   "zh": "",
+   "nome_pt": "Filipenses",
+   "prefixo_titulo": "fp"
+  },
+  "Col": {
+   "en": "Col",
+   "ko": "",
+   "zh": "",
+   "nome_pt": "Colossenses",
+   "prefixo_titulo": "cl"
+  },
+  "1Thess": {
+   "en": "1Thess",
+   "ko": "",
+   "zh": "",
+   "nome_pt": "1 Tessalonicenses",
+   "prefixo_titulo": "1ts"
+  },
+  "2Thess": {
+   "en": "2Thess",
+   "ko": "",
+   "zh": "",
+   "nome_pt": "2 Tessalonicenses",
+   "prefixo_titulo": "2ts"
+  },
+  "1Tim": {
+   "en": "1Tim",
+   "ko": "",
+   "zh": "",
+   "nome_pt": "1 Timóteo",
+   "prefixo_titulo": "1tm"
+  },
+  "2Tim": {
+   "en": "2Tim",
+   "ko": "",
+   "zh": "",
+   "nome_pt": "2 Timóteo",
+   "prefixo_titulo": "2tm"
+  },
+  "Titus": {
+   "en": "Titus",
+   "ko": "",
+   "zh": "",
+   "nome_pt": "Tito",
+   "prefixo_titulo": "tt"
+  },
+  "Phlm": {
+   "en": "Phlm",
+   "ko": "",
+   "zh": "",
+   "nome_pt": "",
+   "prefixo_titulo": ""
+  },
+  "Heb": {
+   "en": "Heb",
+   "ko": "",
+   "zh": "",
+   "nome_pt": "Hebreus",
+   "prefixo_titulo": "hb"
+  },
+  "Jas": {
+   "en": "Jas",
+   "ko": "",
+   "zh": "",
+   "nome_pt": "Tiago",
+   "prefixo_titulo": "tg"
+  },
+  "1Pet": {
+   "en": "1Pet",
+   "ko": "",
+   "zh": "",
+   "nome_pt": "1 Pedro",
+   "prefixo_titulo": "1pe"
+  },
+  "2Pet": {
+   "en": "2Pet",
+   "ko": "",
+   "zh": "",
+   "nome_pt": "2 Pedro",
+   "prefixo_titulo": "2pe"
+  },
+  "1John": {
+   "en": "1John",
+   "ko": "",
+   "zh": "",
+   "nome_pt": "1 João",
+   "prefixo_titulo": "1jo"
+  },
+  "2John": {
+   "en": "2John",
+   "ko": "",
+   "zh": "",
+   "nome_pt": "2 João",
+   "prefixo_titulo": "2jo"
+  },
+  "3John": {
+   "en": "3John",
+   "ko": "",
+   "zh": "",
+   "nome_pt": "3 João",
+   "prefixo_titulo": "3jo"
+  },
+  "Jude": {
+   "en": "Jude",
+   "ko": "",
+   "zh": "",
+   "nome_pt": "Judas",
+   "prefixo_titulo": "jd"
+  },
+  "Rev": {
+   "en": "Rev",
+   "ko": "",
+   "zh": "",
+   "nome_pt": "Apocalipse",
+   "prefixo_titulo": "ap"
+  }
+ }
+}
